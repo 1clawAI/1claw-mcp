@@ -5,9 +5,9 @@ export function shareSecretTool(client: OneClawClient) {
   return {
     name: "share_secret" as const,
     description:
-      "Share a specific secret with a user or agent by their ID, or create " +
-      "an open share link (anyone_with_link). Agents cannot create email-based shares — " +
-      "only human users can share via email from the dashboard. " +
+      "Share a specific secret with a user, agent, or your creator (the human who registered you). " +
+      "Use recipient_type 'creator' to share back with the human who owns this agent — " +
+      "no recipient_id needed. Agents cannot create email-based shares. " +
       "For vault-wide access, use grant_access instead.",
     parameters: z.object({
       secret_id: z
@@ -15,13 +15,16 @@ export function shareSecretTool(client: OneClawClient) {
         .uuid()
         .describe("UUID of the secret entry to share"),
       recipient_type: z
-        .enum(["user", "agent", "anyone_with_link"])
-        .describe("Type of recipient: user, agent, or anyone_with_link"),
+        .enum(["user", "agent", "anyone_with_link", "creator"])
+        .describe(
+          "Type of recipient: 'creator' (share with the human who registered this agent — recommended), " +
+          "'user' (by UUID), 'agent' (by UUID), or 'anyone_with_link'"
+        ),
       recipient_id: z
         .string()
         .uuid()
         .optional()
-        .describe("UUID of the recipient user or agent (required for user/agent types)"),
+        .describe("UUID of the recipient user or agent (required for user/agent types, not needed for creator)"),
       expires_at: z
         .string()
         .describe("ISO-8601 expiry date (e.g. '2026-12-31T00:00:00Z')"),
@@ -34,7 +37,7 @@ export function shareSecretTool(client: OneClawClient) {
     }),
     execute: async (args: {
       secret_id: string;
-      recipient_type: "user" | "agent" | "anyone_with_link";
+      recipient_type: "user" | "agent" | "anyone_with_link" | "creator";
       recipient_id?: string;
       expires_at: string;
       max_access_count: number;
@@ -52,10 +55,16 @@ export function shareSecretTool(client: OneClawClient) {
         expires_at: args.expires_at,
         max_access_count: args.max_access_count,
       });
+
+      const recipientLabel =
+        args.recipient_type === "creator"
+          ? "your creator (the human who registered this agent)"
+          : `${args.recipient_type}${args.recipient_id ? ` (${args.recipient_id})` : ""}`;
+
       return (
         `Secret shared successfully.\n` +
         `  Share ID: ${share.id}\n` +
-        `  Recipient: ${args.recipient_type}${args.recipient_id ? ` (${args.recipient_id})` : ""}\n` +
+        `  Recipient: ${recipientLabel}\n` +
         `  Expires: ${share.expires_at}\n` +
         `  Max accesses: ${share.max_access_count}\n` +
         `  URL: ${share.share_url}\n\n` +

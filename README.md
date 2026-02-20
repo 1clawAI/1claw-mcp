@@ -45,6 +45,7 @@ pnpm run build
 | `create_vault` | Create a new vault (auto-shared with the agent's human creator) |
 | `list_vaults` | List all vaults the agent can access (own + shared) |
 | `grant_access` | Share a vault with a user or agent (own vaults only) |
+| `share_secret` | Share a secret with your creator, a user/agent by ID, or create an open link |
 
 ## Resources
 
