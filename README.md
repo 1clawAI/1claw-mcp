@@ -6,10 +6,10 @@ An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time
 
 The server supports two transport modes:
 
-| Mode | Use case | Auth |
-|---|---|---|
+| Mode                | Use case                       | Auth                                                |
+| ------------------- | ------------------------------ | --------------------------------------------------- |
 | **stdio** (default) | Local — Claude Desktop, Cursor | Env vars: `ONECLAW_AGENT_TOKEN`, `ONECLAW_VAULT_ID` |
-| **httpStream** | Hosted at `mcp.1claw.xyz` | Per-request headers: `Authorization`, `X-Vault-ID` |
+| **httpStream**      | Hosted at `mcp.1claw.xyz`      | Per-request headers: `Authorization`, `X-Vault-ID`  |
 
 Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
@@ -23,34 +23,34 @@ pnpm run build
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `ONECLAW_AGENT_TOKEN` | stdio only | — | Bearer token for the 1claw Agent API |
-| `ONECLAW_VAULT_ID` | stdio only | — | UUID of the vault to operate on |
-| `ONECLAW_BASE_URL` | No | `https://api.1claw.xyz` | API base URL (override for self-hosted) |
-| `MCP_TRANSPORT` | No | `stdio` | Transport mode: `stdio` or `httpStream` |
-| `PORT` | No | `8080` | HTTP port (httpStream mode only) |
+| Variable              | Required   | Default                 | Description                             |
+| --------------------- | ---------- | ----------------------- | --------------------------------------- |
+| `ONECLAW_AGENT_TOKEN` | stdio only | —                       | Bearer token for the 1claw Agent API    |
+| `ONECLAW_VAULT_ID`    | stdio only | —                       | UUID of the vault to operate on         |
+| `ONECLAW_BASE_URL`    | No         | `https://api.1claw.xyz` | API base URL (override for self-hosted) |
+| `MCP_TRANSPORT`       | No         | `stdio`                 | Transport mode: `stdio` or `httpStream` |
+| `PORT`                | No         | `8080`                  | HTTP port (httpStream mode only)        |
 
 ## Tools
 
-| Tool | Description |
-|---|---|
-| `list_secrets` | List all secrets (metadata only — never values) |
-| `get_secret` | Fetch the decrypted value of a secret by path |
-| `put_secret` | Create or update a secret (creates a new version) |
-| `delete_secret` | Soft-delete a secret at a path |
-| `describe_secret` | Get metadata without fetching the value |
-| `rotate_and_store` | Store a new value for an existing secret and return the version |
-| `get_env_bundle` | Fetch an env_bundle secret and parse it as KEY=VALUE JSON |
-| `create_vault` | Create a new vault (auto-shared with the agent's human creator) |
-| `list_vaults` | List all vaults the agent can access (own + shared) |
-| `grant_access` | Share a vault with a user or agent (own vaults only) |
-| `share_secret` | Share a secret with your creator, a user/agent by ID, or create an open link |
+| Tool               | Description                                                                  |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `list_secrets`     | List all secrets (metadata only — never values)                              |
+| `get_secret`       | Fetch the decrypted value of a secret by path                                |
+| `put_secret`       | Create or update a secret (creates a new version)                            |
+| `delete_secret`    | Soft-delete a secret at a path                                               |
+| `describe_secret`  | Get metadata without fetching the value                                      |
+| `rotate_and_store` | Store a new value for an existing secret and return the version              |
+| `get_env_bundle`   | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
+| `create_vault`     | Create a new vault (auto-shared with the agent's human creator)              |
+| `list_vaults`      | List all vaults the agent can access (own + shared)                          |
+| `grant_access`     | Share a vault with a user or agent (own vaults only)                         |
+| `share_secret`     | Share a secret with your creator, a user/agent by ID, or create an open link |
 
 ## Resources
 
-| URI | Description |
-|---|---|
+| URI               | Description                                           |
+| ----------------- | ----------------------------------------------------- |
 | `vault://secrets` | Browsable listing of all secret paths (metadata only) |
 
 ## Configuration
@@ -61,15 +61,15 @@ For MCP clients that support remote servers with HTTP streaming:
 
 ```json
 {
-  "mcpServers": {
-    "1claw": {
-      "url": "https://mcp.1claw.xyz/mcp",
-      "headers": {
-        "Authorization": "Bearer <your-agent-token>",
-        "X-Vault-ID": "<your-vault-id>"
-      }
+    "mcpServers": {
+        "1claw": {
+            "url": "https://mcp.1claw.xyz/mcp",
+            "headers": {
+                "Authorization": "Bearer <your-agent-token>",
+                "X-Vault-ID": "<your-vault-id>"
+            }
+        }
     }
-  }
 }
 ```
 
@@ -79,16 +79,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
-  "mcpServers": {
-    "1claw": {
-      "command": "node",
-      "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
-      "env": {
-        "ONECLAW_AGENT_TOKEN": "your-agent-token-here",
-        "ONECLAW_VAULT_ID": "your-vault-id-here"
-      }
+    "mcpServers": {
+        "1claw": {
+            "command": "node",
+            "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
+            "env": {
+                "ONECLAW_AGENT_TOKEN": "your-agent-token-here",
+                "ONECLAW_VAULT_ID": "your-vault-id-here"
+            }
+        }
     }
-  }
 }
 ```
 
@@ -98,16 +98,16 @@ Add to `.cursor/mcp.json` in your project root:
 
 ```json
 {
-  "mcpServers": {
-    "1claw": {
-      "command": "node",
-      "args": ["./packages/mcp/dist/index.js"],
-      "env": {
-        "ONECLAW_AGENT_TOKEN": "${env:ONECLAW_AGENT_TOKEN}",
-        "ONECLAW_VAULT_ID": "${env:ONECLAW_VAULT_ID}"
-      }
+    "mcpServers": {
+        "1claw": {
+            "command": "node",
+            "args": ["./packages/mcp/dist/index.js"],
+            "env": {
+                "ONECLAW_AGENT_TOKEN": "${env:ONECLAW_AGENT_TOKEN}",
+                "ONECLAW_VAULT_ID": "${env:ONECLAW_VAULT_ID}"
+            }
+        }
     }
-  }
 }
 ```
 

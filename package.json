@@ -33,7 +33,7 @@
     "url": "https://github.com/1clawAI/1claw-mcp.git"
   },
   "homepage": "https://1claw.xyz",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "dependencies": {
     "fastmcp": "^3.33.0",
     "zod": "^3.24.0"
