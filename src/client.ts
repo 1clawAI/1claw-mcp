@@ -25,6 +25,13 @@ export interface ClientConfig {
   vaultId: string;
 }
 
+export interface AgentCredentials {
+  baseUrl: string;
+  agentId: string;
+  apiKey: string;
+  vaultId: string;
+}
+
 function encodePath(path: string): string {
   return path
     .split("/")
@@ -32,18 +39,57 @@ function encodePath(path: string): string {
     .join("/");
 }
 
+const REFRESH_BUFFER_MS = 60_000;
+
 export class OneClawClient {
   private baseUrl: string;
   private token: string;
   private vaultId: string;
 
-  constructor(config: ClientConfig) {
+  private agentCredentials?: { agentId: string; apiKey: string };
+  private tokenExpiresAt = 0;
+
+  constructor(config: ClientConfig | AgentCredentials) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
-    this.token = config.token;
     this.vaultId = config.vaultId;
+
+    if ("agentId" in config) {
+      this.agentCredentials = { agentId: config.agentId, apiKey: config.apiKey };
+      this.token = "";
+    } else {
+      this.token = config.token;
+    }
   }
 
-  private headers(): Record<string, string> {
+  private async ensureToken(): Promise<void> {
+    if (!this.agentCredentials) return;
+    if (this.token && Date.now() < this.tokenExpiresAt - REFRESH_BUFFER_MS) return;
+
+    const res = await fetch(`${this.baseUrl}/v1/auth/agent-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agent_id: this.agentCredentials.agentId,
+        api_key: this.agentCredentials.apiKey,
+      }),
+    });
+
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = (await res.json()) as ApiErrorBody;
+        if (body.detail) detail = body.detail;
+      } catch { /* use default */ }
+      throw new OneClawApiError(res.status, `Agent auth failed: ${detail}`);
+    }
+
+    const data = (await res.json()) as { access_token: string; expires_in: number };
+    this.token = data.access_token;
+    this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+  }
+
+  private async headers(): Promise<Record<string, string>> {
+    await this.ensureToken();
     return {
       Authorization: `Bearer ${this.token}`,
       "Content-Type": "application/json",
@@ -55,9 +101,10 @@ export class OneClawClient {
   }
 
   private async request<T>(url: string, init?: RequestInit): Promise<T> {
+    const hdrs = await this.headers();
     const res = await fetch(url, {
       ...init,
-      headers: { ...this.headers(), ...(init?.headers as Record<string, string>) },
+      headers: { ...hdrs, ...(init?.headers as Record<string, string>) },
     });
 
     if (!res.ok) {

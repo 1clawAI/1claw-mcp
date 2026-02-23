@@ -25,17 +25,28 @@ const port = parseInt(process.env.PORT ?? "8080", 10);
 let sharedClient: OneClawClient | undefined;
 
 if (transport === "stdio") {
-  const token = process.env.ONECLAW_AGENT_TOKEN;
   const vaultId = process.env.ONECLAW_VAULT_ID;
-  if (!token) {
-    console.error("ONECLAW_AGENT_TOKEN is required. Set it as an environment variable.");
-    process.exit(1);
-  }
   if (!vaultId) {
     console.error("ONECLAW_VAULT_ID is required. Set it as an environment variable.");
     process.exit(1);
   }
-  sharedClient = new OneClawClient({ baseUrl, token, vaultId });
+
+  const agentId = process.env.ONECLAW_AGENT_ID;
+  const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
+  const token = process.env.ONECLAW_AGENT_TOKEN;
+
+  if (agentId && agentApiKey) {
+    sharedClient = new OneClawClient({ baseUrl, agentId, apiKey: agentApiKey, vaultId });
+  } else if (token) {
+    sharedClient = new OneClawClient({ baseUrl, token, vaultId });
+  } else {
+    console.error(
+      "Authentication required. Set either:\n" +
+      "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY  (recommended, auto-refreshes)\n" +
+      "  ONECLAW_AGENT_TOKEN                        (static JWT, expires)"
+    );
+    process.exit(1);
+  }
 }
 
 function resolveClient(session?: SessionAuth): OneClawClient {
