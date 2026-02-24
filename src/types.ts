@@ -65,6 +65,50 @@ export interface ShareLinkResponse {
   max_access_count: number;
 }
 
+export interface BalanceChange {
+  address: string;
+  token?: string;
+  token_symbol?: string;
+  before?: string;
+  after?: string;
+  change?: string;
+}
+
+export interface SimulationResponse {
+  simulation_id: string;
+  status: "success" | "reverted" | "error";
+  gas_used: number;
+  gas_estimate_usd?: string;
+  balance_changes: BalanceChange[];
+  error?: string;
+  error_code?: string;
+  error_human_readable?: string;
+  revert_reason?: string;
+  tenderly_dashboard_url?: string;
+  simulated_at: string;
+}
+
+export interface BundleSimulationResponse {
+  simulations: SimulationResponse[];
+}
+
+export interface TransactionResponse {
+  id: string;
+  agent_id: string;
+  chain: string;
+  chain_id: number;
+  to: string;
+  value_wei: string;
+  status: string;
+  signed_tx?: string;
+  tx_hash?: string;
+  error_message?: string;
+  created_at: string;
+  signed_at?: string;
+  simulation_id?: string;
+  simulation_status?: string;
+}
+
 export interface ApiErrorBody {
   type: string;
   title: string;
