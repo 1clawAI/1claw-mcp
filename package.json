@@ -21,13 +21,21 @@
         "start": "node dist/index.js"
     },
     "keywords": [
+        "1claw",
         "mcp",
+        "model-context-protocol",
         "secrets",
         "vault",
         "ai-agents",
         "hsm",
-        "1claw"
+        "claude",
+        "cursor",
+        "fastmcp",
+        "agent-tools"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/1clawAI/1claw-mcp.git"
