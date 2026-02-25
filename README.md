@@ -6,10 +6,10 @@ An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time
 
 The server supports two transport modes:
 
-| Mode                | Use case                       | Auth                                                |
-| ------------------- | ------------------------------ | --------------------------------------------------- |
-| **stdio** (default) | Local — Claude Desktop, Cursor | Env vars: `ONECLAW_AGENT_TOKEN`, `ONECLAW_VAULT_ID` |
-| **httpStream**      | Hosted at `mcp.1claw.xyz`      | Per-request headers: `Authorization`, `X-Vault-ID`  |
+| Mode                | Use case                       | Auth                                                                 |
+| ------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| **stdio** (default) | Local — Claude Desktop, Cursor | Env: `ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY` (recommended) or `ONECLAW_AGENT_TOKEN`; plus `ONECLAW_VAULT_ID` |
+| **httpStream**      | Hosted at `mcp.1claw.xyz`      | Per-request headers: `Authorization: Bearer <token>`, `X-Vault-ID`   |
 
 Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
@@ -23,13 +23,17 @@ pnpm run build
 
 ## Environment Variables
 
-| Variable              | Required   | Default                 | Description                             |
-| --------------------- | ---------- | ----------------------- | --------------------------------------- |
-| `ONECLAW_AGENT_TOKEN` | stdio only | —                       | Bearer token for the 1claw Agent API    |
-| `ONECLAW_VAULT_ID`    | stdio only | —                       | UUID of the vault to operate on         |
-| `ONECLAW_BASE_URL`    | No         | `https://api.1claw.xyz` | API base URL (override for self-hosted) |
-| `MCP_TRANSPORT`       | No         | `stdio`                 | Transport mode: `stdio` or `httpStream` |
-| `PORT`                | No         | `8080`                  | HTTP port (httpStream mode only)        |
+| Variable                  | Required   | Default                 | Description                                                                 |
+| ------------------------- | ---------- | ----------------------- | --------------------------------------------------------------------------- |
+| `ONECLAW_AGENT_ID`        | stdio*     | —                       | Agent UUID (from dashboard). Use with `ONECLAW_AGENT_API_KEY` (recommended). |
+| `ONECLAW_AGENT_API_KEY`   | stdio*     | —                       | Agent API key (`ocv_...`). Server exchanges this for a JWT and auto-refreshes. |
+| `ONECLAW_AGENT_TOKEN`     | stdio*     | —                       | Static Bearer JWT (alternative to ID+key; expires in ~1 h).                |
+| `ONECLAW_VAULT_ID`        | stdio only | —                       | UUID of the vault to operate on.                                           |
+| `ONECLAW_BASE_URL`        | No         | `https://api.1claw.xyz` | API base URL (override for self-hosted).                                    |
+| `MCP_TRANSPORT`           | No         | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
+| `PORT`                    | No         | `8080`                  | HTTP port (httpStream mode only).                                          |
+
+\* For stdio, set either **`ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY`** (recommended) or **`ONECLAW_AGENT_TOKEN`**.
 
 ## Tools
 
@@ -57,7 +61,7 @@ pnpm run build
 
 ### Hosted (mcp.1claw.xyz)
 
-For MCP clients that support remote servers with HTTP streaming:
+For MCP clients that support remote servers with HTTP streaming. The server expects a **Bearer token** (JWT). You can get one by calling `POST https://api.1claw.xyz/v1/auth/agent-token` with `{"agent_id": "<uuid>", "api_key": "<ocv_...>"}` — use your agent ID and API key from the 1claw dashboard.
 
 ```json
 {
@@ -65,7 +69,7 @@ For MCP clients that support remote servers with HTTP streaming:
         "1claw": {
             "url": "https://mcp.1claw.xyz/mcp",
             "headers": {
-                "Authorization": "Bearer <your-agent-token>",
+                "Authorization": "Bearer <agent-jwt-or-token>",
                 "X-Vault-ID": "<your-vault-id>"
             }
         }
@@ -75,7 +79,7 @@ For MCP clients that support remote servers with HTTP streaming:
 
 ### Claude Desktop (local stdio)
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`. Prefer **agent ID + API key** (the server exchanges them for a JWT and refreshes automatically); alternatively use a static `ONECLAW_AGENT_TOKEN` (expires in ~1 hour).
 
 ```json
 {
@@ -84,8 +88,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
             "command": "node",
             "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
             "env": {
-                "ONECLAW_AGENT_TOKEN": "your-agent-token-here",
-                "ONECLAW_VAULT_ID": "your-vault-id-here"
+                "ONECLAW_AGENT_ID": "your-agent-uuid",
+                "ONECLAW_AGENT_API_KEY": "ocv_your_agent_api_key",
+                "ONECLAW_VAULT_ID": "your-vault-id"
             }
         }
     }
@@ -94,7 +99,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ### Cursor (local stdio)
 
-Add to `.cursor/mcp.json` in your project root:
+Add to `.cursor/mcp.json` in your project root. Use **agent ID + API key** so the server can refresh the token; or use `ONECLAW_AGENT_TOKEN` if you prefer a static JWT.
 
 ```json
 {
@@ -103,7 +108,8 @@ Add to `.cursor/mcp.json` in your project root:
             "command": "node",
             "args": ["./packages/mcp/dist/index.js"],
             "env": {
-                "ONECLAW_AGENT_TOKEN": "${env:ONECLAW_AGENT_TOKEN}",
+                "ONECLAW_AGENT_ID": "${env:ONECLAW_AGENT_ID}",
+                "ONECLAW_AGENT_API_KEY": "${env:ONECLAW_AGENT_API_KEY}",
                 "ONECLAW_VAULT_ID": "${env:ONECLAW_VAULT_ID}"
             }
         }
