@@ -123,19 +123,33 @@ export class OneClawClient {
         });
 
         if (!res.ok) {
-            if (res.status === 402) {
-                throw new OneClawApiError(
-                    402,
-                    "Free tier quota exhausted. Upgrade your plan or add payment at https://1claw.xyz/settings/billing",
-                );
-            }
             let detail = `HTTP ${res.status}`;
+            let errorType = "";
             try {
                 const body = (await res.json()) as ApiErrorBody;
                 if (body.detail) detail = body.detail;
+                if (body.type) errorType = body.type;
             } catch {
                 // use default detail
             }
+
+            if (res.status === 402) {
+                throw new OneClawApiError(
+                    402,
+                    "Quota exhausted. Ask your human to upgrade the plan, add prepaid credits, or enable x402 micropayments at https://1claw.xyz/settings/billing",
+                );
+            }
+
+            if (
+                res.status === 403 &&
+                errorType === "resource_limit_exceeded"
+            ) {
+                throw new OneClawApiError(
+                    403,
+                    `Resource limit reached: ${detail}. Ask your human to upgrade the plan at https://1claw.xyz/settings/billing`,
+                );
+            }
+
             throw new OneClawApiError(res.status, detail);
         }
 

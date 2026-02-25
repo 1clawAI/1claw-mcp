@@ -67,6 +67,7 @@ export function simulateTransactionTool(client: OneClawClient) {
         if (err instanceof OneClawApiError) {
           if (err.status === 400) throw new UserError(err.detail);
           if (err.status === 403) throw new UserError(`Access denied: ${err.detail}`);
+          if (err.status === 422) throw new UserError(`Simulation failed: ${err.detail}`);
         }
         throw err;
       }

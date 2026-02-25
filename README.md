@@ -37,19 +37,21 @@ pnpm run build
 
 ## Tools
 
-| Tool               | Description                                                                  |
-| ------------------ | ---------------------------------------------------------------------------- |
-| `list_secrets`     | List all secrets (metadata only — never values)                              |
-| `get_secret`       | Fetch the decrypted value of a secret by path                                |
-| `put_secret`       | Create or update a secret (creates a new version)                            |
-| `delete_secret`    | Soft-delete a secret at a path                                               |
-| `describe_secret`  | Get metadata without fetching the value                                      |
-| `rotate_and_store` | Store a new value for an existing secret and return the version              |
-| `get_env_bundle`   | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
-| `create_vault`     | Create a new vault (auto-shared with the agent's human creator)              |
-| `list_vaults`      | List all vaults the agent can access (own + shared)                          |
-| `grant_access`     | Share a vault with a user or agent (own vaults only)                         |
-| `share_secret`     | Share a secret with your creator, a user/agent by ID, or create an open link |
+| Tool                   | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `list_secrets`         | List all secrets (metadata only — never values)                              |
+| `get_secret`           | Fetch the decrypted value of a secret by path                                |
+| `put_secret`           | Create or update a secret (creates a new version)                            |
+| `delete_secret`        | Soft-delete a secret at a path                                               |
+| `describe_secret`      | Get metadata without fetching the value                                      |
+| `rotate_and_store`     | Store a new value for an existing secret and return the version              |
+| `get_env_bundle`       | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
+| `create_vault`         | Create a new vault (auto-shared with the agent's human creator)              |
+| `list_vaults`          | List all vaults the agent can access (own + shared)                          |
+| `grant_access`         | Share a vault with a user or agent (own vaults only)                         |
+| `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
+| `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
+| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast            |
 
 ## Resources
 

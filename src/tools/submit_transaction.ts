@@ -12,7 +12,7 @@ export function submitTransactionTool(client: OneClawClient) {
       value: z.string().describe("Value in ETH as decimal string (e.g. '0.01')"),
       chain: z.string().describe("Chain name ('base', 'ethereum', etc.) or numeric chain ID"),
       data: z.string().optional().describe("Hex-encoded calldata for contract interactions"),
-      signing_key_path: z.string().optional().describe("Vault path to the signing key"),
+      signing_key_path: z.string().optional().describe("Vault path to the signing key. Defaults to keys/{chain}-signer"),
       nonce: z.number().int().optional().describe("Transaction nonce (auto-resolved if omitted)"),
       gas_price: z.string().optional().describe("Gas price in wei (legacy mode)"),
       gas_limit: z.number().int().optional().describe("Gas limit. Defaults to 21000"),
