@@ -33,7 +33,7 @@ pnpm run build
 | `MCP_TRANSPORT`           | No         | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No         | `8080`                  | HTTP port (httpStream mode only).                                          |
 
-\* For stdio, set either **`ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY`** (recommended) or **`ONECLAW_AGENT_TOKEN`**.
+\* For stdio, set either **`ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY`** (recommended for `api_key` auth method agents) or **`ONECLAW_AGENT_TOKEN`** (required for `mtls` / `oidc_client_credentials` agents, or as a static JWT alternative).
 
 ## Tools
 
