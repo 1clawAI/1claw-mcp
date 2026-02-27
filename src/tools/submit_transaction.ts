@@ -6,7 +6,7 @@ export function submitTransactionTool(client: OneClawClient) {
   return {
     name: "submit_transaction" as const,
     description:
-      "Submit an EVM transaction to be signed by 1claw's crypto proxy and optionally broadcast. Supports legacy and EIP-1559 fee modes. Set simulate_first=true to run a Tenderly simulation before signing (recommended).",
+      "Submit an EVM transaction to be signed by 1claw's Intents API and optionally broadcast. Supports legacy and EIP-1559 fee modes. Set simulate_first=true to run a Tenderly simulation before signing (recommended).",
     parameters: z.object({
       to: z.string().describe("Destination address (0x-prefixed)"),
       value: z.string().describe("Value in ETH as decimal string (e.g. '0.01')"),
