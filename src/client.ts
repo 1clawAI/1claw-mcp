@@ -296,10 +296,16 @@ export class OneClawClient {
             max_priority_fee_per_gas?: string;
             simulate_first?: boolean;
         },
+        idempotencyKey?: string,
     ): Promise<TransactionResponse> {
+        const key = idempotencyKey ?? crypto.randomUUID();
         return this.request<TransactionResponse>(
             `${this.baseUrl}/v1/agents/${agentId}/transactions`,
-            { method: "POST", body: JSON.stringify(tx) },
+            {
+                method: "POST",
+                body: JSON.stringify(tx),
+                headers: { "Idempotency-Key": key },
+            },
         );
     }
 }

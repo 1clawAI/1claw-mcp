@@ -51,7 +51,7 @@ pnpm run build
 | `grant_access`         | Share a vault with a user or agent (own vaults only)                         |
 | `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
 | `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
-| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast            |
+| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast. Auto-generates an `Idempotency-Key` header for replay protection. |
 
 ## Resources
 
