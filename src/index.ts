@@ -28,31 +28,32 @@ let sharedClient: OneClawClient | undefined;
 
 if (transport === "stdio") {
     const vaultId = process.env.ONECLAW_VAULT_ID;
-    if (!vaultId) {
-        console.error(
-            "ONECLAW_VAULT_ID is required. Set it as an environment variable.",
-        );
-        process.exit(1);
-    }
-
     const agentId = process.env.ONECLAW_AGENT_ID;
     const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
     const token = process.env.ONECLAW_AGENT_TOKEN;
 
-    if (agentId && agentApiKey) {
+    if (agentApiKey) {
+        // Key-only auth: agent_id and vault_id are auto-discovered from the token exchange
         sharedClient = new OneClawClient({
             baseUrl,
-            agentId,
+            agentId: agentId || undefined,
             apiKey: agentApiKey,
-            vaultId,
+            vaultId: vaultId || undefined,
         });
     } else if (token) {
+        if (!vaultId) {
+            console.error(
+                "ONECLAW_VAULT_ID is required when using ONECLAW_AGENT_TOKEN (static JWT).",
+            );
+            process.exit(1);
+        }
         sharedClient = new OneClawClient({ baseUrl, token, vaultId });
     } else {
         console.error(
-            "Authentication required. Set either:\n" +
-                "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY  (recommended, auto-refreshes)\n" +
-                "  ONECLAW_AGENT_TOKEN                        (static JWT, expires)",
+            "Authentication required. Set one of:\n" +
+                "  ONECLAW_AGENT_API_KEY                      (simplest, auto-discovers agent ID and vault)\n" +
+                "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY   (explicit agent ID)\n" +
+                "  ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID     (static JWT, expires)",
         );
         process.exit(1);
     }

@@ -30,9 +30,16 @@ export interface ClientConfig {
 
 export interface AgentCredentials {
     baseUrl: string;
-    agentId: string;
+    agentId?: string;
     apiKey: string;
-    vaultId: string;
+    vaultId?: string;
+}
+
+interface AgentTokenResponse {
+    access_token: string;
+    expires_in: number;
+    agent_id?: string;
+    vault_ids?: string[];
 }
 
 function encodePath(path: string): string {
@@ -47,23 +54,23 @@ const REFRESH_BUFFER_MS = 60_000;
 export class OneClawClient {
     private baseUrl: string;
     private token: string;
-    private vaultId: string;
+    private _vaultId: string;
+    private _resolvedAgentId?: string;
 
-    private agentCredentials?: { agentId: string; apiKey: string };
+    private agentCredentials?: { agentId?: string; apiKey: string };
     private tokenExpiresAt = 0;
-
     constructor(config: ClientConfig | AgentCredentials) {
         this.baseUrl = config.baseUrl.replace(/\/$/, "");
-        this.vaultId = config.vaultId;
+        this._vaultId = config.vaultId ?? "";
 
-        if ("agentId" in config) {
+        if ("apiKey" in config && !("token" in config)) {
             this.agentCredentials = {
                 agentId: config.agentId,
                 apiKey: config.apiKey,
             };
             this.token = "";
         } else {
-            this.token = config.token;
+            this.token = (config as ClientConfig).token;
         }
     }
 
@@ -72,20 +79,24 @@ export class OneClawClient {
         if (this.token && Date.now() < this.tokenExpiresAt - REFRESH_BUFFER_MS)
             return;
 
+        const body: Record<string, string> = {
+            api_key: this.agentCredentials.apiKey,
+        };
+        if (this.agentCredentials.agentId) {
+            body.agent_id = this.agentCredentials.agentId;
+        }
+
         const res = await fetch(`${this.baseUrl}/v1/auth/agent-token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                agent_id: this.agentCredentials.agentId,
-                api_key: this.agentCredentials.apiKey,
-            }),
+            body: JSON.stringify(body),
         });
 
         if (!res.ok) {
             let detail = `HTTP ${res.status}`;
             try {
-                const body = (await res.json()) as ApiErrorBody;
-                if (body.detail) detail = body.detail;
+                const errBody = (await res.json()) as ApiErrorBody;
+                if (errBody.detail) detail = errBody.detail;
             } catch {
                 /* use default */
             }
@@ -95,12 +106,27 @@ export class OneClawClient {
             );
         }
 
-        const data = (await res.json()) as {
-            access_token: string;
-            expires_in: number;
-        };
+        const data = (await res.json()) as AgentTokenResponse;
         this.token = data.access_token;
         this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+
+        if (data.agent_id) {
+            this._resolvedAgentId = data.agent_id;
+            if (this.agentCredentials && !this.agentCredentials.agentId) {
+                this.agentCredentials.agentId = data.agent_id;
+            }
+        }
+
+        if (!this._vaultId && data.vault_ids && data.vault_ids.length === 1) {
+            this._vaultId = data.vault_ids[0];
+        }
+    }
+
+    private async autoDiscoverVault(): Promise<void> {
+        const vaults = await this.listVaults();
+        if (vaults.vaults && vaults.vaults.length > 0) {
+            this._vaultId = vaults.vaults[0].id;
+        }
     }
 
     private async headers(): Promise<Record<string, string>> {
@@ -111,8 +137,17 @@ export class OneClawClient {
         };
     }
 
-    private vaultUrl(suffix = ""): string {
-        return `${this.baseUrl}/v1/vaults/${this.vaultId}${suffix}`;
+    private async resolveVaultUrl(suffix = ""): Promise<string> {
+        if (!this._vaultId) {
+            await this.autoDiscoverVault();
+        }
+        if (!this._vaultId) {
+            throw new OneClawApiError(
+                400,
+                "No vault configured. Set ONECLAW_VAULT_ID, bind the agent to a vault, or create a vault first.",
+            );
+        }
+        return `${this.baseUrl}/v1/vaults/${this._vaultId}${suffix}`;
     }
 
     private async request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -158,12 +193,12 @@ export class OneClawClient {
     }
 
     async listSecrets(): Promise<SecretListResponse> {
-        return this.request<SecretListResponse>(this.vaultUrl("/secrets"));
+        return this.request<SecretListResponse>(await this.resolveVaultUrl("/secrets"));
     }
 
     async getSecret(path: string): Promise<SecretWithValue> {
         return this.request<SecretWithValue>(
-            this.vaultUrl(`/secrets/${encodePath(path)}`),
+            await this.resolveVaultUrl(`/secrets/${encodePath(path)}`),
         );
     }
 
@@ -178,14 +213,14 @@ export class OneClawClient {
         },
     ): Promise<SecretMetadata> {
         return this.request<SecretMetadata>(
-            this.vaultUrl(`/secrets/${encodePath(path)}`),
+            await this.resolveVaultUrl(`/secrets/${encodePath(path)}`),
             { method: "PUT", body: JSON.stringify(body) },
         );
     }
 
     async deleteSecret(path: string): Promise<void> {
         await this.request<void>(
-            this.vaultUrl(`/secrets/${encodePath(path)}`),
+            await this.resolveVaultUrl(`/secrets/${encodePath(path)}`),
             { method: "DELETE" },
         );
     }
@@ -244,7 +279,11 @@ export class OneClawClient {
     // ── Transaction Simulation & Submission ──────────────
 
     get agentId(): string | undefined {
-        return this.agentCredentials?.agentId;
+        return this._resolvedAgentId ?? this.agentCredentials?.agentId;
+    }
+
+    get vaultId(): string {
+        return this._vaultId;
     }
 
     async simulateTransaction(
