@@ -15,6 +15,7 @@ import { grantAccessTool } from "./tools/grant_access.js";
 import { shareSecretTool } from "./tools/share_secret.js";
 import { simulateTransactionTool } from "./tools/simulate_transaction.js";
 import { submitTransactionTool } from "./tools/submit_transaction.js";
+import { inspectInput, inspectOutput, isSecurityEnabled } from "./security/index.js";
 
 type SessionAuth = { token: string; vaultId: string };
 
@@ -132,11 +133,34 @@ function registerTool(factory: AnyToolFactory) {
                 log: { info: (msg: string) => void };
             },
         ) => {
+            // Security inspection of input
+            if (isSecurityEnabled()) {
+                const inputCheck = inspectInput(proto.name, args);
+                if (!inputCheck.passed) {
+                    const threat = inputCheck.threats[0];
+                    context.log.info(`[SECURITY] Blocked ${proto.name}: ${threat?.type} (${threat?.pattern})`);
+                    throw new UserError(`Security check failed: ${threat?.type} detected`);
+                }
+                if (inputCheck.threats.length > 0) {
+                    context.log.info(`[SECURITY] Warnings for ${proto.name}: ${inputCheck.threats.map(t => t.pattern).join(", ")}`);
+                }
+            }
+            
             const client = resolveClient(context.session);
             const tool = factory(client);
-            return (
+            const result = await (
                 tool.execute as (a: unknown, c: unknown) => Promise<string>
             )(args, context);
+            
+            // Security inspection of output (log only)
+            if (isSecurityEnabled()) {
+                const outputCheck = inspectOutput(proto.name, result);
+                if (outputCheck.threats.length > 0) {
+                    context.log.info(`[SECURITY] Output warnings for ${proto.name}: ${outputCheck.threats.map(t => t.pattern).join(", ")}`);
+                }
+            }
+            
+            return result;
         },
     });
 }
