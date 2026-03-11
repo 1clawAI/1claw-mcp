@@ -85,7 +85,7 @@ const serverOpts: ServerOpts = {
 };
 
 if (transport === "httpStream") {
-    serverOpts.authenticate = (
+    serverOpts.authenticate = async (
         request: http.IncomingMessage,
     ): Promise<SessionAuth> => {
         const auth = (request.headers["authorization"] ?? "") as string;
@@ -93,15 +93,37 @@ if (transport === "httpStream") {
         const vaultId = (request.headers["x-vault-id"] ?? "") as string;
 
         if (!token)
-            return Promise.reject(
-                new Error(
-                    "Missing Authorization header (Bearer <agent-token>)",
-                ),
+            throw new Error(
+                "Missing Authorization header (Bearer <agent-token>)",
             );
-        if (!vaultId)
-            return Promise.reject(new Error("Missing X-Vault-ID header"));
+        if (!vaultId) throw new Error("Missing X-Vault-ID header");
 
-        return Promise.resolve({ token, vaultId });
+        // H-9: Validate token against the vault API (not just pass-through).
+        // Calls GET /v1/vaults to confirm the token is valid. An invalid or
+        // expired token will fail with 401, rejecting the session early.
+        const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!validationRes.ok) {
+            const status = validationRes.status;
+            if (status === 401) {
+                throw new Error("Invalid or expired Bearer token");
+            }
+            if (status === 403) {
+                // H-10: The token's vault_ids claim doesn't include this vault
+                throw new Error(
+                    "X-Vault-ID is not accessible with this token (vault binding mismatch)",
+                );
+            }
+            if (status === 404) {
+                throw new Error(`Vault ${vaultId} not found`);
+            }
+            throw new Error(
+                `Token validation failed (HTTP ${status})`,
+            );
+        }
+
+        return { token, vaultId };
     };
 }
 
@@ -178,8 +200,9 @@ registerTool(simulateTransactionTool as AnyToolFactory);
 registerTool(submitTransactionTool as AnyToolFactory);
 
 // ── Stretch: rotate_and_store ────────────────────────
+// Registered via registerTool so input/output go through security inspection.
 
-server.addTool({
+const rotateAndStoreTool = (client: OneClawClient) => ({
     name: "rotate_and_store",
     description:
         "Store a new value for an existing secret (creating a new version) and return the version number. Useful when an agent has regenerated an API key and needs to persist it.",
@@ -187,8 +210,10 @@ server.addTool({
         path: z.string().min(1).describe("Secret path to rotate"),
         value: z.string().min(1).describe("The new secret value"),
     }),
-    execute: async (args, context) => {
-        const client = resolveClient(context.session);
+    execute: async (
+        args: { path: string; value: string },
+        context: { log: { info: (msg: string) => void } },
+    ) => {
         const result = await client.putSecret(args.path, {
             value: args.value,
             type: "api_key",
@@ -197,18 +222,22 @@ server.addTool({
         return `Rotated secret at '${args.path}'. New version: ${result.version}.`;
     },
 });
+registerTool(rotateAndStoreTool as AnyToolFactory);
 
 // ── Stretch: get_env_bundle ──────────────────────────
+// Registered via registerTool so input/output go through security inspection.
 
-server.addTool({
+const getEnvBundleTool = (client: OneClawClient) => ({
     name: "get_env_bundle",
     description:
         "Fetch a secret of type env_bundle, parse its KEY=VALUE lines, and return a structured JSON object. Useful for injecting environment variables into subprocesses.",
     parameters: z.object({
         path: z.string().min(1).describe("Path to an env_bundle secret"),
     }),
-    execute: async (args, context) => {
-        const client = resolveClient(context.session);
+    execute: async (
+        args: { path: string },
+        context: { log: { info: (msg: string) => void } },
+    ) => {
         try {
             const secret = await client.getSecret(args.path);
             context.log.info(`env_bundle accessed: ${args.path}`);
@@ -246,6 +275,7 @@ server.addTool({
         }
     },
 });
+registerTool(getEnvBundleTool as AnyToolFactory);
 
 // ── Resource: browsable secret listing ───────────────
 
