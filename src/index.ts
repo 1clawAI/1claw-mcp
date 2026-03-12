@@ -15,7 +15,7 @@ import { grantAccessTool } from "./tools/grant_access.js";
 import { shareSecretTool } from "./tools/share_secret.js";
 import { simulateTransactionTool } from "./tools/simulate_transaction.js";
 import { submitTransactionTool } from "./tools/submit_transaction.js";
-import { inspectInput, inspectOutput, isSecurityEnabled } from "./security/index.js";
+import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
 type SessionAuth = { token: string; vaultId: string };
 
@@ -174,11 +174,33 @@ function registerTool(factory: AnyToolFactory) {
                 tool.execute as (a: unknown, c: unknown) => Promise<string>
             )(args, context);
             
-            // Security inspection of output (log only)
+            // Track secret values for redaction and exfiltration protection
+            if (isSecretRedactionEnabled()) {
+                if (proto.name === "get_secret") {
+                    try {
+                        const parsed = JSON.parse(result);
+                        if (parsed.value && parsed.path) registerSecret(parsed.path, parsed.value);
+                    } catch { /* not JSON — skip */ }
+                }
+                if (proto.name === "get_env_bundle") {
+                    try {
+                        const env = JSON.parse(result);
+                        for (const [key, val] of Object.entries(env)) {
+                            if (typeof val === "string") registerSecret(`env:${key}`, val);
+                        }
+                    } catch { /* not JSON — skip */ }
+                }
+            }
+            
+            // Security inspection of output (redacts secrets, detects PII, logs threats)
             if (isSecurityEnabled()) {
                 const outputCheck = inspectOutput(proto.name, result);
                 if (outputCheck.threats.length > 0) {
                     context.log.info(`[SECURITY] Output warnings for ${proto.name}: ${outputCheck.threats.map(t => t.pattern).join(", ")}`);
+                }
+                if (outputCheck.redacted) {
+                    context.log.info(`[SECURITY] Redacted secret values from ${proto.name} output`);
+                    return outputCheck.redacted;
                 }
             }
             

@@ -1,6 +1,7 @@
 /**
  * Security inspection module for MCP tools.
- * Detects command injection, encoding obfuscation, and other threats.
+ * Detects command injection, encoding obfuscation, PII, and other threats.
+ * Tracks fetched secret values for redaction and exfiltration protection.
  */
 
 export interface ThreatDetection {
@@ -14,7 +15,10 @@ export interface InspectionResult {
     passed: boolean;
     threats: ThreatDetection[];
     sanitized?: string;
+    redacted?: string;
 }
+
+// ── Threat patterns ──────────────────────────────────
 
 const COMMAND_INJECTION_PATTERNS = [
     { name: "shell_chain", pattern: /(?:;|\||&&|\|\|)\s*(?:curl|wget|bash|sh|nc|python|perl|ruby|php|node)\b/i, severity: "critical" as const },
@@ -46,6 +50,15 @@ const NETWORK_PATTERNS = [
     { name: "data_exfil", pattern: /(?:curl|wget|nc)\s+(?:-[a-zA-Z]*\s+)*https?:\/\//i, severity: "critical" as const },
 ];
 
+const PII_PATTERNS = [
+    { name: "email", pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/, severity: "medium" as const },
+    { name: "ssn", pattern: /\b\d{3}-\d{2}-\d{4}\b/, severity: "critical" as const },
+    { name: "credit_card", pattern: /\b(?:4\d{3}|5[1-5]\d{2}|3[47]\d{2}|6(?:011|5\d{2}))[- ]?\d{4}[- ]?\d{4}[- ]?\d{1,4}\b/, severity: "critical" as const },
+    { name: "phone_us", pattern: /\b(?:\+1[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b/, severity: "low" as const },
+    { name: "aws_key", pattern: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/, severity: "critical" as const },
+    { name: "private_key_header", pattern: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/, severity: "critical" as const },
+];
+
 // Zero-width and invisible characters
 const ZERO_WIDTH_CHARS = /[\u200B\u200C\u200D\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
 
@@ -60,16 +73,66 @@ const CONFUSABLES: Record<string, string> = {
 
 const CONFUSABLE_REGEX = new RegExp(`[${Object.keys(CONFUSABLES).join('')}]`, 'g');
 
+// ── Secret value registry (vault-manifest-aware redaction) ───
+
+const MIN_SECRET_LENGTH = 6;
+const secretValues = new Map<string, string>();
+
+/** Tools that legitimately return or accept secret values. */
+const SECRET_TOOLS = new Set([
+    "get_secret",
+    "get_env_bundle",
+    "put_secret",
+    "rotate_and_store",
+]);
+
 /**
- * Check if MCP security inspection is enabled.
+ * Register a secret value for redaction and exfiltration protection.
+ * Called after get_secret / get_env_bundle returns a value.
  */
+export function registerSecret(path: string, value: string): void {
+    if (value.length >= MIN_SECRET_LENGTH) {
+        secretValues.set(value, path);
+    }
+}
+
+/**
+ * Clear all tracked secrets (e.g. on session teardown).
+ */
+export function clearSecrets(): void {
+    secretValues.clear();
+}
+
+/**
+ * Return the number of tracked secret values.
+ */
+export function trackedSecretCount(): number {
+    return secretValues.size;
+}
+
+// ── Feature flags ────────────────────────────────────
+
 export function isSecurityEnabled(): boolean {
     return process.env.ONECLAW_MCP_SECURITY_ENABLED !== "false";
 }
 
-/**
- * Get the configured sanitization mode.
- */
+export function isSecretRedactionEnabled(): boolean {
+    if (!isSecurityEnabled()) return false;
+    return process.env.ONECLAW_MCP_REDACT_SECRETS !== "false";
+}
+
+export function isPiiDetectionEnabled(): boolean {
+    if (!isSecurityEnabled()) return false;
+    return process.env.ONECLAW_MCP_PII_DETECTION !== "false";
+}
+
+export function getExfilProtectionMode(): "block" | "warn" | "off" {
+    if (!isSecurityEnabled()) return "off";
+    const mode = process.env.ONECLAW_MCP_EXFIL_PROTECTION;
+    if (mode === "block" || mode === "off") return mode;
+    return "warn";
+}
+
 export function getSanitizationMode(): "block" | "surgical" | "log_only" {
     const mode = process.env.ONECLAW_MCP_SANITIZATION_MODE;
     if (mode === "surgical" || mode === "log_only") {
@@ -78,19 +141,16 @@ export function getSanitizationMode(): "block" | "surgical" | "log_only" {
     return "block";
 }
 
-/**
- * Normalize text by replacing confusables and stripping zero-width characters.
- */
+// ── Unicode normalization ────────────────────────────
+
 export function normalizeUnicode(text: string): { normalized: string; modified: boolean } {
     let modified = false;
     
-    // Strip zero-width chars
     let normalized = text.replace(ZERO_WIDTH_CHARS, () => {
         modified = true;
         return '';
     });
     
-    // Replace confusables
     normalized = normalized.replace(CONFUSABLE_REGEX, (char) => {
         modified = true;
         return CONFUSABLES[char] || char;
@@ -99,69 +159,90 @@ export function normalizeUnicode(text: string): { normalized: string; modified: 
     return { normalized, modified };
 }
 
-/**
- * Detect threats in a string.
- */
+// ── Threat detection ─────────────────────────────────
+
 function detectThreats(text: string): ThreatDetection[] {
     const threats: ThreatDetection[] = [];
     
-    // Command injection
     for (const { name, pattern, severity } of COMMAND_INJECTION_PATTERNS) {
         const match = text.match(pattern);
         if (match) {
-            threats.push({
-                type: "command_injection",
-                pattern: name,
-                location: match[0],
-                severity,
-            });
+            threats.push({ type: "command_injection", pattern: name, location: match[0], severity });
         }
     }
     
-    // Encoding obfuscation
     for (const { name, pattern, severity } of ENCODING_PATTERNS) {
         const match = text.match(pattern);
         if (match) {
-            threats.push({
-                type: "encoding_obfuscation",
-                pattern: name,
-                location: match[0].slice(0, 50),
-                severity,
-            });
+            threats.push({ type: "encoding_obfuscation", pattern: name, location: match[0].slice(0, 50), severity });
         }
     }
     
-    // Social engineering
     for (const { name, pattern, severity } of SOCIAL_ENGINEERING_PATTERNS) {
         const match = text.match(pattern);
         if (match) {
-            threats.push({
-                type: "social_engineering",
-                pattern: name,
-                location: match[0],
-                severity,
-            });
+            threats.push({ type: "social_engineering", pattern: name, location: match[0], severity });
         }
     }
     
-    // Network threats
     for (const { name, pattern, severity } of NETWORK_PATTERNS) {
         const match = text.match(pattern);
         if (match) {
-            threats.push({
-                type: "network_threat",
-                pattern: name,
-                location: match[0],
-                severity,
-            });
+            threats.push({ type: "network_threat", pattern: name, location: match[0], severity });
         }
     }
     
     return threats;
 }
 
+function detectPii(text: string): ThreatDetection[] {
+    if (!isPiiDetectionEnabled()) return [];
+    const threats: ThreatDetection[] = [];
+    for (const { name, pattern, severity } of PII_PATTERNS) {
+        const match = text.match(pattern);
+        if (match) {
+            threats.push({ type: "pii", pattern: name, location: match[0].slice(0, 30), severity });
+        }
+    }
+    return threats;
+}
+
+// ── Secret redaction ─────────────────────────────────
+
+function redactSecrets(text: string): { redacted: string; matches: Array<{ path: string }> } {
+    const matches: Array<{ path: string }> = [];
+    let redacted = text;
+    for (const [value, path] of secretValues) {
+        if (redacted.includes(value)) {
+            redacted = redacted.split(value).join(`[REDACTED:${path}]`);
+            matches.push({ path });
+        }
+    }
+    return { redacted, matches };
+}
+
+// ── Exfiltration detection (secrets in tool inputs) ──
+
+function detectExfiltration(text: string): ThreatDetection[] {
+    const mode = getExfilProtectionMode();
+    if (mode === "off") return [];
+    const threats: ThreatDetection[] = [];
+    for (const [value, path] of secretValues) {
+        if (text.includes(value)) {
+            threats.push({
+                type: "secret_exfiltration",
+                pattern: `known_secret:${path}`,
+                severity: "critical",
+            });
+        }
+    }
+    return threats;
+}
+
+// ── Public API ───────────────────────────────────────
+
 /**
- * Inspect tool input arguments for threats.
+ * Inspect tool input arguments for threats, PII, and secret exfiltration.
  */
 export function inspectInput(toolName: string, args: unknown): InspectionResult {
     if (!isSecurityEnabled()) {
@@ -169,24 +250,26 @@ export function inspectInput(toolName: string, args: unknown): InspectionResult 
     }
     
     const text = JSON.stringify(args);
-    
-    // Normalize Unicode first
     const { normalized, modified } = normalizeUnicode(text);
-    
-    // Detect threats
     const threats = detectThreats(normalized);
     
-    // Add Unicode warnings if modified
     if (modified) {
-        threats.push({
-            type: "unicode_obfuscation",
-            pattern: "confusables_or_zero_width",
-            severity: "medium",
-        });
+        threats.push({ type: "unicode_obfuscation", pattern: "confusables_or_zero_width", severity: "medium" });
+    }
+    
+    threats.push(...detectPii(normalized));
+    
+    if (!SECRET_TOOLS.has(toolName)) {
+        const exfil = detectExfiltration(normalized);
+        threats.push(...exfil);
+        const exfilMode = getExfilProtectionMode();
+        if (exfil.length > 0 && exfilMode === "block") {
+            return { passed: false, threats };
+        }
     }
     
     const mode = getSanitizationMode();
-    const hasCritical = threats.some((t) => t.severity === "critical");
+    const hasCritical = threats.some((t) => t.severity === "critical" && t.type !== "secret_exfiltration");
     const hasHigh = threats.some((t) => t.severity === "high");
     
     if (mode === "block" && (hasCritical || hasHigh)) {
@@ -206,7 +289,7 @@ export function inspectInput(toolName: string, args: unknown): InspectionResult 
 }
 
 /**
- * Inspect tool output for threats (mainly for logging).
+ * Inspect tool output for threats, PII, and optionally redact known secrets.
  */
 export function inspectOutput(toolName: string, result: string): InspectionResult {
     if (!isSecurityEnabled()) {
@@ -214,7 +297,21 @@ export function inspectOutput(toolName: string, result: string): InspectionResul
     }
     
     const threats = detectThreats(result);
+    threats.push(...detectPii(result));
     
-    // Output inspection is typically log-only
+    if (!SECRET_TOOLS.has(toolName) && isSecretRedactionEnabled()) {
+        const { redacted, matches } = redactSecrets(result);
+        if (matches.length > 0) {
+            for (const m of matches) {
+                threats.push({
+                    type: "secret_leak",
+                    pattern: `redacted:${m.path}`,
+                    severity: "critical",
+                });
+            }
+            return { passed: true, threats, redacted };
+        }
+    }
+    
     return { passed: true, threats };
 }

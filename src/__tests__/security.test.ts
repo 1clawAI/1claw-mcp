@@ -5,6 +5,12 @@ import {
     normalizeUnicode,
     isSecurityEnabled,
     getSanitizationMode,
+    isSecretRedactionEnabled,
+    isPiiDetectionEnabled,
+    getExfilProtectionMode,
+    registerSecret,
+    clearSecrets,
+    trackedSecretCount,
 } from "../security/index.js";
 
 describe("Security Module", () => {
@@ -229,7 +235,6 @@ describe("Security Module", () => {
     describe("inspectOutput", () => {
         it("detects threats in output", () => {
             const result = inspectOutput("test_tool", "Your API key is sk-12345");
-            // Output inspection logs but doesn't block
             expect(result.passed).toBe(true);
         });
 
@@ -237,6 +242,167 @@ describe("Security Module", () => {
             process.env.ONECLAW_MCP_SECURITY_ENABLED = "false";
             const result = inspectOutput("test_tool", "; rm -rf /");
             expect(result.threats).toHaveLength(0);
+        });
+    });
+
+    describe("PII detection", () => {
+        it("detects email addresses in input", () => {
+            const result = inspectInput("test_tool", {
+                message: "Contact alice@example.com",
+            });
+            expect(result.threats.some((t) => t.pattern === "email")).toBe(true);
+        });
+
+        it("detects SSN in input", () => {
+            const result = inspectInput("test_tool", {
+                data: "SSN: 123-45-6789",
+            });
+            expect(result.threats.some((t) => t.pattern === "ssn")).toBe(true);
+        });
+
+        it("detects credit card numbers in input", () => {
+            const result = inspectInput("test_tool", {
+                card: "4111-1111-1111-1111",
+            });
+            expect(result.threats.some((t) => t.pattern === "credit_card")).toBe(true);
+        });
+
+        it("detects AWS access keys", () => {
+            const result = inspectInput("test_tool", {
+                key: "AKIAIOSFODNN7EXAMPLE",
+            });
+            expect(result.threats.some((t) => t.pattern === "aws_key")).toBe(true);
+        });
+
+        it("detects private key headers", () => {
+            const result = inspectInput("test_tool", {
+                key: "-----BEGIN RSA PRIVATE KEY-----",
+            });
+            expect(result.threats.some((t) => t.pattern === "private_key_header")).toBe(true);
+        });
+
+        it("detects PII in output", () => {
+            const result = inspectOutput("test_tool", "User email: alice@example.com");
+            expect(result.threats.some((t) => t.pattern === "email")).toBe(true);
+        });
+
+        it("skips PII detection when disabled", () => {
+            process.env.ONECLAW_MCP_PII_DETECTION = "false";
+            const result = inspectInput("test_tool", {
+                data: "SSN: 123-45-6789",
+            });
+            expect(result.threats.some((t) => t.type === "pii")).toBe(false);
+        });
+    });
+
+    describe("secret redaction", () => {
+        beforeEach(() => {
+            clearSecrets();
+        });
+
+        it("registers and counts secrets", () => {
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+            expect(trackedSecretCount()).toBe(1);
+        });
+
+        it("ignores short values", () => {
+            registerSecret("short", "abc");
+            expect(trackedSecretCount()).toBe(0);
+        });
+
+        it("redacts known secret from non-secret tool output", () => {
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+            const result = inspectOutput("list_vaults", "Found key: sk_live_abc123def456");
+            expect(result.redacted).toBe("Found key: [REDACTED:api-keys/stripe]");
+            expect(result.threats.some((t) => t.type === "secret_leak")).toBe(true);
+        });
+
+        it("does not redact get_secret output", () => {
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+            const result = inspectOutput("get_secret", '{"value":"sk_live_abc123def456"}');
+            expect(result.redacted).toBeUndefined();
+        });
+
+        it("does not redact when feature is disabled", () => {
+            process.env.ONECLAW_MCP_REDACT_SECRETS = "false";
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+            const result = inspectOutput("list_vaults", "Found key: sk_live_abc123def456");
+            expect(result.redacted).toBeUndefined();
+        });
+
+        it("clears secrets", () => {
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+            clearSecrets();
+            expect(trackedSecretCount()).toBe(0);
+        });
+    });
+
+    describe("exfiltration protection", () => {
+        beforeEach(() => {
+            clearSecrets();
+            registerSecret("api-keys/stripe", "sk_live_abc123def456");
+        });
+
+        it("warns when secret appears in non-secret tool input (default mode)", () => {
+            delete process.env.ONECLAW_MCP_EXFIL_PROTECTION;
+            const result = inspectInput("share_secret", {
+                message: "Here is the key: sk_live_abc123def456",
+            });
+            expect(result.threats.some((t) => t.type === "secret_exfiltration")).toBe(true);
+            expect(result.passed).toBe(true);
+        });
+
+        it("blocks when exfil protection is set to block", () => {
+            process.env.ONECLAW_MCP_EXFIL_PROTECTION = "block";
+            const result = inspectInput("share_secret", {
+                message: "Here is the key: sk_live_abc123def456",
+            });
+            expect(result.passed).toBe(false);
+            expect(result.threats.some((t) => t.type === "secret_exfiltration")).toBe(true);
+        });
+
+        it("skips exfil check for secret tools (put_secret)", () => {
+            process.env.ONECLAW_MCP_EXFIL_PROTECTION = "block";
+            const result = inspectInput("put_secret", {
+                path: "api-keys/stripe",
+                value: "sk_live_abc123def456",
+            });
+            expect(result.threats.some((t) => t.type === "secret_exfiltration")).toBe(false);
+        });
+
+        it("skips exfil check when off", () => {
+            process.env.ONECLAW_MCP_EXFIL_PROTECTION = "off";
+            const result = inspectInput("share_secret", {
+                message: "Here is the key: sk_live_abc123def456",
+            });
+            expect(result.threats.some((t) => t.type === "secret_exfiltration")).toBe(false);
+        });
+    });
+
+    describe("feature flag helpers", () => {
+        it("isSecretRedactionEnabled defaults to true", () => {
+            delete process.env.ONECLAW_MCP_REDACT_SECRETS;
+            expect(isSecretRedactionEnabled()).toBe(true);
+        });
+
+        it("isSecretRedactionEnabled false when security disabled", () => {
+            process.env.ONECLAW_MCP_SECURITY_ENABLED = "false";
+            expect(isSecretRedactionEnabled()).toBe(false);
+        });
+
+        it("isPiiDetectionEnabled defaults to true", () => {
+            delete process.env.ONECLAW_MCP_PII_DETECTION;
+            expect(isPiiDetectionEnabled()).toBe(true);
+        });
+
+        it("getExfilProtectionMode defaults to warn", () => {
+            delete process.env.ONECLAW_MCP_EXFIL_PROTECTION;
+            expect(getExfilProtectionMode()).toBe("warn");
+        });
+
+        it("getExfilProtectionMode off when security disabled", () => {
+            process.env.ONECLAW_MCP_SECURITY_ENABLED = "false";
+            expect(getExfilProtectionMode()).toBe("off");
         });
     });
 });

@@ -151,3 +151,28 @@ pnpm inspect
 - **Token scoping.** Use the 1claw dashboard to create agent tokens with the minimum permissions needed. Restrict by vault, path prefix, or action.
 - **No hardcoded credentials.** All auth is via environment variables (stdio) or headers (httpStream).
 - **410/404 handling.** Expired or missing secrets surface clear error messages rather than raw HTTP codes.
+
+### Security inspection pipeline
+
+All tool calls pass through an inspection pipeline before execution and after results are returned. The pipeline runs by default and is configurable via environment variables.
+
+**Input inspection** (before tool execution):
+1. **Unicode normalization** — Strips zero-width characters, replaces Cyrillic/Greek homoglyphs.
+2. **Threat detection** — Command injection, encoding obfuscation, social engineering, network threats.
+3. **PII detection** — Emails, SSNs, credit card numbers, phone numbers, AWS keys, private key headers.
+4. **Exfiltration protection** — Blocks or warns when a previously fetched secret value appears in a non-secret tool's input (e.g., an agent trying to send a secret to an external URL).
+
+**Output inspection** (after tool execution):
+1. **Threat detection** — Same patterns as input.
+2. **PII detection** — Same patterns as input.
+3. **Secret redaction** — Tracks every secret value fetched via `get_secret` or `get_env_bundle`. If a known secret appears in the output of a non-secret tool (e.g., `list_vaults`, `grant_access`), the value is replaced with `[REDACTED:path]` before it reaches the LLM context window.
+
+### Security environment variables
+
+| Variable                           | Default  | Description                                                                                      |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `ONECLAW_MCP_SECURITY_ENABLED`     | `true`   | Master switch. Set to `false` to disable all inspection.                                         |
+| `ONECLAW_MCP_SANITIZATION_MODE`    | `block`  | `block` rejects critical/high threats; `surgical` normalizes Unicode but allows; `log_only` only logs. |
+| `ONECLAW_MCP_REDACT_SECRETS`       | `true`   | Redact known secret values from non-secret tool outputs. Requires security enabled.              |
+| `ONECLAW_MCP_PII_DETECTION`        | `true`   | Detect PII patterns (emails, SSNs, credit cards, etc.) in inputs and outputs.                    |
+| `ONECLAW_MCP_EXFIL_PROTECTION`     | `warn`   | `block` rejects tool inputs containing known secrets; `warn` logs but allows; `off` disables.    |
