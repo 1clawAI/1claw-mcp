@@ -5,6 +5,16 @@
     "type": "module",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./security": {
+            "types": "./dist/security/index.d.ts",
+            "default": "./dist/security/index.js"
+        }
+    },
     "bin": {
         "1claw-mcp": "dist/index.js"
     },
