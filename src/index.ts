@@ -15,6 +15,7 @@ import { grantAccessTool } from "./tools/grant_access.js";
 import { shareSecretTool } from "./tools/share_secret.js";
 import { simulateTransactionTool } from "./tools/simulate_transaction.js";
 import { submitTransactionTool } from "./tools/submit_transaction.js";
+import { inspectContentTool } from "./tools/inspect_content.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
 type SessionAuth = { token: string; vaultId: string };
@@ -23,11 +24,16 @@ const baseUrl = process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz";
 const transport = process.env.MCP_TRANSPORT ?? "stdio";
 const port = parseInt(process.env.PORT ?? "8080", 10);
 
+// When true, only security-inspection tools are registered (no vault credentials needed).
+const localOnly =
+    process.env.ONECLAW_LOCAL_ONLY === "true" ||
+    process.env.ONECLAW_LOCAL_ONLY === "1";
+
 // ── Shared client (stdio mode) ──────────────────────
 
 let sharedClient: OneClawClient | undefined;
 
-if (transport === "stdio") {
+if (transport === "stdio" && !localOnly) {
     const vaultId = process.env.ONECLAW_VAULT_ID;
     const agentId = process.env.ONECLAW_AGENT_ID;
     const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
@@ -54,7 +60,8 @@ if (transport === "stdio") {
             "Authentication required. Set one of:\n" +
                 "  ONECLAW_AGENT_API_KEY                      (simplest, auto-discovers agent ID and vault)\n" +
                 "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY   (explicit agent ID)\n" +
-                "  ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID     (static JWT, expires)",
+                "  ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID     (static JWT, expires)\n" +
+                "  ONECLAW_LOCAL_ONLY=true                    (security tools only, no vault needed)",
         );
         process.exit(1);
     }
@@ -209,20 +216,42 @@ function registerTool(factory: AnyToolFactory) {
     });
 }
 
-registerTool(listSecretsTool as AnyToolFactory);
-registerTool(getSecretTool as AnyToolFactory);
-registerTool(putSecretTool as AnyToolFactory);
-registerTool(deleteSecretTool as AnyToolFactory);
-registerTool(describeSecretTool as AnyToolFactory);
-registerTool(createVaultTool as AnyToolFactory);
-registerTool(listVaultsTool as AnyToolFactory);
-registerTool(grantAccessTool as AnyToolFactory);
-registerTool(shareSecretTool as AnyToolFactory);
-registerTool(simulateTransactionTool as AnyToolFactory);
-registerTool(submitTransactionTool as AnyToolFactory);
+// ── Security-only tools (always available, including local-only mode) ─
 
-// ── Stretch: rotate_and_store ────────────────────────
-// Registered via registerTool so input/output go through security inspection.
+{
+    const tool = inspectContentTool();
+    server.addTool({
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+        execute: async (
+            args: Record<string, unknown>,
+            context: { session?: SessionAuth; log: { info: (msg: string) => void } },
+        ) => {
+            return (tool.execute as (a: unknown, c: unknown) => Promise<string>)(args, context);
+        },
+    });
+}
+
+// ── Vault tools (require credentials — skipped in local-only mode) ─
+
+if (!localOnly) {
+    registerTool(listSecretsTool as AnyToolFactory);
+    registerTool(getSecretTool as AnyToolFactory);
+    registerTool(putSecretTool as AnyToolFactory);
+    registerTool(deleteSecretTool as AnyToolFactory);
+    registerTool(describeSecretTool as AnyToolFactory);
+    registerTool(createVaultTool as AnyToolFactory);
+    registerTool(listVaultsTool as AnyToolFactory);
+    registerTool(grantAccessTool as AnyToolFactory);
+    registerTool(shareSecretTool as AnyToolFactory);
+    registerTool(simulateTransactionTool as AnyToolFactory);
+    registerTool(submitTransactionTool as AnyToolFactory);
+}
+
+// ── Vault-dependent stretch tools + resource ─────────
+
+if (!localOnly) {
 
 const rotateAndStoreTool = (client: OneClawClient) => ({
     name: "rotate_and_store",
@@ -299,8 +328,11 @@ const getEnvBundleTool = (client: OneClawClient) => ({
 });
 registerTool(getEnvBundleTool as AnyToolFactory);
 
+} // end if (!localOnly) — stretch tools
+
 // ── Resource: browsable secret listing ───────────────
 
+if (!localOnly) {
 server.addResource({
     uri: "vault://secrets",
     name: "Vault secrets",
@@ -324,6 +356,7 @@ server.addResource({
         };
     },
 });
+} // end if (!localOnly) — resource
 
 // ── Start ────────────────────────────────────────────
 
@@ -332,7 +365,10 @@ if (transport === "httpStream") {
         transportType: "httpStream",
         httpStream: { port, host: "0.0.0.0" },
     });
-    console.log(`1claw MCP server listening on port ${port} (HTTP streaming)`);
+    console.log(`1claw MCP server listening on port ${port} (HTTP streaming)${localOnly ? " [local-only mode]" : ""}`);
 } else {
     server.start({ transportType: "stdio" });
+    if (localOnly) {
+        console.error("1claw MCP server started in local-only mode (security tools only, no vault credentials required)");
+    }
 }
