@@ -1,6 +1,6 @@
 {
     "name": "@1claw/mcp",
-    "version": "0.14.1",
+    "version": "0.15.0",
     "description": "MCP server for the 1claw secrets vault — lets AI agents fetch, store, and manage secrets at runtime",
     "type": "module",
     "main": "dist/index.js",
@@ -53,7 +53,7 @@
         "url": "https://github.com/1clawAI/1claw-mcp.git"
     },
     "homepage": "https://1claw.xyz",
-    "license": "PolyForm-Noncommercial-1.0.0",
+    "license": "MIT",
     "dependencies": {
         "fastmcp": "^3.33.0",
         "zod": "^3.24.0"
