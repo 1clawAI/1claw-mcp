@@ -109,6 +109,22 @@ export interface TransactionResponse {
   simulation_status?: string;
 }
 
+export interface SignTransactionResponse {
+  signed_tx: string;
+  tx_hash: string;
+  from: string;
+  to: string;
+  chain: string;
+  chain_id: number;
+  nonce: number;
+  value_wei: string;
+  status: "sign_only";
+  simulation_id?: string;
+  simulation_status?: string;
+  max_fee_per_gas?: string;
+  max_priority_fee_per_gas?: string;
+}
+
 export interface ApiErrorBody {
   type: string;
   title: string;

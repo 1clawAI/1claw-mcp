@@ -9,6 +9,7 @@ import type {
     SimulationResponse,
     BundleSimulationResponse,
     TransactionResponse,
+    SignTransactionResponse,
     ApiErrorBody,
 } from "./types.js";
 
@@ -345,6 +346,49 @@ export class OneClawClient {
                 body: JSON.stringify(tx),
                 headers: { "Idempotency-Key": key },
             },
+        );
+    }
+
+    async signTransaction(
+        agentId: string,
+        tx: {
+            to: string;
+            value: string;
+            chain: string;
+            data?: string;
+            signing_key_path?: string;
+            nonce?: number;
+            gas_price?: string;
+            gas_limit?: number;
+            max_fee_per_gas?: string;
+            max_priority_fee_per_gas?: string;
+            simulate_first?: boolean;
+        },
+    ): Promise<SignTransactionResponse> {
+        return this.request<SignTransactionResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}/transactions/sign`,
+            { method: "POST", body: JSON.stringify(tx) },
+        );
+    }
+
+    async listTransactions(
+        agentId: string,
+        opts?: { include_signed_tx?: boolean },
+    ): Promise<{ transactions: TransactionResponse[] }> {
+        const qs = opts?.include_signed_tx ? "?include_signed_tx=true" : "";
+        return this.request<{ transactions: TransactionResponse[] }>(
+            `${this.baseUrl}/v1/agents/${agentId}/transactions${qs}`,
+        );
+    }
+
+    async getTransaction(
+        agentId: string,
+        txId: string,
+        opts?: { include_signed_tx?: boolean },
+    ): Promise<TransactionResponse> {
+        const qs = opts?.include_signed_tx ? "?include_signed_tx=true" : "";
+        return this.request<TransactionResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}/transactions/${txId}${qs}`,
         );
     }
 }

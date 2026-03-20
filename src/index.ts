@@ -15,6 +15,9 @@ import { grantAccessTool } from "./tools/grant_access.js";
 import { shareSecretTool } from "./tools/share_secret.js";
 import { simulateTransactionTool } from "./tools/simulate_transaction.js";
 import { submitTransactionTool } from "./tools/submit_transaction.js";
+import { signTransactionTool } from "./tools/sign_transaction.js";
+import { listTransactionsTool } from "./tools/list_transactions.js";
+import { getTransactionTool } from "./tools/get_transaction.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
@@ -247,6 +250,9 @@ if (!localOnly) {
     registerTool(shareSecretTool as AnyToolFactory);
     registerTool(simulateTransactionTool as AnyToolFactory);
     registerTool(submitTransactionTool as AnyToolFactory);
+    registerTool(signTransactionTool as AnyToolFactory);
+    registerTool(listTransactionsTool as AnyToolFactory);
+    registerTool(getTransactionTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
