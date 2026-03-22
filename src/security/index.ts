@@ -47,7 +47,13 @@ const NETWORK_PATTERNS = [
     { name: "ngrok", pattern: /(?:ngrok\.io|ngrok\.app)/i, severity: "high" as const },
     { name: "pastebin", pattern: /pastebin\.com/i, severity: "high" as const },
     { name: "ip_url", pattern: /https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/, severity: "medium" as const },
-    { name: "data_exfil", pattern: /(?:curl|wget|nc)\s+(?:-[a-zA-Z]*\s+)*https?:\/\//i, severity: "critical" as const },
+    // Allow HTTP verbs after flags (e.g. curl -X POST https://...) — otherwise "POST" breaks the URL match
+    {
+        name: "data_exfil",
+        pattern:
+            /(?:curl|wget|nc)\s+(?:(?:-[a-zA-Z]*\s+)|(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+)*https?:\/\//i,
+        severity: "critical" as const,
+    },
 ];
 
 const PII_PATTERNS = [
