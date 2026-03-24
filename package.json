@@ -1,6 +1,6 @@
 {
     "name": "@1claw/mcp",
-    "version": "0.16.6",
+    "version": "0.16.7",
     "description": "MCP server for the 1claw secrets vault — lets AI agents fetch, store, and manage secrets at runtime",
     "type": "module",
     "main": "dist/index.js",
@@ -56,6 +56,7 @@
     "license": "MIT",
     "dependencies": {
         "@hono/node-server": "^1.19.10",
+        "express-rate-limit": "^8.2.2",
         "fastmcp": "^3.33.0",
         "glob": "^11.1.0",
         "hono": "^4.12.4",
