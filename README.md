@@ -4,6 +4,8 @@ An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time
 
 **Local-only mode**: Run without vault credentials for security-only tools (e.g., `inspect_content`). Ideal for users running local models (Ollama, LM Studio, llama.cpp) who want prompt injection and threat detection without a 1claw account.
 
+**API contract:** Vault-facing tools use the REST API described in [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through **Shroud** is not MCP — agents call `https://shroud.1claw.xyz` directly with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`).
+
 ## Transport Modes
 
 The server supports two transport modes:
