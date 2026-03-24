@@ -6,3 +6,6 @@ CVE-2026-24842
 CVE-2026-26960
 CVE-2026-29786
 CVE-2026-31802
+# Debian bookworm in node:22-slim — no fixed packages yet / distro will_not_fix
+CVE-2026-0861
+CVE-2023-45853
