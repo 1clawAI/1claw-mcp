@@ -14,6 +14,10 @@ RUN npm prune --production
 # ── Runtime ───────────────────────────────────────────
 FROM node:22-slim
 
+# App runs `node` only; drop bundled npm so Trivy does not flag npm's transitive glob/minimatch tree.
+RUN rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx
+
 WORKDIR /app
 ENV NODE_ENV=production
 
