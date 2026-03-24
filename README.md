@@ -32,7 +32,7 @@ pnpm run build
 | `ONECLAW_AGENT_API_KEY`   | stdio*         | —                       | Agent API key (`ocv_...`). Server exchanges this for a JWT and auto-refreshes. |
 | `ONECLAW_AGENT_TOKEN`     | stdio*         | —                       | Static Bearer JWT (alternative to ID+key; expires in ~1 h).                |
 | `ONECLAW_VAULT_ID`        | stdio only     | —                       | UUID of the vault to operate on.                                           |
-| `ONECLAW_BASE_URL`        | No             | `https://api.1claw.xyz` | API base URL (override for self-hosted).                                    |
+| `ONECLAW_BASE_URL`        | No             | `https://api.1claw.xyz` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.xyz` or `https://intents.1claw.xyz`) if your deployment routes signing there. Self-hosted: your Vault/Shroud URL. |
 | `MCP_TRANSPORT`           | No             | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No             | `8080`                  | HTTP port (httpStream mode only).                                          |
 
@@ -55,6 +55,9 @@ pnpm run build
 | `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
 | `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
 | `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast. Auto-generates an `Idempotency-Key` header for replay protection. |
+| `sign_transaction`     | Sign-only (no broadcast); returns `signed_tx` for client-side `eth_sendRawTransaction`. |
+| `list_transactions`    | List transaction intents for the agent.                                      |
+| `get_transaction`      | Get one transaction by id (optional `include_signed_tx`).                    |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 
 ## Resources

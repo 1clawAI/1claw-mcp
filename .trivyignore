@@ -1,0 +1,8 @@
+# MCP image (node:22-slim) — npm tar transitive CVEs until base image / npm advisory resolution.
+# Revisit on Node image bump. Vault scan uses vault/.trivyignore; MCP needs its own file (CI path).
+CVE-2026-23745
+CVE-2026-23950
+CVE-2026-24842
+CVE-2026-26960
+CVE-2026-29786
+CVE-2026-31802
