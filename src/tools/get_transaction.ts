@@ -20,7 +20,9 @@ export function getTransactionTool(client: OneClawClient) {
     ) => {
       const agentId = client.agentId;
       if (!agentId) {
-        throw new UserError("get_transaction requires agent authentication (ONECLAW_AGENT_ID).");
+        throw new UserError(
+          "get_transaction requires agent authentication (ONECLAW_AGENT_API_KEY, or ONECLAW_AGENT_ID + key; agent ID is resolved from token exchange when omitted).",
+        );
       }
 
       try {

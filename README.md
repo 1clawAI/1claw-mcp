@@ -12,7 +12,7 @@ The server supports two transport modes:
 
 | Mode                | Use case                       | Auth                                                                 |
 | ------------------- | ------------------------------ | -------------------------------------------------------------------- |
-| **stdio** (default) | Local — Claude Desktop, Cursor | Env: `ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY` (recommended) or `ONECLAW_AGENT_TOKEN`; plus `ONECLAW_VAULT_ID` |
+| **stdio** (default) | Local — Claude Desktop, Cursor | Env: `ONECLAW_AGENT_API_KEY` (recommended; auto-discovers agent + vault) or `ONECLAW_AGENT_ID` + key; or `ONECLAW_AGENT_TOKEN` + `ONECLAW_VAULT_ID` |
 | **httpStream**      | Hosted at `mcp.1claw.xyz`      | Per-request headers: `Authorization: Bearer <token>`, `X-Vault-ID`   |
 
 Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
@@ -56,6 +56,7 @@ pnpm run build
 | `grant_access`         | Share a vault with a user or agent (own vaults only)                         |
 | `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
 | `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
+| `simulate_bundle`      | Simulate an ordered sequence of transactions (Tenderly bundle) without signing |
 | `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast. Auto-generates an `Idempotency-Key` header for replay protection. |
 | `sign_transaction`     | Sign-only (no broadcast); returns `signed_tx` for client-side `eth_sendRawTransaction`. |
 | `list_transactions`    | List transaction intents for the agent.                                      |

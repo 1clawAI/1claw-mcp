@@ -14,6 +14,7 @@ import { listVaultsTool } from "./tools/list_vaults.js";
 import { grantAccessTool } from "./tools/grant_access.js";
 import { shareSecretTool } from "./tools/share_secret.js";
 import { simulateTransactionTool } from "./tools/simulate_transaction.js";
+import { simulateBundleTool } from "./tools/simulate_bundle.js";
 import { submitTransactionTool } from "./tools/submit_transaction.js";
 import { signTransactionTool } from "./tools/sign_transaction.js";
 import { listTransactionsTool } from "./tools/list_transactions.js";
@@ -249,6 +250,7 @@ if (!localOnly) {
     registerTool(grantAccessTool as AnyToolFactory);
     registerTool(shareSecretTool as AnyToolFactory);
     registerTool(simulateTransactionTool as AnyToolFactory);
+    registerTool(simulateBundleTool as AnyToolFactory);
     registerTool(submitTransactionTool as AnyToolFactory);
     registerTool(signTransactionTool as AnyToolFactory);
     registerTool(listTransactionsTool as AnyToolFactory);
