@@ -224,6 +224,22 @@ export class OneClawClient {
         );
     }
 
+    async listVersions(path: string): Promise<{ versions: SecretMetadata[] }> {
+        return this.request<{ versions: SecretMetadata[] }>(
+            await this.resolveVaultUrl(`/secret-versions/${encodePath(path)}`),
+        );
+    }
+
+    async rotateGenerate(
+        path: string,
+        opts?: { length?: number; charset?: string; type?: string },
+    ): Promise<SecretMetadata> {
+        return this.request<SecretMetadata>(
+            await this.resolveVaultUrl(`/secret-rotate/${encodePath(path)}`),
+            { method: "POST", body: JSON.stringify(opts ?? {}) },
+        );
+    }
+
     async deleteSecret(path: string): Promise<void> {
         await this.request<void>(
             await this.resolveVaultUrl(`/secrets/${encodePath(path)}`),
