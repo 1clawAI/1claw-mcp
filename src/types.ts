@@ -20,6 +20,7 @@ export interface SecretMetadata {
   created_at: string;
   expires_at: string | null;
   client_share?: string;
+  is_disabled?: boolean;
 }
 
 export interface SecretWithValue extends SecretMetadata {

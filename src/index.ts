@@ -323,7 +323,7 @@ const listVersionsTool = (client: OneClawClient) => ({
         const versions = result.versions ?? [];
         if (versions.length === 0) return `No versions found for '${args.path}'.`;
         const lines = versions.map(
-            (v) => `v${v.version} (${v.created_at})${(v as Record<string, unknown>).is_disabled ? " [disabled]" : ""}`,
+            (v) => `v${v.version} (${v.created_at})${v.is_disabled ? " [disabled]" : ""}`,
         );
         return `Versions for '${args.path}' (${versions.length} total):\n${lines.join("\n")}`;
     },
