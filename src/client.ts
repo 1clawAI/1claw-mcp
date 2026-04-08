@@ -197,9 +197,14 @@ export class OneClawClient {
         return this.request<SecretListResponse>(await this.resolveVaultUrl("/secrets"));
     }
 
-    async getSecret(path: string): Promise<SecretWithValue> {
+    async getSecret(path: string, clientShare?: string): Promise<SecretWithValue> {
+        const extraHeaders: Record<string, string> = {};
+        if (clientShare) {
+            extraHeaders["x-client-share"] = clientShare;
+        }
         return this.request<SecretWithValue>(
             await this.resolveVaultUrl(`/secrets/${encodePath(path)}`),
+            Object.keys(extraHeaders).length > 0 ? { headers: extraHeaders } : undefined,
         );
     }
 

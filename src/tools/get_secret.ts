@@ -12,10 +12,14 @@ export function getSecretTool(client: OneClawClient) {
         .string()
         .min(1)
         .describe("Secret path, e.g. 'api-keys/stripe' or 'passwords/db-prod'"),
+      client_share: z
+        .string()
+        .optional()
+        .describe("Base64-encoded client share for 2-of-2 MPC vaults. Required when the vault uses client custody."),
     }),
-    execute: async (args: { path: string }, { log }: { log: { info: (msg: string) => void } }) => {
+    execute: async (args: { path: string; client_share?: string }, { log }: { log: { info: (msg: string) => void } }) => {
       try {
-        const secret = await client.getSecret(args.path);
+        const secret = await client.getSecret(args.path, args.client_share);
         log.info(`secret accessed: ${args.path}`);
         return JSON.stringify({
           path: secret.path,

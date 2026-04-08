@@ -19,6 +19,7 @@ export interface SecretMetadata {
   metadata: Record<string, unknown>;
   created_at: string;
   expires_at: string | null;
+  client_share?: string;
 }
 
 export interface SecretWithValue extends SecretMetadata {
@@ -36,6 +37,9 @@ export interface VaultResponse {
   created_by: string;
   created_by_type: string;
   created_at: string;
+  mpc_custody?: string;
+  mpc_threshold?: number;
+  mpc_providers?: string[];
 }
 
 export interface VaultListResponse {

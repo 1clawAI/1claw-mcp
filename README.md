@@ -45,8 +45,8 @@ pnpm run build
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
 | `list_secrets`         | List all secrets (metadata only — never values)                              |
-| `get_secret`           | Fetch the decrypted value of a secret by path                                |
-| `put_secret`           | Create or update a secret (creates a new version)                            |
+| `get_secret`           | Fetch the decrypted value of a secret by path. Accepts optional `client_share` for MPC vaults. |
+| `put_secret`           | Create or update a secret (creates a new version). Response includes `client_share` when the vault has MPC enabled. |
 | `delete_secret`        | Soft-delete a secret at a path                                               |
 | `describe_secret`      | Get metadata without fetching the value                                      |
 | `rotate_and_store`     | Store a new value for an existing secret and return the version              |

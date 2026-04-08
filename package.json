@@ -1,6 +1,6 @@
 {
     "name": "@1claw/mcp",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "description": "MCP server for the 1claw secrets vault — lets AI agents fetch, store, and manage secrets at runtime",
     "type": "module",
     "main": "dist/index.js",
@@ -9,10 +9,6 @@
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
-        },
-        "./security": {
-            "types": "./dist/security/index.d.ts",
-            "default": "./dist/security/index.js"
         }
     },
     "bin": {

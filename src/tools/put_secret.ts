@@ -53,7 +53,14 @@ export function putSecretTool(client: OneClawClient) {
 
       log.info(`secret stored: ${args.path}`);
 
-      return `Secret stored at '${args.path}' (version ${result.version}, type: ${result.type}).`;
+      let msg = `Secret stored at '${args.path}' (version ${result.version}, type: ${result.type}).`;
+      if (result.client_share) {
+        msg +=
+          `\n\n⚠️ CLIENT SHARE (2-of-2 MPC vault): ${result.client_share}\n` +
+          `You MUST save this share. It is required to read this secret (pass it in the X-Client-Share header). ` +
+          `1claw cannot recover it.`;
+      }
+      return msg;
     },
   };
 }
