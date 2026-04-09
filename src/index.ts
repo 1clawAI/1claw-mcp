@@ -33,39 +33,50 @@ const localOnly =
     process.env.ONECLAW_LOCAL_ONLY === "true" ||
     process.env.ONECLAW_LOCAL_ONLY === "1";
 
-// ── Shared client (stdio mode) ──────────────────────
-
-let sharedClient: OneClawClient | undefined;
-
-if (transport === "stdio" && !localOnly) {
+/** Build client from current process.env (stdio). Re-read each invocation so vault ID is not frozen at startup (C-MPC-VAULT). */
+function createStdioClientFromEnv(): OneClawClient {
     const vaultId = process.env.ONECLAW_VAULT_ID;
     const agentId = process.env.ONECLAW_AGENT_ID;
     const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
     const token = process.env.ONECLAW_AGENT_TOKEN;
 
     if (agentApiKey) {
-        // Key-only auth: agent_id and vault_id are auto-discovered from the token exchange
-        sharedClient = new OneClawClient({
+        return new OneClawClient({
             baseUrl,
             agentId: agentId || undefined,
             apiKey: agentApiKey,
             vaultId: vaultId || undefined,
         });
-    } else if (token) {
+    }
+    if (token) {
         if (!vaultId) {
-            console.error(
+            throw new UserError(
                 "ONECLAW_VAULT_ID is required when using ONECLAW_AGENT_TOKEN (static JWT).",
             );
-            process.exit(1);
         }
-        sharedClient = new OneClawClient({ baseUrl, token, vaultId });
-    } else {
+        return new OneClawClient({ baseUrl, token, vaultId });
+    }
+    throw new UserError(
+        "Authentication required. Set ONECLAW_AGENT_API_KEY or ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID.",
+    );
+}
+
+if (transport === "stdio" && !localOnly) {
+    const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
+    const token = process.env.ONECLAW_AGENT_TOKEN;
+    if (!agentApiKey && !token) {
         console.error(
             "Authentication required. Set one of:\n" +
                 "  ONECLAW_AGENT_API_KEY                      (simplest, auto-discovers agent ID and vault)\n" +
                 "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY   (explicit agent ID)\n" +
                 "  ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID     (static JWT, expires)\n" +
                 "  ONECLAW_LOCAL_ONLY=true                    (security tools only, no vault needed)",
+        );
+        process.exit(1);
+    }
+    if (!agentApiKey && token && !process.env.ONECLAW_VAULT_ID) {
+        console.error(
+            "ONECLAW_VAULT_ID is required when using ONECLAW_AGENT_TOKEN (static JWT).",
         );
         process.exit(1);
     }
@@ -79,7 +90,9 @@ function resolveClient(session?: SessionAuth): OneClawClient {
             vaultId: session.vaultId,
         });
     }
-    if (sharedClient) return sharedClient;
+    if (transport === "stdio" && !localOnly) {
+        return createStdioClientFromEnv();
+    }
     throw new UserError(
         "Not authenticated. Provide Authorization and X-Vault-ID headers.",
     );
@@ -153,7 +166,7 @@ type AnyToolFactory = (client: OneClawClient) => {
 
 function registerTool(factory: AnyToolFactory) {
     const proto = factory(
-        sharedClient ?? new OneClawClient({ baseUrl, token: "", vaultId: "" }),
+        new OneClawClient({ baseUrl, token: "", vaultId: "" }),
     );
     server.addTool({
         name: proto.name,
