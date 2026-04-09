@@ -17,6 +17,8 @@ The server supports two transport modes:
 
 Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
+**stdio and environment:** The server does **not** cache a single vault client for the whole process. Each tool invocation builds a `OneClawClient` from the **current** `process.env` (`ONECLAW_AGENT_API_KEY`, `ONECLAW_VAULT_ID`, etc.), so changing env vars (or vault binding) takes effect on the next call without restarting the MCP process.
+
 ## Installation (local / stdio)
 
 ```bash
