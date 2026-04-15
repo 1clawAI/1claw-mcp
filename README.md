@@ -52,6 +52,8 @@ pnpm run build
 | `delete_secret`        | Soft-delete a secret at a path                                               |
 | `describe_secret`      | Get metadata without fetching the value                                      |
 | `rotate_and_store`     | Store a new value for an existing secret and return the version              |
+| `rotate_generate`      | Server-side secret rotation with generated value (length, charset configurable) |
+| `list_versions`        | List all versions of a secret (version numbers, dates, disabled status)      |
 | `get_env_bundle`       | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
 | `create_vault`         | Create a new vault (auto-shared with the agent's human creator)              |
 | `list_vaults`          | List all vaults the agent can access (own + shared)                          |
