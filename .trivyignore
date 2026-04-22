@@ -9,3 +9,15 @@ CVE-2026-31802
 # Debian bookworm in node:22-slim — no fixed packages yet / distro will_not_fix
 CVE-2026-0861
 CVE-2023-45853
+
+# nghttp2 HTTP/2 DoS (libnghttp2-14) — unfixed in bookworm. MCP server uses HTTP/1.1
+# upstream; fronted by Cloud Run which terminates HTTP/2 safely.
+CVE-2026-27135
+
+# systemd arbitrary code execution (libsystemd0, libudev1) — unfixed in bookworm.
+# Container has no systemd init; libs linked only transitively.
+CVE-2026-29111
+
+# ncurses buffer overflow via terminal escape sequences — unfixed in bookworm.
+# MCP runs headless with no TTY.
+CVE-2025-69720
