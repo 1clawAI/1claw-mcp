@@ -1,23 +1,33 @@
-# MCP image (node:22-slim) — npm tar transitive CVEs until base image / npm advisory resolution.
-# Revisit on Node image bump. Vault scan uses vault/.trivyignore; MCP needs its own file (CI path).
+# MCP image (node:22-slim) — Debian bookworm base + npm transitive CVEs.
+# Revisit on each Node image bump. Tracked for quarterly review in the main
+# repo's audits/MASTER-SECURITY-ISSUES-REVIEW.md under "Dockerfile base image
+# CVE ignores (vault + mcp)".
+
+# npm tar / tar-fs / transitive CVEs — pending fixed releases from upstream.
 CVE-2026-23745
 CVE-2026-23950
 CVE-2026-24842
 CVE-2026-26960
 CVE-2026-29786
 CVE-2026-31802
-# Debian bookworm in node:22-slim — no fixed packages yet / distro will_not_fix
+
+# glibc memalign — no bookworm security update; pulled transitively.
 CVE-2026-0861
+
+# zlib — Debian "will_not_fix" for minizip path; MCP binary does not use the
+# affected minizip API.
 CVE-2023-45853
 
-# nghttp2 HTTP/2 DoS (libnghttp2-14) — unfixed in bookworm. MCP server uses HTTP/1.1
-# upstream; fronted by Cloud Run which terminates HTTP/2 safely.
+# nghttp2 HTTP/2 DoS via malformed frames — unfixed in bookworm. Ingress path
+# is not exposed: Cloud Run terminates HTTP/2 at the frontend. Outbound path
+# only reaches api.1claw.xyz (our own Vault) over HTTP/1.1. Residual risk:
+# low. Accepted until Debian patches or we migrate the MCP image base.
 CVE-2026-27135
 
-# systemd arbitrary code execution (libsystemd0, libudev1) — unfixed in bookworm.
-# Container has no systemd init; libs linked only transitively.
+# systemd libsystemd0 / libudev1 ACE — unfixed in bookworm. Not reachable:
+# container has no systemd init; libs linked only transitively.
 CVE-2026-29111
 
 # ncurses buffer overflow via terminal escape sequences — unfixed in bookworm.
-# MCP runs headless with no TTY.
+# MCP runs headless with no TTY; ncurses linked transitively only.
 CVE-2025-69720
