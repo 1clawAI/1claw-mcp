@@ -22,7 +22,9 @@ import { getTransactionTool } from "./tools/get_transaction.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
-type SessionAuth = { token: string; vaultId: string };
+type SessionAuth =
+    | { token: string; vaultId: string }
+    | { agentApiKey: string; agentId?: string; vaultId?: string };
 
 const baseUrl = process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz";
 const transport = process.env.MCP_TRANSPORT ?? "stdio";
@@ -84,6 +86,14 @@ if (transport === "stdio" && !localOnly) {
 
 function resolveClient(session?: SessionAuth): OneClawClient {
     if (session) {
+        if ("agentApiKey" in session) {
+            return new OneClawClient({
+                baseUrl,
+                agentId: session.agentId,
+                apiKey: session.agentApiKey,
+                vaultId: session.vaultId,
+            });
+        }
         return new OneClawClient({
             baseUrl,
             token: session.token,
@@ -94,7 +104,7 @@ function resolveClient(session?: SessionAuth): OneClawClient {
         return createStdioClientFromEnv();
     }
     throw new UserError(
-        "Not authenticated. Provide Authorization and X-Vault-ID headers.",
+        "Not authenticated. Provide Authorization header (Bearer <ocv_api_key> or Bearer <jwt>).",
     );
 }
 
@@ -113,20 +123,73 @@ if (transport === "httpStream") {
         request: http.IncomingMessage,
     ): Promise<SessionAuth> => {
         const auth = (request.headers["authorization"] ?? "") as string;
-        const token = auth.replace(/^Bearer\s+/i, "").trim();
-        const vaultId = (request.headers["x-vault-id"] ?? "") as string;
+        const credential = auth.replace(/^Bearer\s+/i, "").trim();
+        const vaultIdHeader = (request.headers["x-vault-id"] ?? "") as string;
+        const agentIdHeader = (request.headers["x-agent-id"] ?? "") as string;
 
-        if (!token)
+        if (!credential)
             throw new Error(
-                "Missing Authorization header (Bearer <agent-token>)",
+                "Missing Authorization header (Bearer <ocv_api_key> or Bearer <jwt>)",
             );
-        if (!vaultId) throw new Error("Missing X-Vault-ID header");
+
+        // ── API key path: exchange for JWT, auto-discover vault ──
+        if (credential.startsWith("ocv_")) {
+            const body: Record<string, string> = { api_key: credential };
+            if (agentIdHeader) body.agent_id = agentIdHeader;
+
+            const tokenRes = await fetch(`${baseUrl}/v1/auth/agent-token`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            if (!tokenRes.ok) {
+                const status = tokenRes.status;
+                let detail = `HTTP ${status}`;
+                try {
+                    const errBody = await tokenRes.json() as { detail?: string };
+                    if (errBody.detail) detail = errBody.detail;
+                } catch { /* use default */ }
+                throw new Error(`Agent API key auth failed: ${detail}`);
+            }
+
+            const data = await tokenRes.json() as {
+                access_token: string;
+                agent_id?: string;
+                vault_ids?: string[];
+            };
+
+            const resolvedVaultId =
+                vaultIdHeader ||
+                (data.vault_ids && data.vault_ids.length === 1
+                    ? data.vault_ids[0]
+                    : "");
+
+            if (resolvedVaultId && data.access_token) {
+                const checkRes = await fetch(
+                    `${baseUrl}/v1/vaults/${resolvedVaultId}`,
+                    { headers: { Authorization: `Bearer ${data.access_token}` } },
+                );
+                if (!checkRes.ok && checkRes.status === 404) {
+                    throw new Error(`Vault ${resolvedVaultId} not found`);
+                }
+            }
+
+            return {
+                agentApiKey: credential,
+                agentId: data.agent_id || agentIdHeader || undefined,
+                vaultId: resolvedVaultId || undefined,
+            };
+        }
+
+        // ── JWT path (legacy): static token, requires X-Vault-ID ──
+        if (!vaultIdHeader)
+            throw new Error(
+                "Missing X-Vault-ID header (required when using a JWT; use an ocv_ API key instead for auto-discovery)",
+            );
 
         // H-9: Validate token against the vault API (not just pass-through).
-        // Calls GET /v1/vaults to confirm the token is valid. An invalid or
-        // expired token will fail with 401, rejecting the session early.
-        const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+        const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultIdHeader}`, {
+            headers: { Authorization: `Bearer ${credential}` },
         });
         if (!validationRes.ok) {
             const status = validationRes.status;
@@ -134,20 +197,19 @@ if (transport === "httpStream") {
                 throw new Error("Invalid or expired Bearer token");
             }
             if (status === 403) {
-                // H-10: The token's vault_ids claim doesn't include this vault
                 throw new Error(
                     "X-Vault-ID is not accessible with this token (vault binding mismatch)",
                 );
             }
             if (status === 404) {
-                throw new Error(`Vault ${vaultId} not found`);
+                throw new Error(`Vault ${vaultIdHeader} not found`);
             }
             throw new Error(
                 `Token validation failed (HTTP ${status})`,
             );
         }
 
-        return { token, vaultId };
+        return { token: credential, vaultId: vaultIdHeader };
     };
 }
 
