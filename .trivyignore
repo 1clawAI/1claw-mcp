@@ -31,3 +31,22 @@ CVE-2026-29111
 # ncurses buffer overflow via terminal escape sequences — unfixed in bookworm.
 # MCP runs headless with no TTY; ncurses linked transitively only.
 CVE-2025-69720
+
+# libcap2 privilege escalation via TOCTOU race in cap_set_file() — unfixed in
+# bookworm (libcap2 1:2.66-4+deb12u2+b2). The vulnerable codepath sets file
+# capabilities. MCP container runs only the Node fastmcp server; never invokes
+# cap_set_file (no setcap, no privilege drops). Library is pulled transitively
+# and never called. Accepted.
+CVE-2026-4878
+
+# libgcrypt20 DoS / buffer overflow via crafted ECDH ciphertext — unfixed in
+# bookworm (libgcrypt20 1.10.1-3). MCP's outbound TLS goes through Node's
+# OpenSSL; libgcrypt is not used. Pulled transitively (gnutls / libldap chain)
+# and the affected ECDH function is never called. Accepted.
+CVE-2026-41989
+
+# gnutls DTLS zero-length fragment DoS — unfixed in bookworm (libgnutls30
+# 3.7.9-2+deb12u6). MCP does not use DTLS or TLS via gnutls; all TLS goes
+# through Node's bundled OpenSSL. libgnutls pulled transitively, unreachable.
+# DoS-only, no RCE. Accepted.
+CVE-2026-33845
