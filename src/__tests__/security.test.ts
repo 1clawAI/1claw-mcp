@@ -353,13 +353,13 @@ describe("Security Module", () => {
             registerSecret("api-keys/stripe", "sk_live_abc123def456");
         });
 
-        it("warns when secret appears in non-secret tool input (default mode)", () => {
+        it("blocks when secret appears in non-secret tool input (default mode)", () => {
             delete process.env.ONECLAW_MCP_EXFIL_PROTECTION;
             const result = inspectInput("share_secret", {
                 message: "Here is the key: sk_live_abc123def456",
             });
             expect(result.threats.some((t) => t.type === "secret_exfiltration")).toBe(true);
-            expect(result.passed).toBe(true);
+            expect(result.passed).toBe(false);
         });
 
         it("blocks when exfil protection is set to block", () => {
@@ -471,9 +471,9 @@ describe("Security Module", () => {
             expect(isPiiDetectionEnabled()).toBe(true);
         });
 
-        it("getExfilProtectionMode defaults to warn", () => {
+        it("getExfilProtectionMode defaults to block", () => {
             delete process.env.ONECLAW_MCP_EXFIL_PROTECTION;
-            expect(getExfilProtectionMode()).toBe("warn");
+            expect(getExfilProtectionMode()).toBe("block");
         });
 
         it("getExfilProtectionMode off when security disabled", () => {

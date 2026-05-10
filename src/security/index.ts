@@ -135,8 +135,8 @@ export function isPiiDetectionEnabled(): boolean {
 export function getExfilProtectionMode(): "block" | "warn" | "off" {
     if (!isSecurityEnabled()) return "off";
     const mode = process.env.ONECLAW_MCP_EXFIL_PROTECTION;
-    if (mode === "block" || mode === "off") return mode;
-    return "warn";
+    if (mode === "warn" || mode === "off") return mode;
+    return "block";
 }
 
 export function getSanitizationMode(): "block" | "surgical" | "log_only" {
