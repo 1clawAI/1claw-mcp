@@ -65,6 +65,10 @@ pnpm run build
 | `sign_transaction`     | Sign-only (no broadcast); returns `signed_tx` for client-side `eth_sendRawTransaction`. |
 | `list_transactions`    | List transaction intents for the agent.                                      |
 | `get_transaction`      | Get one transaction by id (optional `include_signed_tx`).                    |
+| `provision_signing_key`| Generate a multi-chain signing key for an agent. Returns public key, address, and metadata. Private key stored securely in vault. |
+| `list_signing_keys`    | List all signing keys for an agent across all chains.                        |
+| `sign_message`         | Sign a message using EIP-191 personal_sign. Returns signature and signer address. |
+| `sign_typed_data`      | Sign EIP-712 typed structured data. Returns signature, typed data hash, and signer address. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 
 ## Resources
