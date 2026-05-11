@@ -19,6 +19,10 @@ import { submitTransactionTool } from "./tools/submit_transaction.js";
 import { signTransactionTool } from "./tools/sign_transaction.js";
 import { listTransactionsTool } from "./tools/list_transactions.js";
 import { getTransactionTool } from "./tools/get_transaction.js";
+import { provisionSigningKeyTool } from "./tools/provision_signing_key.js";
+import { listSigningKeysTool } from "./tools/list_signing_keys.js";
+import { signMessageTool } from "./tools/sign_message.js";
+import { signTypedDataTool } from "./tools/sign_typed_data.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
@@ -330,6 +334,10 @@ if (!localOnly) {
     registerTool(signTransactionTool as AnyToolFactory);
     registerTool(listTransactionsTool as AnyToolFactory);
     registerTool(getTransactionTool as AnyToolFactory);
+    registerTool(provisionSigningKeyTool as AnyToolFactory);
+    registerTool(listSigningKeysTool as AnyToolFactory);
+    registerTool(signMessageTool as AnyToolFactory);
+    registerTool(signTypedDataTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────

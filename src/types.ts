@@ -130,6 +130,35 @@ export interface SignTransactionResponse {
   max_priority_fee_per_gas?: string;
 }
 
+export interface SigningKeyResponse {
+  id: string;
+  agent_id: string;
+  chain: string;
+  curve: string;
+  public_key: string;
+  address?: string;
+  key_version: number;
+  is_active: boolean;
+  created_at: string;
+  rotated_at?: string;
+}
+
+export interface SigningKeyListResponse {
+  keys: SigningKeyResponse[];
+}
+
+export interface SignIntentResponse {
+  intent_type: string;
+  chain: string;
+  from: string;
+  signature?: string;
+  signed_tx?: string;
+  tx_hash?: string;
+  message_hash?: string;
+  typed_data_hash?: string;
+  tx_type?: number;
+}
+
 export interface ApiErrorBody {
   type: string;
   title: string;

@@ -10,6 +10,9 @@ import type {
     BundleSimulationResponse,
     TransactionResponse,
     SignTransactionResponse,
+    SigningKeyResponse,
+    SigningKeyListResponse,
+    SignIntentResponse,
     ApiErrorBody,
 } from "./types.js";
 
@@ -446,6 +449,36 @@ export class OneClawClient {
         const qs = opts?.include_signed_tx ? "?include_signed_tx=true" : "";
         return this.request<TransactionResponse>(
             `${this.baseUrl}/v1/agents/${agentId}/transactions/${txId}${qs}`,
+        );
+    }
+
+    // ── Signing Keys & Sign Intent ──────────────────────
+
+    async provisionSigningKey(
+        agentId: string,
+        chain: string,
+    ): Promise<SigningKeyResponse> {
+        return this.request<SigningKeyResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}/signing-keys`,
+            { method: "POST", body: JSON.stringify({ chain }) },
+        );
+    }
+
+    async listSigningKeys(
+        agentId: string,
+    ): Promise<SigningKeyListResponse> {
+        return this.request<SigningKeyListResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}/signing-keys`,
+        );
+    }
+
+    async signIntent(
+        agentId: string,
+        body: Record<string, unknown>,
+    ): Promise<SignIntentResponse> {
+        return this.request<SignIntentResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}/sign`,
+            { method: "POST", body: JSON.stringify(body) },
         );
     }
 }
