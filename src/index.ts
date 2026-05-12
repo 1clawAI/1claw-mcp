@@ -118,7 +118,7 @@ type ServerOpts = ConstructorParameters<typeof FastMCP<SessionAuth>>[0];
 
 const serverOpts: ServerOpts = {
     name: "1claw",
-    version: "0.17.0",
+    version: "0.21.0",
     health: { enabled: true, path: "/health" },
 };
 

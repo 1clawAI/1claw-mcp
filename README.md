@@ -71,6 +71,8 @@ pnpm run build
 | `sign_typed_data`      | Sign EIP-712 typed structured data. Returns signature, typed data hash, and signer address. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 
+> **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
+
 ## Resources
 
 | URI               | Description                                           |
@@ -241,7 +243,7 @@ All tool calls pass through an inspection pipeline before execution and after re
 | `ONECLAW_MCP_SANITIZATION_MODE`    | `block`  | `block` rejects critical/high threats; `surgical` normalizes Unicode but allows; `log_only` only logs. |
 | `ONECLAW_MCP_REDACT_SECRETS`       | `true`   | Redact known secret values from non-secret tool outputs. Requires security enabled.              |
 | `ONECLAW_MCP_PII_DETECTION`        | `true`   | Detect PII patterns (emails, SSNs, credit cards, etc.) in inputs and outputs.                    |
-| `ONECLAW_MCP_EXFIL_PROTECTION`     | `warn`   | `block` rejects tool inputs containing known secrets; `warn` logs but allows; `off` disables.    |
+| `ONECLAW_MCP_EXFIL_PROTECTION`     | `block`  | `block` rejects tool inputs containing known secrets; `warn` logs but allows; `off` disables.    |
 
 ### Shroud advanced security
 
