@@ -24,6 +24,9 @@ import { listSigningKeysTool } from "./tools/list_signing_keys.js";
 import { signMessageTool } from "./tools/sign_message.js";
 import { signTypedDataTool } from "./tools/sign_typed_data.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
+import { platformListAppsTool } from "./tools/platform_list_apps.js";
+import { platformCreateAppTool } from "./tools/platform_create_app.js";
+import { platformBootstrapUserTool } from "./tools/platform_bootstrap_user.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
 type SessionAuth =
@@ -118,7 +121,7 @@ type ServerOpts = ConstructorParameters<typeof FastMCP<SessionAuth>>[0];
 
 const serverOpts: ServerOpts = {
     name: "1claw",
-    version: "0.21.0",
+    version: "0.23.0",
     health: { enabled: true, path: "/health" },
 };
 
@@ -338,6 +341,9 @@ if (!localOnly) {
     registerTool(listSigningKeysTool as AnyToolFactory);
     registerTool(signMessageTool as AnyToolFactory);
     registerTool(signTypedDataTool as AnyToolFactory);
+    registerTool(platformListAppsTool as AnyToolFactory);
+    registerTool(platformCreateAppTool as AnyToolFactory);
+    registerTool(platformBootstrapUserTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────

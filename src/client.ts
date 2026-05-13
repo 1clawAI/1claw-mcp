@@ -14,6 +14,9 @@ import type {
     SigningKeyListResponse,
     SignIntentResponse,
     ApiErrorBody,
+    PlatformAppCreatedResponse,
+    PlatformAppListResponse,
+    BootstrapResponse,
 } from "./types.js";
 
 export class OneClawApiError extends Error {
@@ -479,6 +482,33 @@ export class OneClawClient {
         return this.request<SignIntentResponse>(
             `${this.baseUrl}/v1/agents/${agentId}/sign`,
             { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    // ── Platform API ──────────────────────────────────────
+
+    async platformListApps(): Promise<PlatformAppListResponse> {
+        return this.request<PlatformAppListResponse>(
+            `${this.baseUrl}/v1/platform/apps`,
+        );
+    }
+
+    async platformCreateApp(
+        data: Record<string, unknown>,
+    ): Promise<PlatformAppCreatedResponse> {
+        return this.request<PlatformAppCreatedResponse>(
+            `${this.baseUrl}/v1/platform/apps`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformBootstrapUser(
+        connectionId: string,
+        data: { template_id?: string; return_to?: string },
+    ): Promise<BootstrapResponse> {
+        return this.request<BootstrapResponse>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/bootstrap`,
+            { method: "POST", body: JSON.stringify(data) },
         );
     }
 }

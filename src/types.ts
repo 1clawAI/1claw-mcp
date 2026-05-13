@@ -165,3 +165,41 @@ export interface ApiErrorBody {
   status: number;
   detail: string;
 }
+
+// ── Platform API ──────────────────────────────────────
+
+export interface PlatformAppResponse {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  logo_url?: string;
+  api_key_prefix: string;
+  is_active: boolean;
+  billing_model: string;
+  auth_mode: string;
+  max_connected_users?: number;
+  connected_users: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlatformAppCreatedResponse extends PlatformAppResponse {
+  api_key: string;
+}
+
+export interface PlatformAppListResponse {
+  apps: PlatformAppResponse[];
+}
+
+export interface BootstrapResponse {
+  claim_url: string;
+  claim_token: string;
+  expires_in: number;
+  connection_id: string;
+  summary: {
+    vault_id?: string;
+    agent_id?: string;
+    policy_ids: string[];
+  };
+}

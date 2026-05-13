@@ -69,6 +69,9 @@ pnpm run build
 | `list_signing_keys`    | List all signing keys for an agent across all chains.                        |
 | `sign_message`         | Sign a message using EIP-191 personal_sign. Returns signature and signer address. |
 | `sign_typed_data`      | Sign EIP-712 typed structured data. Returns signature, typed data hash, and signer address. |
+| `platform_list_apps`   | List all platform apps in the caller's org.                                                          |
+| `platform_create_app`  | Register a new platform app (returns `plt_` API key). User-only.                                     |
+| `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 
 > **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
