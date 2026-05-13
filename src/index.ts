@@ -502,6 +502,52 @@ server.addResource({
 });
 } // end if (!localOnly) — resource
 
+// ── Rate limiting (httpStream only) ──────────────────
+
+if (transport === "httpStream") {
+    const RATE_LIMIT_WINDOW_MS = 60_000;
+    const RATE_LIMIT_MAX = 60;
+
+    const hits = new Map<string, { count: number; resetAt: number }>();
+
+    // Periodic sweep to prevent unbounded growth
+    const sweepTimer = setInterval(() => {
+        const now = Date.now();
+        for (const [ip, bucket] of hits) {
+            if (now >= bucket.resetAt) hits.delete(ip);
+        }
+    }, RATE_LIMIT_WINDOW_MS);
+    if (typeof sweepTimer === "object" && "unref" in sweepTimer) {
+        sweepTimer.unref();
+    }
+
+    const app = server.getApp();
+    app.use("*", async (c, next) => {
+        const ip =
+            c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+            c.req.header("x-real-ip") ||
+            "unknown";
+
+        const now = Date.now();
+        let bucket = hits.get(ip);
+        if (!bucket || now >= bucket.resetAt) {
+            bucket = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+            hits.set(ip, bucket);
+        }
+        bucket.count++;
+
+        c.header("RateLimit-Limit", String(RATE_LIMIT_MAX));
+        c.header("RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX - bucket.count)));
+        c.header("RateLimit-Reset", String(Math.ceil(bucket.resetAt / 1000)));
+
+        if (bucket.count > RATE_LIMIT_MAX) {
+            return c.json({ error: "Too many requests, please try again later." }, 429);
+        }
+
+        await next();
+    });
+}
+
 // ── Start ────────────────────────────────────────────
 
 if (transport === "httpStream") {

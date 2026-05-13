@@ -82,7 +82,41 @@ const CONFUSABLE_REGEX = new RegExp(`[${Object.keys(CONFUSABLES).join('')}]`, 'g
 // ── Secret value registry (vault-manifest-aware redaction) ───
 
 const MIN_SECRET_LENGTH = 6;
+const SECRET_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_SECRET_ENTRIES = 1000;
+const PRUNE_INTERVAL_MS = 60 * 1000; // 60 seconds
+
 const secretValues = new Map<string, string>();
+const secretTimestamps = new Map<string, number>();
+
+/** Periodic cleanup — runs every 60s to cap memory growth in long-lived processes. */
+let _pruneTimer: ReturnType<typeof setInterval> | undefined;
+function ensurePruneTimer(): void {
+    if (_pruneTimer) return;
+    _pruneTimer = setInterval(pruneExpiredSecrets, PRUNE_INTERVAL_MS);
+    if (typeof _pruneTimer === "object" && "unref" in _pruneTimer) {
+        _pruneTimer.unref();
+    }
+}
+
+/** Remove entries older than SECRET_TTL_MS. */
+export function pruneExpiredSecrets(): void {
+    const now = Date.now();
+    for (const [value, ts] of secretTimestamps) {
+        if (now - ts > SECRET_TTL_MS) {
+            secretValues.delete(value);
+            secretTimestamps.delete(value);
+        }
+    }
+}
+
+const SCOPE_SEPARATOR = "\x00";
+
+/** Strip the optional scope prefix from a map key to get the raw secret value. */
+function extractRawValue(key: string): string {
+    const idx = key.indexOf(SCOPE_SEPARATOR);
+    return idx === -1 ? key : key.slice(idx + 1);
+}
 
 /** Tools that legitimately return or accept secret values. */
 const SECRET_TOOLS = new Set([
@@ -95,11 +129,29 @@ const SECRET_TOOLS = new Set([
 /**
  * Register a secret value for redaction and exfiltration protection.
  * Called after get_secret / get_env_bundle returns a value.
+ * Keys are scoped by an optional `scope` (org/agent ID) to prevent cross-tenant matches.
  */
-export function registerSecret(path: string, value: string): void {
-    if (value.length >= MIN_SECRET_LENGTH) {
-        secretValues.set(value, path);
+export function registerSecret(path: string, value: string, scope?: string): void {
+    if (value.length < MIN_SECRET_LENGTH) return;
+
+    const key = scope ? `${scope}${SCOPE_SEPARATOR}${value}` : value;
+
+    // Evict oldest entries when at capacity
+    if (!secretValues.has(key) && secretValues.size >= MAX_SECRET_ENTRIES) {
+        let oldestKey: string | undefined;
+        let oldestTs = Infinity;
+        for (const [k, ts] of secretTimestamps) {
+            if (ts < oldestTs) { oldestTs = ts; oldestKey = k; }
+        }
+        if (oldestKey) {
+            secretValues.delete(oldestKey);
+            secretTimestamps.delete(oldestKey);
+        }
     }
+
+    secretValues.set(key, path);
+    secretTimestamps.set(key, Date.now());
+    ensurePruneTimer();
 }
 
 /**
@@ -107,6 +159,7 @@ export function registerSecret(path: string, value: string): void {
  */
 export function clearSecrets(): void {
     secretValues.clear();
+    secretTimestamps.clear();
 }
 
 /**
@@ -216,11 +269,13 @@ function detectPii(text: string): ThreatDetection[] {
 // ── Secret redaction ─────────────────────────────────
 
 function redactSecrets(text: string): { redacted: string; matches: Array<{ path: string }> } {
+    pruneExpiredSecrets();
     const matches: Array<{ path: string }> = [];
     let redacted = text;
-    for (const [value, path] of secretValues) {
-        if (redacted.includes(value)) {
-            redacted = redacted.split(value).join(`[REDACTED:${path}]`);
+    for (const [key, path] of secretValues) {
+        const rawValue = extractRawValue(key);
+        if (redacted.includes(rawValue)) {
+            redacted = redacted.split(rawValue).join(`[REDACTED:${path}]`);
             matches.push({ path });
         }
     }
@@ -232,9 +287,11 @@ function redactSecrets(text: string): { redacted: string; matches: Array<{ path:
 function detectExfiltration(text: string): ThreatDetection[] {
     const mode = getExfilProtectionMode();
     if (mode === "off") return [];
+    pruneExpiredSecrets();
     const threats: ThreatDetection[] = [];
-    for (const [value, path] of secretValues) {
-        if (text.includes(value)) {
+    for (const [key, path] of secretValues) {
+        const rawValue = extractRawValue(key);
+        if (text.includes(rawValue)) {
             threats.push({
                 type: "secret_exfiltration",
                 pattern: `known_secret:${path}`,

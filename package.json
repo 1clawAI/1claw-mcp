@@ -56,7 +56,6 @@
     "license": "MIT",
     "dependencies": {
         "@hono/node-server": "^1.19.10",
-        "express-rate-limit": "^8.2.2",
         "fastmcp": "^3.33.0",
         "glob": "^11.1.0",
         "hono": "^4.12.4",
