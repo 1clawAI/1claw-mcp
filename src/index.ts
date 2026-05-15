@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
 import http from "node:http";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { FastMCP, UserError } from "fastmcp";
 import { z } from "zod";
 import { OneClawClient, OneClawApiError } from "./client.js";
@@ -119,9 +122,13 @@ function resolveClient(session?: SessionAuth): OneClawClient {
 
 type ServerOpts = ConstructorParameters<typeof FastMCP<SessionAuth>>[0];
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8")) as { version: string };
+
 const serverOpts: ServerOpts = {
     name: "1claw",
-    version: "0.23.0",
+    version: pkg.version as `${number}.${number}.${number}`,
     health: { enabled: true, path: "/health" },
 };
 
