@@ -26,8 +26,11 @@ function buildInspectContentReport(
       (t.type === "pii" && (t.pattern === "ssn" || t.severity === "critical")) ||
       (t.type === "network_threat" && t.severity === "critical"),
   );
+  const hasHighSeverity = threats.some(
+    (t) => t.severity === "high" || t.severity === "critical",
+  );
   const verdict: "clean" | "malicious" = malicious ? "malicious" : "clean";
-  const safe = !malicious && result.passed;
+  const safe = !malicious && !hasHighSeverity && result.passed;
 
   const base = {
     safe,
