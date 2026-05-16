@@ -236,7 +236,7 @@ All tool calls pass through an inspection pipeline before execution and after re
 **Output inspection** (after tool execution):
 1. **Threat detection** — Same patterns as input.
 2. **PII detection** — Same patterns as input.
-3. **Secret redaction** — Tracks every secret value fetched via `get_secret` or `get_env_bundle`. If a known secret appears in the output of a non-secret tool (e.g., `list_vaults`, `grant_access`), the value is replaced with `[REDACTED:path]` before it reaches the LLM context window.
+3. **Secret redaction** — Tracks every secret value fetched via `get_secret` or `get_env_bundle`. If a known secret appears in the output of a non-secret tool (e.g., `list_vaults`, `grant_access`), the value is replaced with an opaque token like `[REDACTED:#a1b2c3d4]` (SHA-256 prefix, no path disclosure) before it reaches the LLM context window.
 
 ### Security environment variables
 
