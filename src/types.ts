@@ -203,3 +203,18 @@ export interface BootstrapResponse {
     policy_ids: string[];
   };
 }
+
+export interface ApprovalResponse {
+  id: string;
+  status: string;
+  action: string;
+  resource_type?: string;
+  resource_id?: string;
+  agent_id?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+  decided_by?: string;
+  decided_at?: string;
+  created_at: string;
+  expires_at?: string;
+}

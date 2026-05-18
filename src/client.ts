@@ -17,6 +17,7 @@ import type {
     PlatformAppCreatedResponse,
     PlatformAppListResponse,
     BootstrapResponse,
+    ApprovalResponse,
 } from "./types.js";
 
 export class OneClawApiError extends Error {
@@ -482,6 +483,26 @@ export class OneClawClient {
         return this.request<SignIntentResponse>(
             `${this.baseUrl}/v1/agents/${agentId}/sign`,
             { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    // ── Approvals ─────────────────────────────────────────
+
+    async listApprovals(
+        opts?: { status?: string; limit?: number },
+    ): Promise<{ approvals: ApprovalResponse[] }> {
+        const params = new URLSearchParams();
+        if (opts?.status) params.set("status", opts.status);
+        if (opts?.limit != null) params.set("limit", String(opts.limit));
+        const qs = params.toString() ? `?${params.toString()}` : "";
+        return this.request<{ approvals: ApprovalResponse[] }>(
+            `${this.baseUrl}/v1/approvals${qs}`,
+        );
+    }
+
+    async getApproval(approvalId: string): Promise<ApprovalResponse> {
+        return this.request<ApprovalResponse>(
+            `${this.baseUrl}/v1/approvals/${approvalId}`,
         );
     }
 
