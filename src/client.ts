@@ -506,6 +506,20 @@ export class OneClawClient {
         );
     }
 
+    async requestApproval(data: {
+        action: string;
+        target_type: string;
+        target_id: string;
+        summary: Record<string, unknown>;
+        reason?: string;
+        risk_tier?: number;
+    }): Promise<ApprovalResponse> {
+        return this.request<ApprovalResponse>(
+            `${this.baseUrl}/v1/approvals/request`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
     // ── Platform API ──────────────────────────────────────
 
     async platformListApps(): Promise<PlatformAppListResponse> {
@@ -530,6 +544,16 @@ export class OneClawClient {
         return this.request<BootstrapResponse>(
             `${this.baseUrl}/v1/platform/connections/${connectionId}/bootstrap`,
             { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformReissueClaim(
+        connectionId: string,
+        data?: { return_to?: string },
+    ): Promise<{ claim_url: string; claim_token: string; expires_in: number; connection_id: string }> {
+        return this.request<{ claim_url: string; claim_token: string; expires_in: number; connection_id: string }>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/reissue-claim`,
+            { method: "POST", body: JSON.stringify(data ?? {}) },
         );
     }
 }

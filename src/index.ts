@@ -30,8 +30,10 @@ import { inspectContentTool } from "./tools/inspect_content.js";
 import { platformListAppsTool } from "./tools/platform_list_apps.js";
 import { platformCreateAppTool } from "./tools/platform_create_app.js";
 import { platformBootstrapUserTool } from "./tools/platform_bootstrap_user.js";
+import { platformReissueClaimTool } from "./tools/platform_reissue_claim.js";
 import { listApprovalsTool } from "./tools/list_approvals.js";
 import { getApprovalTool } from "./tools/get_approval.js";
+import { requestApprovalTool } from "./tools/request_approval.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
 type SessionAuth =
@@ -353,8 +355,10 @@ if (!localOnly) {
     registerTool(platformListAppsTool as AnyToolFactory);
     registerTool(platformCreateAppTool as AnyToolFactory);
     registerTool(platformBootstrapUserTool as AnyToolFactory);
+    registerTool(platformReissueClaimTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
+    registerTool(requestApprovalTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
