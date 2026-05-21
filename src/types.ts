@@ -180,8 +180,16 @@ export interface PlatformAppResponse {
   auth_mode: string;
   max_connected_users?: number;
   connected_users: number;
+  api_key_expires_at?: string;
+  api_key_rotated_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PlatformRotateKeyResponse {
+  api_key: string;
+  api_key_prefix: string;
+  api_key_expires_at?: string;
 }
 
 export interface PlatformAppCreatedResponse extends PlatformAppResponse {

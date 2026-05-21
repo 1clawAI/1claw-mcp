@@ -16,6 +16,7 @@ import type {
     ApiErrorBody,
     PlatformAppCreatedResponse,
     PlatformAppListResponse,
+    PlatformRotateKeyResponse,
     BootstrapResponse,
     ApprovalResponse,
 } from "./types.js";
@@ -544,6 +545,16 @@ export class OneClawClient {
         return this.request<BootstrapResponse>(
             `${this.baseUrl}/v1/platform/connections/${connectionId}/bootstrap`,
             { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformRotateKey(
+        appId: string,
+        data?: { api_key_expires_at?: string },
+    ): Promise<PlatformRotateKeyResponse> {
+        return this.request<PlatformRotateKeyResponse>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/rotate-key`,
+            { method: "POST", body: JSON.stringify(data ?? {}) },
         );
     }
 

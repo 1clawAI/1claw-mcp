@@ -30,6 +30,10 @@ export function platformCreateAppTool(client: OneClawClient) {
         .string()
         .optional()
         .describe("Short description of the platform app"),
+      api_key_expires_at: z
+        .string()
+        .optional()
+        .describe("ISO 8601 expiration timestamp for the API key (e.g. '2025-12-31T23:59:59Z')"),
     }),
     execute: async (
       args: {
@@ -38,6 +42,7 @@ export function platformCreateAppTool(client: OneClawClient) {
         billing_model?: string;
         auth_mode?: string;
         description?: string;
+        api_key_expires_at?: string;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -53,6 +58,10 @@ export function platformCreateAppTool(client: OneClawClient) {
           `  Billing: ${result.billing_model}`,
           `  Auth mode: ${result.auth_mode}`,
         ];
+
+        if (result.api_key_expires_at) {
+          lines.push(`  Key expires: ${result.api_key_expires_at}`);
+        }
 
         if (result.api_key) {
           lines.push(``);

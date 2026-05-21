@@ -72,6 +72,9 @@ pnpm run build
 | `platform_list_apps`   | List all platform apps in the caller's org.                                                          |
 | `platform_create_app`  | Register a new platform app (returns `plt_` API key). User-only.                                     |
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
+| `request_approval`     | Request human approval for a policy change or sensitive action. Creates a pending approval for the agent's human operator. |
+| `list_approvals`       | List approval requests, optionally filtered by status (pending, approved, denied).                   |
+| `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 
 > **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
