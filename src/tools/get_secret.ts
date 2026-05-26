@@ -37,6 +37,9 @@ export function getSecretTool(client: OneClawClient) {
           if (err.status === 404) {
             throw new UserError(`No secret found at path '${args.path}'.`);
           }
+          if (err.status === 403) {
+            throw new UserError(`Access denied for secret '${args.path}': ${err.detail}`);
+          }
         }
         throw err;
       }

@@ -19,8 +19,13 @@ export function deleteSecretTool(client: OneClawClient) {
         log.info(`secret deleted: ${args.path}`);
         return `Secret at '${args.path}' has been soft-deleted.`;
       } catch (err) {
-        if (err instanceof OneClawApiError && err.status === 404) {
-          throw new UserError(`No secret found at path '${args.path}'.`);
+        if (err instanceof OneClawApiError) {
+          if (err.status === 404) {
+            throw new UserError(`No secret found at path '${args.path}'.`);
+          }
+          if (err.status === 403) {
+            throw new UserError(`Access denied for '${args.path}': ${err.detail}`);
+          }
         }
         throw err;
       }

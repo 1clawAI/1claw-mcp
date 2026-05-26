@@ -42,6 +42,9 @@ export function describeSecretTool(client: OneClawClient) {
                 `Secret at path '${args.path}' is expired or has exceeded its maximum access count.`,
               );
             }
+            if (err.status === 403) {
+              throw new UserError(`Access denied for secret '${args.path}': ${err.detail}`);
+            }
           }
           throw err;
         }
