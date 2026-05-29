@@ -35,6 +35,9 @@ import { platformRotateKeyTool } from "./tools/platform_rotate_key.js";
 import { listApprovalsTool } from "./tools/list_approvals.js";
 import { getApprovalTool } from "./tools/get_approval.js";
 import { requestApprovalTool } from "./tools/request_approval.js";
+import { treasuryProposeTool } from "./tools/treasury_propose.js";
+import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
+import { treasuryListProposalsTool } from "./tools/treasury_list_proposals.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
 
 type SessionAuth =
@@ -361,6 +364,9 @@ if (!localOnly) {
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
     registerTool(requestApprovalTool as AnyToolFactory);
+    registerTool(treasuryProposeTool as AnyToolFactory);
+    registerTool(treasurySignProposalTool as AnyToolFactory);
+    registerTool(treasuryListProposalsTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
