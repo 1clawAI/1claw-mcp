@@ -72,6 +72,9 @@ pnpm run build
 | `platform_list_apps`   | List all platform apps in the caller's org.                                                          |
 | `platform_create_app`  | Register a new platform app (returns `plt_` API key). User-only.                                     |
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
+| `treasury_propose`     | Create a treasury multisig proposal (transaction intent for Safe signers to approve).                                    |
+| `treasury_sign_proposal` | Sign or reject a treasury proposal. Submits an EIP-712 signature; auto-executes if threshold is met.                  |
+| `treasury_list_proposals` | List proposals for a treasury, optionally filtered by status (pending, approved, executed, rejected, expired).        |
 | `request_approval`     | Request human approval for a policy change or sensitive action. Creates a pending approval for the agent's human operator. |
 | `list_approvals`       | List approval requests, optionally filtered by status (pending, approved, denied).                   |
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
