@@ -72,6 +72,8 @@ pnpm run build
 | `platform_list_apps`   | List all platform apps in the caller's org.                                                          |
 | `platform_create_app`  | Register a new platform app (returns `plt_` API key). User-only.                                     |
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
+| `platform_reissue_claim` | Reissue a claim URL for an already-bootstrapped connection without re-provisioning resources.       |
+| `platform_rotate_key`  | Rotate the API key for a platform app. Returns the new `plt_` key (one-time).                        |
 | `treasury_propose`     | Create a treasury multisig proposal (transaction intent for Safe signers to approve).                                    |
 | `treasury_sign_proposal` | Sign or reject a treasury proposal. Submits an EIP-712 signature; auto-executes if threshold is met.                  |
 | `treasury_list_proposals` | List proposals for a treasury, optionally filtered by status (pending, approved, executed, rejected, expired).        |
