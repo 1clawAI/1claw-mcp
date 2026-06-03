@@ -1,0 +1,55 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.1clawAI/1claw-mcp",
+  "title": "1Claw Vault",
+  "description": "HSM-backed vault secrets for AI agents (JIT fetch) plus prompt-injection and threat scanning.",
+  "websiteUrl": "https://1claw.xyz",
+  "repository": {
+    "url": "https://github.com/1clawAI/1claw-mcp",
+    "source": "github"
+  },
+  "version": "0.31.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@1claw/mcp",
+      "version": "0.31.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ONECLAW_AGENT_API_KEY",
+          "description": "Agent API key (ocv_...). Exchanged for a short-lived JWT; auto-discovers agent ID and vault. Recommended for stdio.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "ONECLAW_AGENT_ID",
+          "description": "Optional agent UUID when pinning identity (usually auto-discovered from the API key).",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "ONECLAW_VAULT_ID",
+          "description": "Optional vault UUID when the agent can access multiple vaults.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "ONECLAW_BASE_URL",
+          "description": "Vault API base URL (default https://api.1claw.xyz).",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "ONECLAW_LOCAL_ONLY",
+          "description": "Set to true for security-only mode (inspect_content only; no vault credentials).",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
