@@ -1,5 +1,7 @@
 # @1claw/mcp
 
+<!-- mcp-name: io.github.1clawAI/1claw-mcp -->
+
 An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time access to secrets stored in the [1claw](https://1claw.xyz) vault — and a standalone security inspection pipeline for detecting malicious LLM content. Secrets are fetched at runtime via the 1claw Agent API and never persisted in the LLM context window beyond the moment they are used.
 
 **Local-only mode**: Run without vault credentials for security-only tools (e.g., `inspect_content`). Ideal for users running local models (Ollama, LM Studio, llama.cpp) who want prompt injection and threat detection without a 1claw account.
