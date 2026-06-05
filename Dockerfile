@@ -3,7 +3,8 @@ FROM node:22-slim AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# npm ci fails when lockfile was generated on another OS (optional platform bindings).
+RUN npm install --include=dev
 
 COPY tsconfig.json ./
 COPY src/ src/
