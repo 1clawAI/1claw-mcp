@@ -6,11 +6,11 @@ export function leaseBankrKeyTool(client: OneClawClient) {
   return {
     name: "lease_bankr_key" as const,
     description:
-      "Provision a short-lived Bankr wallet API key for an agent. The 1Claw vault holds the partner key and calls the Bankr Partner API to issue a scoped, time-limited key. Returns the ephemeral bk_usr_ key, wallet ID, and expiry.",
+      "Provision a short-lived Bankr wallet API key for an agent (privileged; requires explicit policy on agents/{id}/bankr/*). Partner key stays server-side; leased key is stored for Shroud — never returned in tool output. Prefer ttl_seconds 300–900 for autonomous agents; revoke when done via list + revoke.",
     parameters: z.object({
       agent_id: z.string().optional().describe("Agent ID. Uses the current authenticated agent if omitted."),
       wallet_id: z.string().optional().describe("Bankr wallet ID (wlt_...). Uses org default if omitted."),
-      ttl_seconds: z.number().optional().describe("Lease TTL in seconds (default 3600, max 86400)."),
+      ttl_seconds: z.number().optional().describe("Lease TTL in seconds (recommend 300–900 for agents; max 86400)."),
       llm_gateway_enabled: z.boolean().optional().describe("Enable LLM gateway access (default true)."),
       agent_api_enabled: z.boolean().optional().describe("Enable agent API access (default false)."),
       read_only: z.boolean().optional().describe("Read-only key (default true)."),
@@ -46,11 +46,11 @@ export function leaseBankrKeyTool(client: OneClawClient) {
         log.info(`Bankr key leased: ${result.lease_id}`);
 
         return [
-          `Bankr key leased successfully`,
+          `Bankr key leased successfully.`,
           `Lease ID: ${result.lease_id}`,
-          `API key: ${result.api_key}`,
           `Wallet: ${result.wallet_id}`,
           `Expires: ${result.expires_at}`,
+          `The bk_usr_ key is NOT included in this response (secret output). Use Shroud with X-Shroud-Provider: bankr, or revoke via lease ID when finished.`,
         ].join("\n");
       } catch (err) {
         if (err instanceof OneClawApiError) {
