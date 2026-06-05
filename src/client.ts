@@ -487,6 +487,44 @@ export class OneClawClient {
         );
     }
 
+    // ── Bankr Dynamic Key Vending ────────────────────────────
+
+    async leaseBankrKey(
+        agentId: string,
+        opts?: {
+            wallet_id?: string;
+            ttl_seconds?: number;
+            permissions?: {
+                llm_gateway_enabled?: boolean;
+                agent_api_enabled?: boolean;
+                read_only?: boolean;
+            };
+        },
+    ): Promise<{ lease_id: string; api_key: string; wallet_id: string; expires_at: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/agents/${agentId}/bankr-keys/lease`,
+            { method: "POST", body: JSON.stringify(opts ?? {}) },
+        );
+    }
+
+    async listBankrKeys(
+        agentId: string,
+    ): Promise<{ leases: Array<{ id: string; wallet_id: string; bankr_key_id: string; expires_at: string }> }> {
+        return this.request(
+            `${this.baseUrl}/v1/agents/${agentId}/bankr-keys`,
+        );
+    }
+
+    async revokeBankrKey(
+        agentId: string,
+        leaseId: string,
+    ): Promise<void> {
+        await this.request(
+            `${this.baseUrl}/v1/agents/${agentId}/bankr-keys/${leaseId}`,
+            { method: "DELETE" },
+        );
+    }
+
     // ── Approvals ─────────────────────────────────────────
 
     async listApprovals(
