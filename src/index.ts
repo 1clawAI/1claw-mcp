@@ -39,7 +39,7 @@ import { requestApprovalTool } from "./tools/request_approval.js";
 import { treasuryProposeTool } from "./tools/treasury_propose.js";
 import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
 import { treasuryListProposalsTool } from "./tools/treasury_list_proposals.js";
-import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled } from "./security/index.js";
+import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 
 type SessionAuth =
     | { token: string; vaultId: string }
@@ -155,6 +155,18 @@ if (transport === "httpStream") {
                 "Missing Authorization header (Bearer <ocv_api_key> or Bearer <jwt>)",
             );
 
+        // SEC-005: Only accept agent API keys (ocv_). Reject human and platform keys.
+        if (credential.startsWith("1ck_")) {
+            throw new Error(
+                "MCP server only accepts agent API keys (ocv_). Human API keys (1ck_) should use the SDK or dashboard.",
+            );
+        }
+        if (credential.startsWith("plt_")) {
+            throw new Error(
+                "MCP server only accepts agent API keys (ocv_). Platform API keys (plt_) should use the SDK.",
+            );
+        }
+
         // ── API key path: exchange for JWT, auto-discover vault ──
         if (credential.startsWith("ocv_")) {
             const body: Record<string, string> = { api_key: credential };
@@ -209,6 +221,23 @@ if (transport === "httpStream") {
             throw new Error(
                 "Missing X-Vault-ID header (required when using a JWT; use an ocv_ API key instead for auto-discovery)",
             );
+
+        // SEC-005: Verify the JWT belongs to an agent (sub starts with "agent:")
+        try {
+            const parts = credential.split(".");
+            if (parts.length === 3) {
+                const payload = JSON.parse(
+                    Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString(),
+                );
+                if (payload.sub && typeof payload.sub === "string" && !payload.sub.startsWith("agent:")) {
+                    throw new Error(
+                        "MCP server only accepts agent JWTs. This token belongs to a non-agent principal.",
+                    );
+                }
+            }
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("MCP server only accepts")) throw e;
+        }
 
         // H-9: Validate token against the vault API (not just pass-through).
         const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultIdHeader}`, {
@@ -285,17 +314,24 @@ function registerTool(factory: AnyToolFactory) {
             
             // Track secret values for redaction and exfiltration protection
             if (isSecretRedactionEnabled()) {
+                // SEC-004: Scope secrets to the session's agent/vault to prevent cross-tenant matches
+                const sessionScope = context.session
+                    ? ("agentId" in context.session && context.session.agentId)
+                        ? context.session.agentId
+                        : ("vaultId" in context.session ? context.session.vaultId : undefined)
+                    : undefined;
+
                 if (proto.name === "get_secret") {
                     try {
                         const parsed = JSON.parse(result);
-                        if (parsed.value && parsed.path) registerSecret(parsed.path, parsed.value);
+                        if (parsed.value && parsed.path) registerSecret(parsed.path, parsed.value, sessionScope);
                     } catch { /* not JSON — skip */ }
                 }
                 if (proto.name === "get_env_bundle") {
                     try {
                         const env = JSON.parse(result);
                         for (const [key, val] of Object.entries(env)) {
-                            if (typeof val === "string") registerSecret(`env:${key}`, val);
+                            if (typeof val === "string") registerSecret(`env:${key}`, val, sessionScope);
                         }
                     } catch { /* not JSON — skip */ }
                 }
@@ -548,8 +584,10 @@ if (transport === "httpStream") {
 
     const app = server.getApp();
     app.use("*", async (c, next) => {
+        // L2: Use rightmost XFF entry (closest to the trusted edge proxy)
+        const xff = c.req.header("x-forwarded-for");
         const ip =
-            c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+            (xff ? xff.split(",").pop()?.trim() : undefined) ||
             c.req.header("x-real-ip") ||
             "unknown";
 

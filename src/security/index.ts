@@ -132,9 +132,11 @@ const SECRET_TOOLS = new Set([
  * Keys are scoped by an optional `scope` (org/agent ID) to prevent cross-tenant matches.
  */
 export function registerSecret(path: string, value: string, scope?: string): void {
-    if (value.length < MIN_SECRET_LENGTH) return;
+    // SEC-007: Normalize stored value to prevent zero-width char bypass
+    const normalized = value.replace(ZERO_WIDTH_CHARS, '');
+    if (normalized.length < MIN_SECRET_LENGTH) return;
 
-    const key = scope ? `${scope}${SCOPE_SEPARATOR}${value}` : value;
+    const key = scope ? `${scope}${SCOPE_SEPARATOR}${normalized}` : normalized;
 
     // Evict oldest entries when at capacity
     if (!secretValues.has(key) && secretValues.size >= MAX_SECRET_ENTRIES) {
@@ -155,11 +157,21 @@ export function registerSecret(path: string, value: string, scope?: string): voi
 }
 
 /**
- * Clear all tracked secrets (e.g. on session teardown).
+ * Clear all tracked secrets, optionally filtered by scope.
  */
-export function clearSecrets(): void {
-    secretValues.clear();
-    secretTimestamps.clear();
+export function clearSecrets(scope?: string): void {
+    if (!scope) {
+        secretValues.clear();
+        secretTimestamps.clear();
+        return;
+    }
+    const prefix = `${scope}${SCOPE_SEPARATOR}`;
+    for (const key of [...secretValues.keys()]) {
+        if (key.startsWith(prefix)) {
+            secretValues.delete(key);
+            secretTimestamps.delete(key);
+        }
+    }
 }
 
 /**
@@ -288,10 +300,12 @@ function detectExfiltration(text: string): ThreatDetection[] {
     const mode = getExfilProtectionMode();
     if (mode === "off") return [];
     pruneExpiredSecrets();
+    // SEC-007: Normalize inspected text to prevent zero-width char bypass
+    const normalizedText = text.replace(ZERO_WIDTH_CHARS, '');
     const threats: ThreatDetection[] = [];
     for (const [key, path] of secretValues) {
         const rawValue = extractRawValue(key);
-        if (text.includes(rawValue)) {
+        if (normalizedText.includes(rawValue)) {
             threats.push({
                 type: "secret_exfiltration",
                 pattern: `known_secret:${path}`,

@@ -37,8 +37,10 @@ export function platformRotateKeyTool(client: OneClawClient) {
         }
 
         lines.push(``);
-        lines.push(`  New API Key (save this — it won't be shown again):`);
-        lines.push(`  ${result.api_key}`);
+        lines.push(`  New API Key prefix: ${result.api_key.slice(0, 12)}…`);
+        lines.push(
+          `  (Full key available in the dashboard — not shown in MCP output for security)`,
+        );
 
         return lines.join("\n");
       } catch (err) {

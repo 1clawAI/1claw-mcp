@@ -65,8 +65,10 @@ export function platformCreateAppTool(client: OneClawClient) {
 
         if (result.api_key) {
           lines.push(``);
-          lines.push(`  API Key (save this — it won't be shown again):`);
-          lines.push(`  ${result.api_key}`);
+          lines.push(`  API Key prefix: ${result.api_key.slice(0, 12)}…`);
+          lines.push(
+            `  (Full key available in the dashboard — not shown in MCP output for security)`,
+          );
         }
 
         return lines.join("\n");
