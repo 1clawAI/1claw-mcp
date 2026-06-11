@@ -38,6 +38,7 @@ pnpm run build
 | `ONECLAW_AGENT_API_KEY`   | stdio*         | —                       | Agent API key (`ocv_...`). Server exchanges this for a JWT and auto-refreshes. |
 | `ONECLAW_AGENT_TOKEN`     | stdio*         | —                       | Static Bearer JWT (alternative to ID+key; expires in ~1 h).                |
 | `ONECLAW_VAULT_ID`        | stdio only     | —                       | UUID of the vault to operate on.                                           |
+| `ONECLAW_DPOP`            | No             | `false`                 | Set to `true` to enable DPoP (RFC 9449) proof-of-possession. Binds agent tokens to the MCP client's ephemeral P-256 keypair so stolen tokens are unusable without the matching private key. |
 | `ONECLAW_BASE_URL`        | No             | `https://api.1claw.xyz` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.xyz` or `https://intents.1claw.xyz`) if your deployment routes signing there. Self-hosted: your Vault/Shroud URL. |
 | `MCP_TRANSPORT`           | No             | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No             | `8080`                  | HTTP port (httpStream mode only).                                          |

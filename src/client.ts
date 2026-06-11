@@ -20,6 +20,7 @@ import type {
     BootstrapResponse,
     ApprovalResponse,
 } from "./types.js";
+import { DPoPManager } from "./auth/dpop.js";
 
 export class OneClawApiError extends Error {
     constructor(
@@ -68,9 +69,16 @@ export class OneClawClient {
 
     private agentCredentials?: { agentId?: string; apiKey: string };
     private tokenExpiresAt = 0;
+    private dpopManager?: DPoPManager;
+    private dpopReady: Promise<void> | null = null;
+
     constructor(config: ClientConfig | AgentCredentials) {
         this.baseUrl = config.baseUrl.replace(/\/$/, "");
         this._vaultId = config.vaultId ?? "";
+
+        if (process.env.ONECLAW_DPOP === "true") {
+            this.dpopManager = new DPoPManager();
+        }
 
         if ("apiKey" in config && !("token" in config)) {
             this.agentCredentials = {
@@ -94,21 +102,45 @@ export class OneClawClient {
         this.tokenExpiresAt = 0;
     }
 
+    private async ensureDPoP(): Promise<void> {
+        if (!this.dpopManager) return;
+        if (!this.dpopReady) {
+            this.dpopReady = this.dpopManager.init();
+        }
+        await this.dpopReady;
+    }
+
     private async ensureToken(): Promise<void> {
         if (!this.agentCredentials) return;
         if (this.token && Date.now() < this.tokenExpiresAt - REFRESH_BUFFER_MS)
             return;
 
-        const body: Record<string, string> = {
+        await this.ensureDPoP();
+
+        const body: Record<string, unknown> = {
             api_key: this.agentCredentials.apiKey,
         };
         if (this.agentCredentials.agentId) {
             body.agent_id = this.agentCredentials.agentId;
         }
+        if (this.dpopManager) {
+            body.dpop_jwk = this.dpopManager.getPublicJwk();
+        }
 
-        const res = await fetch(`${this.baseUrl}/v1/auth/agent-token`, {
+        const tokenUrl = `${this.baseUrl}/v1/auth/agent-token`;
+        const tokenHeaders: Record<string, string> = {
+            "Content-Type": "application/json",
+        };
+        if (this.dpopManager) {
+            tokenHeaders["DPoP"] = await this.dpopManager.generateProof(
+                "POST",
+                tokenUrl,
+            );
+        }
+
+        const res = await fetch(tokenUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: tokenHeaders,
             body: JSON.stringify(body),
         });
 
@@ -149,12 +181,16 @@ export class OneClawClient {
         }
     }
 
-    private async headers(): Promise<Record<string, string>> {
+    private async headers(method: string = "GET", url?: string): Promise<Record<string, string>> {
         await this.ensureToken();
-        return {
+        const hdrs: Record<string, string> = {
             Authorization: `Bearer ${this.token}`,
             "Content-Type": "application/json",
         };
+        if (this.dpopManager && url) {
+            hdrs["DPoP"] = await this.dpopManager.generateProof(method, url);
+        }
+        return hdrs;
     }
 
     private async resolveVaultUrl(suffix = ""): Promise<string> {
@@ -188,7 +224,8 @@ export class OneClawClient {
         init?: RequestInit,
         isRetry = false,
     ): Promise<T> {
-        const hdrs = await this.headers();
+        const method = init?.method ?? "GET";
+        const hdrs = await this.headers(method, url);
         const res = await fetch(url, {
             ...init,
             headers: { ...hdrs, ...(init?.headers as Record<string, string>) },
