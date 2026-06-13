@@ -280,11 +280,15 @@ function detectPii(text: string): ThreatDetection[] {
 
 // ── Secret redaction ─────────────────────────────────
 
-function redactSecrets(text: string): { redacted: string; matches: Array<{ path: string }> } {
+function redactSecrets(text: string, sessionScope?: string): { redacted: string; matches: Array<{ path: string }> } {
     pruneExpiredSecrets();
     const matches: Array<{ path: string }> = [];
-    let redacted = text;
+    // SEC-007: Normalize text before matching to prevent zero-width char bypass
+    let redacted = text.replace(ZERO_WIDTH_CHARS, '');
+    const scopePrefix = sessionScope ? `${sessionScope}${SCOPE_SEPARATOR}` : undefined;
     for (const [key, path] of secretValues) {
+        // SEC-004: Only match secrets belonging to this session's scope
+        if (scopePrefix && !key.startsWith(scopePrefix)) continue;
         const rawValue = extractRawValue(key);
         if (redacted.includes(rawValue)) {
             redacted = redacted.split(rawValue).join(`[REDACTED:${path}]`);
@@ -296,14 +300,16 @@ function redactSecrets(text: string): { redacted: string; matches: Array<{ path:
 
 // ── Exfiltration detection (secrets in tool inputs) ──
 
-function detectExfiltration(text: string): ThreatDetection[] {
+function detectExfiltration(text: string, sessionScope?: string): ThreatDetection[] {
     const mode = getExfilProtectionMode();
     if (mode === "off") return [];
     pruneExpiredSecrets();
-    // SEC-007: Normalize inspected text to prevent zero-width char bypass
     const normalizedText = text.replace(ZERO_WIDTH_CHARS, '');
     const threats: ThreatDetection[] = [];
+    const scopePrefix = sessionScope ? `${sessionScope}${SCOPE_SEPARATOR}` : undefined;
     for (const [key, path] of secretValues) {
+        // SEC-004: Only match secrets belonging to this session's scope
+        if (scopePrefix && !key.startsWith(scopePrefix)) continue;
         const rawValue = extractRawValue(key);
         if (normalizedText.includes(rawValue)) {
             threats.push({
@@ -320,8 +326,9 @@ function detectExfiltration(text: string): ThreatDetection[] {
 
 /**
  * Inspect tool input arguments for threats, PII, and secret exfiltration.
+ * @param sessionScope - org/agent scope to restrict secret matching to this tenant
  */
-export function inspectInput(toolName: string, args: unknown): InspectionResult {
+export function inspectInput(toolName: string, args: unknown, sessionScope?: string): InspectionResult {
     if (!isSecurityEnabled()) {
         return { passed: true, threats: [] };
     }
@@ -337,7 +344,7 @@ export function inspectInput(toolName: string, args: unknown): InspectionResult 
     threats.push(...detectPii(normalized));
     
     if (!SECRET_TOOLS.has(toolName)) {
-        const exfil = detectExfiltration(normalized);
+        const exfil = detectExfiltration(normalized, sessionScope);
         threats.push(...exfil);
         const exfilMode = getExfilProtectionMode();
         if (exfil.length > 0 && exfilMode === "block") {
@@ -367,8 +374,9 @@ export function inspectInput(toolName: string, args: unknown): InspectionResult 
 
 /**
  * Inspect tool output for threats, PII, and optionally redact known secrets.
+ * @param sessionScope - org/agent scope to restrict secret matching to this tenant
  */
-export function inspectOutput(toolName: string, result: string): InspectionResult {
+export function inspectOutput(toolName: string, result: string, sessionScope?: string): InspectionResult {
     if (!isSecurityEnabled()) {
         return { passed: true, threats: [] };
     }
@@ -377,7 +385,7 @@ export function inspectOutput(toolName: string, result: string): InspectionResul
     threats.push(...detectPii(result));
     
     if (!SECRET_TOOLS.has(toolName) && isSecretRedactionEnabled()) {
-        const { redacted, matches } = redactSecrets(result);
+        const { redacted, matches } = redactSecrets(result, sessionScope);
         if (matches.length > 0) {
             for (const m of matches) {
                 threats.push({

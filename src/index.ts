@@ -293,9 +293,16 @@ function registerTool(factory: AnyToolFactory) {
                 log: { info: (msg: string) => void };
             },
         ) => {
+            // SEC-004: Resolve session scope for tenant-isolated secret matching
+            const sessionScope = context.session
+                ? ("agentId" in context.session && context.session.agentId)
+                    ? context.session.agentId
+                    : ("vaultId" in context.session ? context.session.vaultId : undefined)
+                : undefined;
+
             // Security inspection of input
             if (isSecurityEnabled()) {
-                const inputCheck = inspectInput(proto.name, args);
+                const inputCheck = inspectInput(proto.name, args, sessionScope);
                 if (!inputCheck.passed) {
                     const threat = inputCheck.threats[0];
                     context.log.info(`[SECURITY] Blocked ${proto.name}: ${threat?.type} (${threat?.pattern})`);
@@ -314,13 +321,6 @@ function registerTool(factory: AnyToolFactory) {
             
             // Track secret values for redaction and exfiltration protection
             if (isSecretRedactionEnabled()) {
-                // SEC-004: Scope secrets to the session's agent/vault to prevent cross-tenant matches
-                const sessionScope = context.session
-                    ? ("agentId" in context.session && context.session.agentId)
-                        ? context.session.agentId
-                        : ("vaultId" in context.session ? context.session.vaultId : undefined)
-                    : undefined;
-
                 if (proto.name === "get_secret") {
                     try {
                         const parsed = JSON.parse(result);
@@ -339,7 +339,7 @@ function registerTool(factory: AnyToolFactory) {
             
             // Security inspection of output (redacts secrets, detects PII, logs threats)
             if (isSecurityEnabled()) {
-                const outputCheck = inspectOutput(proto.name, result);
+                const outputCheck = inspectOutput(proto.name, result, sessionScope);
                 if (outputCheck.threats.length > 0) {
                     context.log.info(`[SECURITY] Output warnings for ${proto.name}: ${outputCheck.threats.map(t => t.pattern).join(", ")}`);
                 }
