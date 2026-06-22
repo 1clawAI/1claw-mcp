@@ -1,0 +1,25 @@
+# Inspection image for MCP registries (Glama, MCP scanners, etc.).
+# Builds the server and runs it in stdio + LOCAL-ONLY mode: no ONECLAW_* vault
+# credentials are required, so the server starts and answers MCP introspection
+# (tool listing) for automated checks. The credential-free security tools
+# (e.g. inspect_content) are exposed, which is enough to pass introspection.
+#
+# NOTE: the PRODUCTION image is the root Dockerfile (httpStream on :8080).
+# This file exists only so registries can start + introspect the server cold.
+FROM node:22-slim AS builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json ./
+COPY src/ src/
+RUN npx tsc
+RUN npm prune --production
+
+FROM node:22-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/node_modules node_modules/
+COPY --from=builder /app/dist dist/
+COPY --from=builder /app/package.json ./
+# stdio (default, no MCP_TRANSPORT) + no ONECLAW_* creds => local-only mode.
+CMD ["node", "dist/index.js"]
