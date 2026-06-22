@@ -23,6 +23,14 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 ## Installation (local / stdio)
 
+### Homebrew (macOS / Linux)
+
+```bash
+brew install 1clawAI/tap/1claw-mcp
+```
+
+### From source
+
 ```bash
 cd packages/mcp
 pnpm install
@@ -271,3 +279,9 @@ When an agent has `shroud_enabled: true`, its JWT carries a `shroud_config` payl
 - **Advanced redaction** — Server-side secret redaction with configurable scope and granularity.
 
 Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`CreateAgentRequest.shroud_config`), or CLI (`agent update`). See the [Shroud documentation](https://docs.1claw.xyz/shroud) for the full `shroud_config` schema.
+
+## MCP Registry
+
+This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
+
+npm: `@1claw/mcp` v0.34.1
