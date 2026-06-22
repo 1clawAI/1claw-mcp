@@ -6,6 +6,8 @@ An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time
 
 **Local-only mode**: Run without vault credentials for security-only tools (e.g., `inspect_content`). Ideal for users running local models (Ollama, LM Studio, llama.cpp) who want prompt injection and threat detection without a 1claw account.
 
+**Local daemon mode**: Connect to the local 1claw daemon instead of the cloud API. Secrets stay on your machine, injected into HTTP requests via a Unix socket proxy — the model never sees the raw value. Set `ONECLAW_LOCAL_VAULT=true` and optionally `ONECLAW_DAEMON_SOCKET`.
+
 **API contract:** Vault-facing tools use the REST API described in [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through **Shroud** is not MCP — agents call `https://shroud.1claw.xyz` directly with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`). When the MCP server exchanges an agent API key for a JWT, that token may carry **`shroud_config`** for Shroud’s PolicyEngine; MCP itself does not proxy LLM requests.
 
 ## Transport Modes
@@ -41,17 +43,19 @@ pnpm run build
 
 | Variable                  | Required       | Default                 | Description                                                                 |
 | ------------------------- | -------------- | ----------------------- | --------------------------------------------------------------------------- |
+| `ONECLAW_AGENT_API_KEY`   | stdio*         | —                       | **Recommended.** Agent API key (`ocv_...`). Server exchanges it for a JWT, auto-discovers agent ID and vault, and refreshes the token automatically. |
 | `ONECLAW_LOCAL_ONLY`      | No             | `false`                 | Set to `true` for security-only mode (no vault credentials needed).         |
-| `ONECLAW_AGENT_ID`        | stdio*         | —                       | Agent UUID (from dashboard). Use with `ONECLAW_AGENT_API_KEY` (recommended). |
-| `ONECLAW_AGENT_API_KEY`   | stdio*         | —                       | Agent API key (`ocv_...`). Server exchanges this for a JWT and auto-refreshes. |
-| `ONECLAW_AGENT_TOKEN`     | stdio*         | —                       | Static Bearer JWT (alternative to ID+key; expires in ~1 h).                |
-| `ONECLAW_VAULT_ID`        | stdio only     | —                       | UUID of the vault to operate on.                                           |
+| `ONECLAW_LOCAL_VAULT`     | No             | `false`                 | Set to `true` to use the local daemon instead of the cloud API.             |
+| `ONECLAW_DAEMON_SOCKET`   | No             | `~/.config/1claw/daemon.sock` | Path to the local daemon Unix socket (local daemon mode only).       |
+| `ONECLAW_AGENT_ID`        | No             | —                       | Agent UUID. Optional with `ONECLAW_AGENT_API_KEY` (auto-discovered from key). |
+| `ONECLAW_AGENT_TOKEN`     | stdio*         | —                       | **Legacy.** Static Bearer JWT (expires in ~1 h, no auto-refresh).          |
+| `ONECLAW_VAULT_ID`        | No             | —                       | UUID of the vault. Auto-discovered when using `ONECLAW_AGENT_API_KEY`.     |
 | `ONECLAW_DPOP`            | No             | `false`                 | Set to `true` to enable DPoP (RFC 9449) proof-of-possession. Binds agent tokens to the MCP client's ephemeral P-256 keypair so stolen tokens are unusable without the matching private key. |
 | `ONECLAW_BASE_URL`        | No             | `https://api.1claw.xyz` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.xyz` or `https://intents.1claw.xyz`) if your deployment routes signing there. Self-hosted: your Vault/Shroud URL. |
 | `MCP_TRANSPORT`           | No             | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No             | `8080`                  | HTTP port (httpStream mode only).                                          |
 
-\* For stdio, set either **`ONECLAW_AGENT_ID` + `ONECLAW_AGENT_API_KEY`** (recommended for `api_key` auth method agents) or **`ONECLAW_AGENT_TOKEN`** (required for `mtls` / `oidc_client_credentials` agents, or as a static JWT alternative). Not needed when `ONECLAW_LOCAL_ONLY=true`.
+\* For stdio, set **`ONECLAW_AGENT_API_KEY`** (recommended — auto-discovers agent ID and vault, handles token refresh). Alternatively, set `ONECLAW_AGENT_TOKEN` + `ONECLAW_VAULT_ID` for static JWT auth. Not needed when `ONECLAW_LOCAL_ONLY=true` or `ONECLAW_LOCAL_VAULT=true`.
 
 ## Tools
 
@@ -93,6 +97,7 @@ pnpm run build
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
+| `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
 > **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
 
@@ -106,7 +111,7 @@ pnpm run build
 
 ### Hosted (mcp.1claw.xyz)
 
-For MCP clients that support remote servers with HTTP streaming. The server expects a **Bearer token** (JWT). You can get one by calling `POST https://api.1claw.xyz/v1/auth/agent-token` with `{"agent_id": "<uuid>", "api_key": "<ocv_...>"}` — use your agent ID and API key from the 1claw dashboard.
+For MCP clients that support remote servers with HTTP streaming. Pass your agent API key as a Bearer token — the server exchanges it for a JWT, auto-discovers the agent ID and vault, and handles refresh.
 
 ```json
 {
@@ -114,28 +119,27 @@ For MCP clients that support remote servers with HTTP streaming. The server expe
         "1claw": {
             "url": "https://mcp.1claw.xyz/mcp",
             "headers": {
-                "Authorization": "Bearer <agent-jwt-or-token>",
-                "X-Vault-ID": "<your-vault-id>"
+                "Authorization": "Bearer ocv_your_agent_api_key"
             }
         }
     }
 }
 ```
 
+> The server accepts `ocv_` API keys directly as Bearer tokens — no manual JWT exchange needed. Vault is auto-discovered from the token response.
+
 ### Claude Desktop (local stdio)
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`. Prefer **agent ID + API key** (the server exchanges them for a JWT and refreshes automatically); alternatively use a static `ONECLAW_AGENT_TOKEN` (expires in ~1 hour).
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`. Only `ONECLAW_AGENT_API_KEY` is needed — the server auto-discovers the agent ID and vault, and handles JWT refresh.
 
 ```json
 {
     "mcpServers": {
         "1claw": {
-            "command": "node",
-            "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
+            "command": "npx",
+            "args": ["-y", "@1claw/mcp"],
             "env": {
-                "ONECLAW_AGENT_ID": "your-agent-uuid",
-                "ONECLAW_AGENT_API_KEY": "ocv_your_agent_api_key",
-                "ONECLAW_VAULT_ID": "your-vault-id"
+                "ONECLAW_AGENT_API_KEY": "ocv_your_agent_api_key"
             }
         }
     }
@@ -144,18 +148,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`. Prefer
 
 ### Cursor (local stdio)
 
-Add to `.cursor/mcp.json` in your project root. Use **agent ID + API key** so the server can refresh the token; or use `ONECLAW_AGENT_TOKEN` if you prefer a static JWT.
+Add to `.cursor/mcp.json` in your project root. Same key-only auth — agent ID and vault are auto-discovered.
 
 ```json
 {
     "mcpServers": {
         "1claw": {
-            "command": "node",
-            "args": ["./packages/mcp/dist/index.js"],
+            "command": "npx",
+            "args": ["-y", "@1claw/mcp"],
             "env": {
-                "ONECLAW_AGENT_ID": "${env:ONECLAW_AGENT_ID}",
-                "ONECLAW_AGENT_API_KEY": "${env:ONECLAW_AGENT_API_KEY}",
-                "ONECLAW_VAULT_ID": "${env:ONECLAW_VAULT_ID}"
+                "ONECLAW_AGENT_API_KEY": "ocv_your_agent_api_key"
             }
         }
     }
@@ -181,6 +183,26 @@ For users running local models who only need security inspection. No 1claw accou
 ```
 
 In this mode only the `inspect_content` tool is available. Vault, secret, and transaction tools are not registered.
+
+### Local daemon mode (no cloud, zero-knowledge proxy)
+
+Connect to the local 1claw daemon. The model gets `list_secrets` (names only) and `proxy_request` (inject a secret into an HTTP call without exposing the value). Set up with `1claw setup --local`.
+
+```json
+{
+    "mcpServers": {
+        "1claw": {
+            "command": "npx",
+            "args": ["-y", "@1claw/mcp"],
+            "env": {
+                "ONECLAW_LOCAL_VAULT": "true"
+            }
+        }
+    }
+}
+```
+
+In this mode the model never sees secret values. It asks the daemon to make API calls on its behalf, and the daemon injects the secret per your policy. See `1claw daemon --help` for policy management.
 
 ## Example: Checking LLM Output for Threats
 
@@ -284,4 +306,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.34.1
+npm: `@1claw/mcp` v0.34.2
