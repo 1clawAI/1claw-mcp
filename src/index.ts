@@ -40,6 +40,8 @@ import { treasuryProposeTool } from "./tools/treasury_propose.js";
 import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
 import { treasuryListProposalsTool } from "./tools/treasury_list_proposals.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
+import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
+import { proxyRequestTool } from "./tools/proxy_request.js";
 
 type SessionAuth =
     | { token: string; vaultId: string }
@@ -82,7 +84,7 @@ function createStdioClientFromEnv(): OneClawClient {
     );
 }
 
-if (transport === "stdio" && !localOnly) {
+if (transport === "stdio" && !localOnly && !isLocalDaemonMode()) {
     const agentApiKey = process.env.ONECLAW_AGENT_API_KEY;
     const token = process.env.ONECLAW_AGENT_TOKEN;
     if (!agentApiKey && !token) {
@@ -91,7 +93,8 @@ if (transport === "stdio" && !localOnly) {
                 "  ONECLAW_AGENT_API_KEY                      (simplest, auto-discovers agent ID and vault)\n" +
                 "  ONECLAW_AGENT_ID + ONECLAW_AGENT_API_KEY   (explicit agent ID)\n" +
                 "  ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID     (static JWT, expires)\n" +
-                "  ONECLAW_LOCAL_ONLY=true                    (security tools only, no vault needed)",
+                "  ONECLAW_LOCAL_ONLY=true                    (security tools only, no vault needed)\n" +
+                "  ONECLAW_LOCAL_VAULT=true                   (local daemon mode, no cloud auth needed)",
         );
         process.exit(1);
     }
@@ -371,9 +374,44 @@ function registerTool(factory: AnyToolFactory) {
     });
 }
 
+// ── Local daemon tools (available when ONECLAW_LOCAL_VAULT=true) ──
+
+if (isLocalDaemonMode()) {
+    const localClient = createLocalClient();
+    const proxyTool = proxyRequestTool(localClient);
+    server.addTool({
+        name: proxyTool.name,
+        description: proxyTool.description,
+        parameters: proxyTool.parameters,
+        execute: async (
+            args: Record<string, unknown>,
+            context: { session?: SessionAuth; log: { info: (msg: string) => void } },
+        ) => {
+            return (proxyTool.execute as (a: unknown, c: unknown) => Promise<string>)(args, context);
+        },
+    });
+
+    // In local mode, list_secrets uses the daemon (shows names only, no values)
+    server.addTool({
+        name: "list_secrets",
+        description:
+            "List secret names in the local vault. Values are never exposed. " +
+            "Use proxy_request to make API calls with secrets injected.",
+        parameters: z.object({}),
+        execute: async (
+            _args: Record<string, unknown>,
+            { log }: { log: { info: (msg: string) => void } },
+        ) => {
+            const result = await localClient.listSecrets();
+            log.info(`Listed ${result.secrets.length} local secrets`);
+            return JSON.stringify(result.secrets);
+        },
+    });
+}
+
 // ── Vault tools (require credentials — skipped in local-only mode) ─
 
-if (!localOnly) {
+if (!localOnly && !isLocalDaemonMode()) {
     registerTool(listSecretsTool as AnyToolFactory);
     registerTool(getSecretTool as AnyToolFactory);
     registerTool(putSecretTool as AnyToolFactory);
@@ -409,7 +447,7 @@ if (!localOnly) {
 
 // ── Vault-dependent stretch tools + resource ─────────
 
-if (!localOnly) {
+if (!localOnly && !isLocalDaemonMode()) {
 
 const rotateAndStoreTool = (client: OneClawClient) => ({
     name: "rotate_and_store",
