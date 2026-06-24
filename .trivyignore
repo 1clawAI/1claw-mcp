@@ -50,3 +50,32 @@ CVE-2026-41989
 # through Node's bundled OpenSSL. libgnutls pulled transitively, unreachable.
 # DoS-only, no RCE. Accepted.
 CVE-2026-33845
+
+# gnutls name constraint handling security bypass — unfixed in bookworm. MCP
+# uses Node's OpenSSL for all TLS; gnutls is a transitive dep, never invoked.
+CVE-2026-42010
+CVE-2026-42011
+# libgnutls30 HIGH CVEs — no fixed version in bookworm; gnutls never used by MCP.
+CVE-2026-33846
+CVE-2026-3833
+
+# libssh2 integer overflow — unfixed in bookworm. MCP performs no SSH
+# connections; libssh2 pulled transitively and never called. Accepted.
+CVE-2026-7598
+
+# curl / libcurl4 — unfixed in bookworm. MCP's HTTP client is Node's fetch
+# (undici); system curl/libcurl is base-image only and never used for requests.
+# CVE-2026-5773: SMB wrong-transfer — MCP never speaks SMB. CVE-2026-6276:
+# libcurl cookie-leak — MCP does not use libcurl. Accepted.
+CVE-2026-5773
+CVE-2026-6276
+
+# perl-base (Archive::Tar / IO-Compress) — fix_deferred/affected in bookworm.
+# MCP is a headless Node server; perl and its modules are base-image only and
+# never invoked at runtime. Vulnerable paths require parsing attacker-controlled
+# archives in perl, which MCP never does. Accepted.
+CVE-2026-42496
+CVE-2026-8376
+CVE-2026-42497
+CVE-2026-48962
+CVE-2026-9538
