@@ -84,6 +84,7 @@ pnpm run build
 | `list_signing_keys`    | List all signing keys for an agent across all chains.                        |
 | `sign_message`         | Sign a message using EIP-191 personal_sign. Returns signature and signer address. |
 | `sign_typed_data`      | Sign EIP-712 typed structured data. Returns signature, typed data hash, and signer address. |
+| `sign_digest`          | Sign a client-computed 32-byte digest directly (raw/blind signing) for ERC-1271/ERC-7739 nested EIP-712 flows (e.g. Polymarket). Requires `raw_signing_enabled`; audit-logged. |
 | `platform_list_apps`   | List all platform apps in the caller's org.                                                          |
 | `platform_create_app`  | Register a new platform app (returns `plt_` API key). User-only.                                     |
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
