@@ -88,9 +88,11 @@ function daemonRequest<T>(
  */
 export class LocalDaemonClient {
     private socketPath: string;
+    private secretPrefix: string;
 
     constructor(socketPath?: string) {
         this.socketPath = socketPath ?? DEFAULT_SOCKET;
+        this.secretPrefix = process.env.ONECLAW_SECRET_PREFIX || "";
     }
 
     get agentId(): string | undefined {
@@ -102,10 +104,13 @@ export class LocalDaemonClient {
     }
 
     async listSecrets(): Promise<{ secrets: DaemonSecretMeta[] }> {
+        const path = this.secretPrefix
+            ? `/secrets?prefix=${encodeURIComponent(this.secretPrefix)}`
+            : "/secrets";
         const res = await daemonRequest<{ secrets: DaemonSecretMeta[] }>(
             this.socketPath,
             "GET",
-            "/secrets",
+            path,
         );
         return {
             secrets: res.secrets.map((s) => ({
