@@ -76,8 +76,8 @@ pnpm run build
 | `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
 | `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
 | `simulate_bundle`      | Simulate an ordered sequence of transactions (Tenderly bundle) without signing |
-| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast. Auto-generates an `Idempotency-Key` header for replay protection. |
-| `sign_transaction`     | Sign-only (no broadcast); returns `signed_tx` for client-side `eth_sendRawTransaction`. |
+| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast (EVM + Bitcoin, Solana, XRP, Cardano, Tron). Auto-generates an `Idempotency-Key` header for replay protection. |
+| `sign_transaction`     | Sign-only (no broadcast). EVM returns `signed_tx` hex; non-EVM returns chain-specific signed payload. |
 | `list_transactions`    | List transaction intents for the agent.                                      |
 | `get_transaction`      | Get one transaction by id (optional `include_signed_tx`).                    |
 | `provision_signing_key`| Generate a multi-chain signing key for an agent. Returns public key, address, and metadata. Private key stored securely in vault. |
