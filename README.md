@@ -76,8 +76,8 @@ pnpm run build
 | `share_secret`         | Share a secret with your creator, a user/agent by ID, or create an open link |
 | `simulate_transaction` | Simulate a transaction via Tenderly without signing or broadcasting          |
 | `simulate_bundle`      | Simulate an ordered sequence of transactions (Tenderly bundle) without signing |
-| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast (EVM + Bitcoin, Solana, XRP, Cardano, Tron). Auto-generates an `Idempotency-Key` header for replay protection. |
-| `sign_transaction`     | Sign-only (no broadcast). EVM returns `signed_tx` hex; non-EVM returns chain-specific signed payload. |
+| `submit_transaction`   | Submit a transaction intent to be signed and optionally broadcast (EVM + Bitcoin, Solana, XRP, Cardano, Tron). Auto-generates an `Idempotency-Key` header for replay protection. Supports `xrpl_tx_json` for 30+ XRPL transaction types (Payment, TrustSet, NFTokenMint, AMMCreate, EscrowCreate, etc.). |
+| `sign_transaction`     | Sign-only (no broadcast). EVM returns `signed_tx` hex; non-EVM returns chain-specific signed payload. Supports `xrpl_tx_json` for arbitrary XRPL transactions. |
 | `list_transactions`    | List transaction intents for the agent.                                      |
 | `get_transaction`      | Get one transaction by id (optional `include_signed_tx`).                    |
 | `provision_signing_key`| Generate a multi-chain signing key for an agent. Returns public key, address, and metadata. Private key stored securely in vault. |
@@ -307,4 +307,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.35.0
+npm: `@1claw/mcp` v0.36.1
