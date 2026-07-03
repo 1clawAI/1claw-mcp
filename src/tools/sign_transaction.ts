@@ -2,23 +2,34 @@ import { z } from "zod";
 import { UserError } from "fastmcp";
 import { OneClawClient, OneClawApiError } from "../client.js";
 
+const nonEvmParams = {
+  destination_tag: z.number().int().optional().describe("XRP: destination tag for exchange deposits"),
+  memo: z.string().optional().describe("XRP / Solana: optional memo"),
+  fee_rate_sat_per_vbyte: z.number().int().optional().describe("Bitcoin: override fee rate (sat/vByte)"),
+  fee_limit_sun: z.number().int().optional().describe("Tron: TRC-20 energy fee limit in sun"),
+  token_mint: z.string().optional().describe("Solana SPL / Tron TRC-20: token mint or contract; omit for native transfer"),
+  token_decimals: z.number().int().optional().describe("Solana / Tron: token decimals (default 6)"),
+  ttl: z.number().int().optional().describe("Cardano: transaction time-to-live (absolute slot)"),
+};
+
 export function signTransactionTool(client: OneClawClient) {
   return {
     name: "sign_transaction" as const,
     description:
-      "Sign an EVM transaction without broadcasting it. Returns the raw signed_tx hex and tx_hash so the caller can submit to any RPC. All agent guardrails (allowlists, value caps, daily limits) are enforced. Use this when the agent needs to broadcast via its own RPC endpoint.",
+      "Sign a transaction without broadcasting. Returns signed_tx/raw_tx and tx_hash for the caller to submit via their own RPC. Supports EVM and non-EVM chains (Bitcoin, Solana, XRP, Cardano, Tron). All agent guardrails (allowlists, value caps, daily limits) are enforced.",
     parameters: z.object({
-      to: z.string().describe("Destination address (0x-prefixed)"),
-      value: z.string().describe("Value in ETH as decimal string (e.g. '0.01')"),
-      chain: z.string().describe("Chain name ('base', 'ethereum', etc.) or numeric chain ID"),
-      data: z.string().optional().describe("Hex-encoded calldata for contract interactions"),
+      to: z.string().describe("Destination address (0x for EVM; chain-native format for non-EVM)"),
+      value: z.string().describe("Value in major units as decimal string (e.g. '0.01' ETH, '0.001' BTC, '0.25' SOL)"),
+      chain: z.string().describe("Chain name ('ethereum', 'bitcoin-testnet', 'solana-devnet', etc.) or numeric EVM chain ID"),
+      data: z.string().optional().describe("Hex-encoded calldata (EVM contract interactions)"),
       signing_key_path: z.string().optional().describe("Vault path to the signing key. Auto-resolves per-chain signing key if provisioned, otherwise keys/{chain}-signer"),
-      nonce: z.number().int().optional().describe("Transaction nonce (auto-resolved if omitted)"),
-      gas_price: z.string().optional().describe("Gas price in wei (legacy mode)"),
-      gas_limit: z.number().int().optional().describe("Gas limit. Defaults to 21000"),
-      max_fee_per_gas: z.string().optional().describe("EIP-1559 max fee per gas in wei"),
-      max_priority_fee_per_gas: z.string().optional().describe("EIP-1559 max priority fee per gas in wei"),
-      simulate_first: z.boolean().default(true).describe("Run Tenderly simulation before signing. Defaults to true."),
+      nonce: z.number().int().optional().describe("Transaction nonce (EVM; auto-resolved if omitted)"),
+      gas_price: z.string().optional().describe("Gas price in wei (EVM legacy mode)"),
+      gas_limit: z.number().int().optional().describe("Gas limit (EVM). Defaults to 21000"),
+      max_fee_per_gas: z.string().optional().describe("EIP-1559 max fee per gas in wei (EVM)"),
+      max_priority_fee_per_gas: z.string().optional().describe("EIP-1559 max priority fee per gas in wei (EVM)"),
+      simulate_first: z.boolean().default(true).describe("Run Tenderly simulation before signing (EVM-only). Defaults to true."),
+      ...nonEvmParams,
     }),
     execute: async (
       args: {
@@ -33,6 +44,13 @@ export function signTransactionTool(client: OneClawClient) {
         max_fee_per_gas?: string;
         max_priority_fee_per_gas?: string;
         simulate_first?: boolean;
+        destination_tag?: number;
+        memo?: string;
+        fee_rate_sat_per_vbyte?: number;
+        fee_limit_sun?: number;
+        token_mint?: string;
+        token_decimals?: number;
+        ttl?: number;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
