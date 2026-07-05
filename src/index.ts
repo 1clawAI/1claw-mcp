@@ -28,6 +28,7 @@ import { signMessageTool } from "./tools/sign_message.js";
 import { signTypedDataTool } from "./tools/sign_typed_data.js";
 import { signDigestTool } from "./tools/sign_digest.js";
 import { leaseBankrKeyTool } from "./tools/lease_bankr_key.js";
+import { getSigningKeyBalanceTool } from "./tools/get_signing_key_balance.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
 import { platformListAppsTool } from "./tools/platform_list_apps.js";
 import { platformCreateAppTool } from "./tools/platform_create_app.js";
@@ -434,6 +435,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(signTypedDataTool as AnyToolFactory);
     registerTool(signDigestTool as AnyToolFactory);
     registerTool(leaseBankrKeyTool as AnyToolFactory);
+    registerTool(getSigningKeyBalanceTool as AnyToolFactory);
     registerTool(platformListAppsTool as AnyToolFactory);
     registerTool(platformCreateAppTool as AnyToolFactory);
     registerTool(platformBootstrapUserTool as AnyToolFactory);

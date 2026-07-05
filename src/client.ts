@@ -682,4 +682,17 @@ export class OneClawClient {
             `${this.baseUrl}/v1/treasury/${treasuryId}/proposals${qs}`,
         );
     }
+
+    // ── Signing Key Balance ──────────────────────────────────────────
+
+    async getSigningKeyBalance(
+        agentId: string,
+        chain: string,
+        tokens?: string,
+    ): Promise<Record<string, unknown>> {
+        const params = tokens ? `?tokens=${encodeURIComponent(tokens)}` : "";
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/signing-keys/${encodeURIComponent(chain)}/balance${params}`,
+        );
+    }
 }

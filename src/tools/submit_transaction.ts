@@ -17,7 +17,7 @@ export function submitTransactionTool(client: OneClawClient) {
   return {
     name: "submit_transaction" as const,
     description:
-      "Submit a transaction to be signed by 1claw's Intents API and optionally broadcast. Supports EVM (legacy + EIP-1559) and non-EVM chains (Bitcoin, Solana, XRP, Cardano, Tron). value is the major-unit decimal string (ETH/BTC/SOL/XRP/ADA/TRX). Set simulate_first=true for Tenderly pre-flight (EVM-only; no-op on non-EVM).",
+      "Submit a transaction to be signed by 1claw's Intents API and optionally broadcast. Supports EVM (legacy + EIP-1559) and non-EVM chains (Bitcoin, Solana, XRP, Cardano, Tron). value is the major-unit decimal string (ETH/BTC/SOL/XRP/ADA/TRX). token_mint supports ERC-20 transfers on EVM chains (contract address) as well as SPL/TRC-20 on non-EVM. Set simulate_first=true for Tenderly pre-flight (EVM-only; no-op on non-EVM).",
     parameters: z.object({
       to: z.string().describe("Destination address (0x for EVM; chain-native format for non-EVM)"),
       value: z.string().describe("Value in major units as decimal string (e.g. '0.01' ETH, '0.001' BTC, '0.25' SOL)"),
