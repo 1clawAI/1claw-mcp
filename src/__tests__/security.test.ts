@@ -455,6 +455,109 @@ describe("Security Module", () => {
         });
     });
 
+    describe("encoded / fragmented secret exfiltration", () => {
+        const SECRET = "unit_test_secret_value_do_not_use_4a6f3c";
+        const SECRET_PATH = "api-keys/stripe";
+        const TOOL = "submit_transaction";
+
+        const enc = {
+            base64: (s: string) => Buffer.from(s, "utf8").toString("base64"),
+            base64url: (s: string) => Buffer.from(s, "utf8").toString("base64url"),
+            hex: (s: string) => Buffer.from(s, "utf8").toString("hex"),
+            hexUpper: (s: string) => Buffer.from(s, "utf8").toString("hex").toUpperCase(),
+            reversed: (s: string) => [...s].reverse().join(""),
+            half1: (s: string) => s.slice(0, Math.ceil(s.length / 2)),
+            half2: (s: string) => s.slice(Math.ceil(s.length / 2)),
+            unpadded: (s: string) => Buffer.from(s, "utf8").toString("base64").replace(/=+$/, ""),
+        };
+
+        function blocked(res: { passed: boolean; threats: Array<{ type: string }> }): boolean {
+            return res.passed === false && res.threats.some((t) => t.type === "secret_exfiltration");
+        }
+
+        beforeEach(() => {
+            clearSecrets();
+            delete process.env.ONECLAW_MCP_EXFIL_PROTECTION;
+            delete process.env.ONECLAW_MCP_SECURITY_ENABLED;
+            registerSecret(SECRET_PATH, SECRET);
+        });
+
+        it("CONTROL: plaintext secret in tool input is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: `leak:${SECRET}` }))).toBe(true);
+        });
+
+        it("base64-encoded secret is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: enc.base64(SECRET) }))).toBe(true);
+        });
+
+        it("base64url-encoded secret is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: enc.base64url(SECRET) }))).toBe(true);
+        });
+
+        it("unpadded base64 secret is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: enc.unpadded(SECRET) }))).toBe(true);
+        });
+
+        it("hex-encoded secret (as calldata) is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: "0x" + enc.hex(SECRET) }))).toBe(true);
+        });
+
+        it("uppercase hex secret is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: enc.hexUpper(SECRET) }))).toBe(true);
+        });
+
+        it("reversed secret is blocked", () => {
+            expect(blocked(inspectInput(TOOL, { data: enc.reversed(SECRET) }))).toBe(true);
+        });
+
+        it("secret split across two adjacent fields is blocked", () => {
+            const res = inspectInput(TOOL, {
+                to: "0xC0ffee",
+                data: enc.half1(SECRET),
+                memo: enc.half2(SECRET),
+            });
+            expect(blocked(res)).toBe(true);
+        });
+
+        it("secret split across a nested array of fragments is blocked", () => {
+            const res = inspectInput(TOOL, {
+                to: "0xC0ffee",
+                calls: [{ note: enc.half1(SECRET) }, { note: enc.half2(SECRET) }],
+            });
+            expect(blocked(res)).toBe(true);
+        });
+
+        it("output redaction catches base64-encoded secret", () => {
+            const b64 = enc.base64(SECRET);
+            const res = inspectOutput("list_vaults", `dump: ${b64}`);
+            expect(res.redacted).not.toContain(b64);
+            expect(res.threats.some((t) => t.type === "secret_leak")).toBe(true);
+        });
+
+        it("output redaction catches hex-encoded secret", () => {
+            const hexVal = enc.hex(SECRET);
+            const res = inspectOutput("list_vaults", `dump: 0x${hexVal}`);
+            expect(res.redacted).not.toContain(hexVal);
+            expect(res.threats.some((t) => t.type === "secret_leak")).toBe(true);
+        });
+
+        it("a normal transaction to an address passes while a secret is live", () => {
+            const res = inspectInput(TOOL, {
+                to: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                value: "1500000000000000000",
+                data: "0x" + "a1b2c3d4".repeat(8),
+                chain: "base",
+            });
+            expect(res.threats.some((t) => t.type === "secret_exfiltration")).toBe(false);
+        });
+
+        it("a cleared secret is no longer matched", () => {
+            expect(blocked(inspectInput(TOOL, { data: SECRET }))).toBe(true);
+            clearSecrets();
+            expect(blocked(inspectInput(TOOL, { data: SECRET }))).toBe(false);
+        });
+    });
+
     describe("feature flag helpers", () => {
         it("isSecretRedactionEnabled defaults to true", () => {
             delete process.env.ONECLAW_MCP_REDACT_SECRETS;

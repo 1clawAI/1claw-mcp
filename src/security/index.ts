@@ -126,6 +126,72 @@ const SECRET_TOOLS = new Set([
     "rotate_and_store",
 ]);
 
+// ── Encoding variant generation ──────────────────────
+// Forward-generate common reversible encodings of each tracked secret so exfil
+// detection catches base64, hex, reversed, and percent-encoded forms without
+// ever decoding attacker-controlled input.
+
+interface SecretVariants {
+    exact: string[];
+    caseInsensitive: string[];
+}
+
+function buildSecretVariants(raw: string): SecretVariants {
+    const buf = Buffer.from(raw, "utf8");
+    const stripPad = (s: string) => s.replace(/=+$/, "");
+
+    const exact = new Set<string>([raw]);
+    exact.add(stripPad(buf.toString("base64")));
+    exact.add(stripPad(buf.toString("base64url")));
+    exact.add([...raw].reverse().join(""));
+    try { exact.add(encodeURIComponent(raw)); } catch { /* non-encodable */ }
+
+    const caseInsensitive = new Set<string>([buf.toString("hex")]);
+
+    const longEnough = (v: string) => v.length >= MIN_SECRET_LENGTH;
+    return {
+        exact: [...exact].filter(longEnough),
+        caseInsensitive: [...caseInsensitive].filter(longEnough),
+    };
+}
+
+const VARIANT_CACHE_MAX = 512;
+const variantCache = new Map<string, SecretVariants>();
+
+function getSecretVariants(raw: string): SecretVariants {
+    let cached = variantCache.get(raw);
+    if (!cached) {
+        if (variantCache.size >= VARIANT_CACHE_MAX) variantCache.clear();
+        cached = buildSecretVariants(raw);
+        variantCache.set(raw, cached);
+    }
+    return cached;
+}
+
+function textContainsSecretVariant(text: string, lowerText: string, variants: SecretVariants): boolean {
+    return variants.exact.some((v) => text.includes(v))
+        || variants.caseInsensitive.some((v) => lowerText.includes(v));
+}
+
+// ── String leaf concatenation ────────────────────────
+// Rejoin a secret split across adjacent fields by concatenating all string leaf
+// values in traversal order with no separators.
+
+const MAX_COLLECT_DEPTH = 100;
+const MAX_COLLECT_CHARS = 200_000;
+
+function collectStringValues(value: unknown, depth = 0, acc = { text: "" }): string {
+    if (depth > MAX_COLLECT_DEPTH || acc.text.length >= MAX_COLLECT_CHARS) return acc.text;
+    if (typeof value === "string") {
+        acc.text += value.slice(0, MAX_COLLECT_CHARS - acc.text.length);
+    } else if (Array.isArray(value)) {
+        for (const v of value) collectStringValues(v, depth + 1, acc);
+    } else if (value && typeof value === "object") {
+        for (const v of Object.values(value)) collectStringValues(v, depth + 1, acc);
+    }
+    return acc.text;
+}
+
 /**
  * Register a secret value for redaction and exfiltration protection.
  * Called after get_secret / get_env_bundle returns a value.
@@ -163,6 +229,7 @@ export function clearSecrets(scope?: string): void {
     if (!scope) {
         secretValues.clear();
         secretTimestamps.clear();
+        variantCache.clear();
         return;
     }
     const prefix = `${scope}${SCOPE_SEPARATOR}`;
@@ -172,6 +239,7 @@ export function clearSecrets(scope?: string): void {
             secretTimestamps.delete(key);
         }
     }
+    variantCache.clear();
 }
 
 /**
@@ -290,28 +358,47 @@ function redactSecrets(text: string, sessionScope?: string): { redacted: string;
         // SEC-004: Only match secrets belonging to this session's scope
         if (scopePrefix && !key.startsWith(scopePrefix)) continue;
         const rawValue = extractRawValue(key);
-        if (redacted.includes(rawValue)) {
-            redacted = redacted.split(rawValue).join(`[REDACTED:${path}]`);
-            matches.push({ path });
+        const tag = `[REDACTED:${path}]`;
+        const { exact, caseInsensitive } = getSecretVariants(rawValue);
+        let matched = false;
+        for (const variant of exact) {
+            if (redacted.includes(variant)) {
+                redacted = redacted.split(variant).join(tag);
+                matched = true;
+            }
         }
+        for (const variant of caseInsensitive) {
+            const pattern = new RegExp(escapeForRegex(variant), "gi");
+            if (pattern.test(redacted)) {
+                redacted = redacted.replace(new RegExp(escapeForRegex(variant), "gi"), tag);
+                matched = true;
+            }
+        }
+        if (matched) matches.push({ path });
     }
     return { redacted, matches };
 }
 
+function escapeForRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // ── Exfiltration detection (secrets in tool inputs) ──
 
-function detectExfiltration(text: string, sessionScope?: string): ThreatDetection[] {
+function detectExfiltration(haystacks: string[], sessionScope?: string): ThreatDetection[] {
     const mode = getExfilProtectionMode();
     if (mode === "off") return [];
     pruneExpiredSecrets();
-    const normalizedText = text.replace(ZERO_WIDTH_CHARS, '');
+    const texts = haystacks.map((t) => t.replace(ZERO_WIDTH_CHARS, ''));
+    const lowerTexts = texts.map((t) => t.toLowerCase());
     const threats: ThreatDetection[] = [];
     const scopePrefix = sessionScope ? `${sessionScope}${SCOPE_SEPARATOR}` : undefined;
     for (const [key, path] of secretValues) {
         // SEC-004: Only match secrets belonging to this session's scope
         if (scopePrefix && !key.startsWith(scopePrefix)) continue;
         const rawValue = extractRawValue(key);
-        if (normalizedText.includes(rawValue)) {
+        const variants = getSecretVariants(rawValue);
+        if (texts.some((t, i) => textContainsSecretVariant(t, lowerTexts[i], variants))) {
             threats.push({
                 type: "secret_exfiltration",
                 pattern: `known_secret:${path}`,
@@ -344,7 +431,8 @@ export function inspectInput(toolName: string, args: unknown, sessionScope?: str
     threats.push(...detectPii(normalized));
     
     if (!SECRET_TOOLS.has(toolName)) {
-        const exfil = detectExfiltration(normalized, sessionScope);
+        const valuesConcat = collectStringValues(args);
+        const exfil = detectExfiltration([normalized, valuesConcat], sessionScope);
         threats.push(...exfil);
         const exfilMode = getExfilProtectionMode();
         if (exfil.length > 0 && exfilMode === "block") {
