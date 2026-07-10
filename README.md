@@ -97,6 +97,8 @@ pnpm run build
 | `list_approvals`       | List approval requests, optionally filtered by status (pending, approved, denied).                   |
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
+| `execute_http`         | Execute an HTTP request through a pre-configured binding. Credentials are injected server-side and never exposed to the agent. Requires `execution_intents_enabled` on the agent. |
+| `list_bindings`        | List all bindings configured for the agent. Returns binding names, types, and configuration (no credentials). |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 

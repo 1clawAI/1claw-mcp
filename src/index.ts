@@ -41,6 +41,8 @@ import { requestApprovalTool } from "./tools/request_approval.js";
 import { treasuryProposeTool } from "./tools/treasury_propose.js";
 import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
 import { treasuryListProposalsTool } from "./tools/treasury_list_proposals.js";
+import { executeHttpTool } from "./tools/execute_http.js";
+import { listBindingsTool } from "./tools/list_bindings.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -447,6 +449,8 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(treasuryProposeTool as AnyToolFactory);
     registerTool(treasurySignProposalTool as AnyToolFactory);
     registerTool(treasuryListProposalsTool as AnyToolFactory);
+    registerTool(executeHttpTool as AnyToolFactory);
+    registerTool(listBindingsTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
