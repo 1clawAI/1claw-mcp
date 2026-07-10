@@ -10,9 +10,11 @@ export function listBindingsTool(client: OneClawClient) {
     parameters: z.object({}),
     execute: async () => {
       try {
-        const res = await client.get(
-          `/v1/agents/${client.agentId}/bindings`,
-        );
+        const agentId = client.agentId;
+        if (!agentId) {
+          throw new UserError("Agent ID not resolved. Ensure ONECLAW_AGENT_API_KEY is set.");
+        }
+        const res = await client.listBindings(agentId);
         return JSON.stringify(res, null, 2);
       } catch (err) {
         if (err instanceof OneClawApiError) {

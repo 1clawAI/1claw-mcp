@@ -38,20 +38,21 @@ export function executeHttpTool(client: OneClawClient) {
       execution_mode?: string;
     }) => {
       try {
-        const res = await client.post(
-          `/v1/agents/${client.agentId}/execute`,
-          {
-            binding: args.binding,
-            intent_type: "http",
-            execution_mode: args.execution_mode ?? "vault",
-            params: {
-              method: args.method ?? "GET",
-              path: args.path ?? "",
-              headers: args.headers,
-              body: args.body,
-            },
+        const agentId = client.agentId;
+        if (!agentId) {
+          throw new UserError("Agent ID not resolved. Ensure ONECLAW_AGENT_API_KEY is set.");
+        }
+        const res = await client.executeIntent(agentId, {
+          binding: args.binding,
+          intent_type: "http",
+          execution_mode: args.execution_mode ?? "vault",
+          params: {
+            method: args.method ?? "GET",
+            path: args.path ?? "",
+            headers: args.headers,
+            body: args.body,
           },
-        );
+        });
         return JSON.stringify(res, null, 2);
       } catch (err) {
         if (err instanceof OneClawApiError) {

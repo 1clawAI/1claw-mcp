@@ -683,6 +683,31 @@ export class OneClawClient {
         );
     }
 
+    // ── Execution Intents ─────────────────────────────────────────
+
+    async executeIntent(
+        agentId: string,
+        body: {
+            binding: string;
+            intent_type: string;
+            execution_mode?: string;
+            params: Record<string, unknown>;
+        },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/execute`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    async listBindings(
+        agentId: string,
+    ): Promise<{ bindings: Array<Record<string, unknown>> }> {
+        return this.request<{ bindings: Array<Record<string, unknown>> }>(
+            `${this.baseUrl}/v1/agents/${agentId}/bindings`,
+        );
+    }
+
     // ── Signing Key Balance ──────────────────────────────────────────
 
     async getSigningKeyBalance(
