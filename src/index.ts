@@ -42,7 +42,11 @@ import { treasuryProposeTool } from "./tools/treasury_propose.js";
 import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
 import { treasuryListProposalsTool } from "./tools/treasury_list_proposals.js";
 import { executeHttpTool } from "./tools/execute_http.js";
+import { executeIntentTool } from "./tools/execute_intent.js";
 import { listBindingsTool } from "./tools/list_bindings.js";
+import { createBindingTool } from "./tools/create_binding.js";
+import { testBindingTool } from "./tools/test_binding.js";
+import { listExecutionsTool } from "./tools/list_executions.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -450,7 +454,11 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(treasurySignProposalTool as AnyToolFactory);
     registerTool(treasuryListProposalsTool as AnyToolFactory);
     registerTool(executeHttpTool as AnyToolFactory);
+    registerTool(executeIntentTool as AnyToolFactory);
     registerTool(listBindingsTool as AnyToolFactory);
+    registerTool(createBindingTool as AnyToolFactory);
+    registerTool(testBindingTool as AnyToolFactory);
+    registerTool(listExecutionsTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────

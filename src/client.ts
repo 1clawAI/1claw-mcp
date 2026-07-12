@@ -708,6 +708,50 @@ export class OneClawClient {
         );
     }
 
+    async createBinding(
+        agentId: string,
+        body: {
+            name: string;
+            binding_type: string;
+            config?: Record<string, unknown>;
+            guardrails?: Record<string, unknown>;
+            credential?: Record<string, unknown>;
+        },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/bindings`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    async testBinding(
+        agentId: string,
+        bindingId: string,
+        timeoutMs?: number,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/bindings/${bindingId}/test`,
+            {
+                method: "POST",
+                body: JSON.stringify(timeoutMs ? { timeout_ms: timeoutMs } : {}),
+            },
+        );
+    }
+
+    async listExecutions(
+        agentId: string,
+        limit?: number,
+        offset?: number,
+    ): Promise<Record<string, unknown>> {
+        const qs = new URLSearchParams();
+        if (limit) qs.set("limit", String(limit));
+        if (offset) qs.set("offset", String(offset));
+        const query = qs.toString();
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/executions${query ? `?${query}` : ""}`,
+        );
+    }
+
     // ── Signing Key Balance ──────────────────────────────────────────
 
     async getSigningKeyBalance(

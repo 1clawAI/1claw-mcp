@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.40.2 (2026-07-12)
+
+### Added
+
+- **Execution Intents tools:** `execute_intent` (generic/non-HTTP intents, e.g. GraphQL), `create_binding` (human-only), `test_binding` (connectivity check), and `list_executions` (recent execution events). These join the existing `execute_http` and `list_bindings` tools.
+- Client methods `createBinding`, `testBinding`, and `listExecutions` on the lightweight MCP client.
+
 ## 0.12.0 (2026-03-11)
 
 ### Security
