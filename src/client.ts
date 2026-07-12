@@ -59,6 +59,35 @@ function encodePath(path: string): string {
         .join("/");
 }
 
+/**
+ * Best-effort extraction of the agent UUID from a 1Claw agent JWT's `sub`
+ * claim (`"agent:<uuid>"`). Used in static-token mode (legacy
+ * `ONECLAW_AGENT_TOKEN`) so agent-scoped tools (transactions, signing,
+ * bindings/execute) can resolve their agent id without a key exchange.
+ * The signature is NOT verified here — the server validates every JWT; we
+ * only read the claim to know which `/v1/agents/{id}` path to call. Returns
+ * `undefined` for non-agent tokens (e.g. user JWTs) or unparseable input.
+ */
+function agentIdFromJwt(token: string): string | undefined {
+    try {
+        const parts = token.split(".");
+        if (parts.length !== 3) return undefined;
+        const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = payload.padEnd(
+            payload.length + ((4 - (payload.length % 4)) % 4),
+            "=",
+        );
+        const json = Buffer.from(padded, "base64").toString("utf8");
+        const sub = (JSON.parse(json) as { sub?: string }).sub;
+        if (typeof sub === "string" && sub.startsWith("agent:")) {
+            return sub.slice("agent:".length);
+        }
+    } catch {
+        /* not a decodable JWT — leave agentId unresolved */
+    }
+    return undefined;
+}
+
 const REFRESH_BUFFER_MS = 60_000;
 
 export class OneClawClient {
@@ -88,6 +117,10 @@ export class OneClawClient {
             this.token = "";
         } else {
             this.token = (config as ClientConfig).token;
+            // Static-token (legacy ONECLAW_AGENT_TOKEN) mode: resolve the agent
+            // id from the JWT sub claim so agent-scoped tools work without a key
+            // exchange.
+            this._resolvedAgentId = agentIdFromJwt(this.token);
         }
     }
 
