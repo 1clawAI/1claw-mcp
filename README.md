@@ -98,9 +98,17 @@ pnpm run build
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
 | `execute_http`         | Execute an HTTP request through a pre-configured binding. Credentials are injected server-side and never exposed to the agent. Requires `execution_intents_enabled` on the agent. |
+| `execute_intent`       | Execute a generic intent (HTTP, GraphQL, etc.) through a named binding. |
+| `create_binding`       | Create a binding (credential handle) for an agent. Supports inline credentials or `vault_ref` (live pointer to an existing vault secret, resolved at execution time). Human-only. |
 | `list_bindings`        | List all bindings configured for the agent. Returns binding names, types, and configuration (no credentials). |
+| `test_binding`         | Test connectivity of a binding. |
+| `list_executions`      | List recent execution events for an agent. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
+
+> **Binding credential sources:** The `create_binding` tool accepts an optional `credential_source` parameter with two modes:
+> - `{ "type": "inline", "value": { "token": "..." } }` — the credential is stored in `__agent-keys` (default behavior, same as using `credential`).
+> - `{ "type": "vault_ref", "vault_id": "<uuid>", "path": "secrets/api-key" }` — a live pointer to an existing vault secret. The credential is resolved at execution time and always uses the latest version. Useful for secrets that rotate independently or are shared across bindings.
 
 > **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
 

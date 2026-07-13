@@ -749,7 +749,8 @@ export class OneClawClient {
             config?: Record<string, unknown>;
             guardrails?: Record<string, unknown>;
             credential?: Record<string, unknown>;
-        },
+            credential_source?: Record<string, unknown>;
+        } | Record<string, unknown>,
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/agents/${agentId}/bindings`,
