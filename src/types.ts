@@ -226,3 +226,24 @@ export interface ApprovalResponse {
   created_at: string;
   expires_at?: string;
 }
+
+/** Masked payment card — never contains PAN/CVV. */
+export interface CardResponse {
+  id: string;
+  agent_id?: string | null;
+  issuer: string;
+  kind: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+  currency: string;
+  order_amount_usd?: string;
+  balance?: string;
+  status: string;
+  storage_mode: string;
+  reveal_policy: Record<string, unknown>;
+  void_after?: string;
+  created_at: string;
+  updated_at: string;
+}

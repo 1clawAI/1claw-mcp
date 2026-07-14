@@ -28,6 +28,12 @@ import { signMessageTool } from "./tools/sign_message.js";
 import { signTypedDataTool } from "./tools/sign_typed_data.js";
 import { signDigestTool } from "./tools/sign_digest.js";
 import { leaseBankrKeyTool } from "./tools/lease_bankr_key.js";
+import { orderCardTool, orderGiftCardTool } from "./tools/order_card.js";
+import {
+    listCardsTool,
+    getCardStatusTool,
+    searchGiftCardsTool,
+} from "./tools/list_cards.js";
 import { getSigningKeyBalanceTool } from "./tools/get_signing_key_balance.js";
 import { inspectContentTool } from "./tools/inspect_content.js";
 import { platformListAppsTool } from "./tools/platform_list_apps.js";
@@ -459,6 +465,11 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(createBindingTool as AnyToolFactory);
     registerTool(testBindingTool as AnyToolFactory);
     registerTool(listExecutionsTool as AnyToolFactory);
+    registerTool(orderCardTool as AnyToolFactory);
+    registerTool(orderGiftCardTool as AnyToolFactory);
+    registerTool(searchGiftCardsTool as AnyToolFactory);
+    registerTool(listCardsTool as AnyToolFactory);
+    registerTool(getCardStatusTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────

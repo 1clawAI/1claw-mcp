@@ -103,6 +103,11 @@ pnpm run build
 | `list_bindings`        | List all bindings configured for the agent. Returns binding names, types, and configuration (no credentials). |
 | `test_binding`         | Test connectivity of a binding. |
 | `list_executions`      | List recent execution events for an agent. |
+| `order_card`           | Order a prepaid card via x402. Requires `cards_enabled` on the agent and a funded USDC signing key on Base. Returns a masked card reference (never PAN). |
+| `order_gift_card`      | Order a gift card via x402. Accepts optional `laso_server_id` for brand selection. |
+| `search_gift_cards`    | Search available gift-card brands/servers (by query or country). |
+| `list_cards`           | List all payment cards for the agent (masked — last4 only). |
+| `get_card_status`      | Get the current status and metadata of a card by ID. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
