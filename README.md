@@ -108,6 +108,18 @@ pnpm run build
 | `search_gift_cards`    | Search available gift-card brands/servers (by query or country). |
 | `list_cards`           | List all payment cards for the agent (masked — last4 only). |
 | `get_card_status`      | Get the current status and metadata of a card by ID. |
+| `put_memory`           | Store a value in agent memory (namespace/key). Supports TTL for scratch entries. |
+| `get_memory`           | Read a value from agent memory by namespace and key. |
+| `list_memory`          | List memory namespaces or entries within a namespace. |
+| `delete_memory`        | Delete a memory entry by namespace and key. |
+| `search_memory`        | Search agent memory using semantic similarity (vector search). |
+| `list_automations`     | List automation workflows for the agent. |
+| `trigger_automation`   | Manually trigger an automation workflow. |
+| `list_runtimes`        | List cloud runtimes for the agent. |
+| `manage_runtime`       | Start, stop, or delete a cloud runtime. |
+| `runtime_status`       | Get the current status and resource usage of a runtime. |
+| `runtime_logs`         | Get recent logs from a runtime container. |
+| `search_agent_directory` | Search the public agent directory for discoverable agents. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
@@ -322,4 +334,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.36.1
+npm: `@1claw/mcp` v0.42.0

@@ -53,6 +53,18 @@ import { listBindingsTool } from "./tools/list_bindings.js";
 import { createBindingTool } from "./tools/create_binding.js";
 import { testBindingTool } from "./tools/test_binding.js";
 import { listExecutionsTool } from "./tools/list_executions.js";
+import { putMemoryTool } from "./tools/put_memory.js";
+import { getMemoryTool } from "./tools/get_memory.js";
+import { listMemoryTool } from "./tools/list_memory.js";
+import { deleteMemoryTool } from "./tools/delete_memory.js";
+import { listAutomationsTool } from "./tools/list_automations.js";
+import { triggerAutomationTool } from "./tools/trigger_automation.js";
+import { listRuntimesTool } from "./tools/list_runtimes.js";
+import { manageRuntimeTool } from "./tools/manage_runtime.js";
+import { searchDirectoryTool } from "./tools/search_directory.js";
+import { searchMemoryTool } from "./tools/search_memory.js";
+import { runtimeStatusTool } from "./tools/runtime_status.js";
+import { runtimeLogsTool } from "./tools/runtime_logs.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -470,6 +482,18 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(searchGiftCardsTool as AnyToolFactory);
     registerTool(listCardsTool as AnyToolFactory);
     registerTool(getCardStatusTool as AnyToolFactory);
+    registerTool(putMemoryTool as AnyToolFactory);
+    registerTool(getMemoryTool as AnyToolFactory);
+    registerTool(listMemoryTool as AnyToolFactory);
+    registerTool(deleteMemoryTool as AnyToolFactory);
+    registerTool(listAutomationsTool as AnyToolFactory);
+    registerTool(triggerAutomationTool as AnyToolFactory);
+    registerTool(listRuntimesTool as AnyToolFactory);
+    registerTool(manageRuntimeTool as AnyToolFactory);
+    registerTool(searchDirectoryTool as AnyToolFactory);
+    registerTool(searchMemoryTool as AnyToolFactory);
+    registerTool(runtimeStatusTool as AnyToolFactory);
+    registerTool(runtimeLogsTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
