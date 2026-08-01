@@ -1,6 +1,15 @@
 import { z } from "zod";
 import type { OneClawClient } from "../client.js";
 
+interface DirectoryAgent {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  a2a_url?: string;
+  capabilities: string[];
+}
+
 export function searchDirectoryTool(client: OneClawClient) {
   return {
     name: "search_agent_directory" as const,
@@ -20,24 +29,20 @@ export function searchDirectoryTool(client: OneClawClient) {
       args: { query?: string; tags?: string },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
+      const baseUrl = (client as unknown as { baseUrl: string }).baseUrl || process.env.ONECLAW_API_URL || "https://api.1claw.xyz";
       const searchParams = new URLSearchParams();
       if (args.query) searchParams.set("q", args.query);
       if (args.tags) searchParams.set("tags", args.tags);
       searchParams.set("page_size", "10");
       const qs = searchParams.toString();
 
-      const resp = (await client.request(
-        "GET",
-        `/v1/agents/directory${qs ? `?${qs}` : ""}`,
-      )) as {
-        agents: Array<{
-          id: string;
-          name: string;
-          description: string;
-          tags: string[];
-          a2a_url?: string;
-          capabilities: string[];
-        }>;
+      const url = `${baseUrl}/v1/agents/directory${qs ? `?${qs}` : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Directory search failed: ${res.status} ${res.statusText}`);
+      }
+      const resp = (await res.json()) as {
+        agents: DirectoryAgent[];
         total: number;
         page: number;
       };
