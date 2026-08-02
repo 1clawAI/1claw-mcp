@@ -65,6 +65,11 @@ import { searchDirectoryTool } from "./tools/search_directory.js";
 import { searchMemoryTool } from "./tools/search_memory.js";
 import { runtimeStatusTool } from "./tools/runtime_status.js";
 import { runtimeLogsTool } from "./tools/runtime_logs.js";
+import { sendChatMessageTool } from "./tools/send_chat_message.js";
+import { listChatConversationsTool } from "./tools/list_chat_conversations.js";
+import { createChannelTool } from "./tools/create_channel.js";
+import { listChannelsTool } from "./tools/list_channels.js";
+import { sendChannelMessageTool } from "./tools/send_channel_message.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -494,6 +499,11 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(searchMemoryTool as AnyToolFactory);
     registerTool(runtimeStatusTool as AnyToolFactory);
     registerTool(runtimeLogsTool as AnyToolFactory);
+    registerTool(sendChatMessageTool as AnyToolFactory);
+    registerTool(listChatConversationsTool as AnyToolFactory);
+    registerTool(createChannelTool as AnyToolFactory);
+    registerTool(listChannelsTool as AnyToolFactory);
+    registerTool(sendChannelMessageTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
