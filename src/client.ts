@@ -938,10 +938,10 @@ export class OneClawClient {
 
     async getRuntimeLogs(
         runtimeId: string,
-        lines?: number,
-    ): Promise<Record<string, unknown>> {
-        const qs = lines ? `?lines=${lines}` : "";
-        return this.request<Record<string, unknown>>(
+        tail?: number,
+    ): Promise<{ entries: Array<{ timestamp?: string; message: string; level?: string }> }> {
+        const qs = tail ? `?tail=${tail}` : "";
+        return this.request(
             `${this.baseUrl}/v1/runtimes/${runtimeId}/logs${qs}`,
         );
     }
