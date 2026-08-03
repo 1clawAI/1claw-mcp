@@ -6,7 +6,7 @@ export function listAutomationsTool(client: OneClawClient) {
   return {
     name: "list_automations" as const,
     description:
-      "List all automations configured for the current organization. Returns automation names, schedules, and status.",
+      "List all automations configured for the current organization. Returns names, trigger type, cron, and active status.",
     parameters: z.object({}),
     execute: async (
       _args: Record<string, never>,
@@ -22,11 +22,13 @@ export function listAutomationsTool(client: OneClawClient) {
         }
 
         const lines = automations.map((a) => {
-          const parts = [`- ${a.name ?? a.id}`];
-          if (a.status) parts.push(`[${a.status}]`);
-          if (a.schedule) parts.push(`(schedule: ${a.schedule})`);
-          if (a.description) parts.push(`— ${a.description}`);
-          return parts.join(" ");
+          const active = a.is_active === false ? "inactive" : "active";
+          const trigger = typeof a.trigger_type === "string" ? a.trigger_type : "unknown";
+          const cron =
+            typeof a.cron_expr === "string" && a.cron_expr.length > 0
+              ? ` cron: ${a.cron_expr}`
+              : "";
+          return `- ${a.name ?? a.id} [${active}] (${trigger}${cron})`;
         });
 
         return `Found ${automations.length} automation(s):\n${lines.join("\n")}`;

@@ -116,7 +116,7 @@ pnpm run build
 | `list_automations`     | List automation workflows for the agent. |
 | `trigger_automation`   | Manually trigger an automation workflow. |
 | `list_runtimes`        | List cloud runtimes for the agent. |
-| `manage_runtime`       | Start, stop, or delete a cloud runtime. |
+| `manage_runtime`       | Start or stop a cloud runtime. |
 | `runtime_status`       | Get the current status and resource usage of a runtime. |
 | `runtime_logs`         | Get recent logs from a runtime container. |
 | `search_agent_directory` | Search the public agent directory for discoverable agents. |
@@ -334,4 +334,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.42.0
+npm: `@1claw/mcp` v0.43.1

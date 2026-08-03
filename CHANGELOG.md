@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.43.1 (2026-08-03)
+
+### Fixed
+
+- **`list_automations` formatting:** Output now uses API fields `is_active`, `trigger_type`, and `cron_expr` (was incorrectly reading non-existent `status` / `schedule` / `description`).
+
+### Changed
+
+- Version bump aligned with platform `0.43.1` clients (OpenAPI / SDK / CLI). Automations create remains human/SDK/CLI (`workflow_spec`); MCP exposes list + trigger only.
+
 ## 0.40.3 (2026-07-12)
 
 ### Fixed
