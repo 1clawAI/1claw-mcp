@@ -79,3 +79,36 @@ CVE-2026-8376
 CVE-2026-42497
 CVE-2026-48962
 CVE-2026-9538
+# CVE-2026-13221: Perl silently incorrect output (CRITICAL). Base-image only.
+CVE-2026-13221
+# CVE-2026-57433/57432: Storable/pack perl CVEs. Base-image only.
+CVE-2026-57433
+CVE-2026-57432
+
+# curl / libcurl4 — additional bookworm CVEs; MCP uses Node fetch, not libcurl.
+CVE-2026-8458
+CVE-2026-8927
+CVE-2026-8286
+CVE-2026-12064
+
+# gzip LZH overflow — base image only; MCP never invokes gzip CLI.
+CVE-2026-41992
+
+# libacl1 symlink traversal — base image only.
+CVE-2026-54369
+
+# util-linux / libblkid partition parser overflow — base image only.
+CVE-2026-53615
+
+# npm transitive CVEs — pending upstream lockfile resolution in fastmcp deps.
+# brace-expansion DoS (HIGH) — deep transitive via glob/minimatch chain.
+CVE-2026-13149
+CVE-2026-14257
+CVE-2026-69152
+# fast-uri host confusion — overridden to 3.1.5+ but Trivy may still flag
+# intermediate copies until lockfile refresh; accepted at MCP proxy boundary.
+CVE-2026-13676
+CVE-2026-16221
+CVE-2026-18446
+# ip-address parsing inconsistency — deep transitive.
+CVE-2026-69192
