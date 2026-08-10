@@ -59,6 +59,7 @@ import { listMemoryTool } from "./tools/list_memory.js";
 import { deleteMemoryTool } from "./tools/delete_memory.js";
 import { listAutomationsTool } from "./tools/list_automations.js";
 import { triggerAutomationTool } from "./tools/trigger_automation.js";
+import { cancelAutomationRunTool } from "./tools/cancel_automation_run.js";
 import { listRuntimesTool } from "./tools/list_runtimes.js";
 import { manageRuntimeTool } from "./tools/manage_runtime.js";
 import { searchDirectoryTool } from "./tools/search_directory.js";
@@ -493,6 +494,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(deleteMemoryTool as AnyToolFactory);
     registerTool(listAutomationsTool as AnyToolFactory);
     registerTool(triggerAutomationTool as AnyToolFactory);
+    registerTool(cancelAutomationRunTool as AnyToolFactory);
     registerTool(listRuntimesTool as AnyToolFactory);
     registerTool(manageRuntimeTool as AnyToolFactory);
     registerTool(searchDirectoryTool as AnyToolFactory);

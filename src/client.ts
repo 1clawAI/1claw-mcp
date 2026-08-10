@@ -910,6 +910,16 @@ export class OneClawClient {
         );
     }
 
+    async cancelAutomationRun(
+        automationId: string,
+        runId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/automations/${automationId}/runs/${runId}/cancel`,
+            { method: "POST" },
+        );
+    }
+
     // ── Runtimes ────────────────────────────────────────────────────
 
     async listRuntimes(): Promise<Record<string, unknown>> {
