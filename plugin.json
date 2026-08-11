@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "1claw",
+  "version": "0.44.0",
+  "description": "Secure secrets management, multi-chain signing, agent memory, automations, and 60+ tools for AI agents via 1Claw vault.",
+  "author": {
+    "name": "1Claw",
+    "url": "https://1claw.xyz",
+    "email": "ops@1claw.xyz"
+  },
+  "homepage": "https://docs.1claw.xyz",
+  "repository": "https://github.com/1clawAI/1claw-mcp",
+  "license": "MIT",
+  "keywords": [
+    "secrets",
+    "vault",
+    "signing",
+    "mcp",
+    "ai-agents",
+    "encryption",
+    "hsm",
+    "treasury",
+    "memory",
+    "automations"
+  ]
+}
