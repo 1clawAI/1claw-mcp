@@ -209,6 +209,10 @@ export interface BootstrapResponse {
     vault_id?: string;
     agent_id?: string;
     policy_ids: string[];
+    signing_key_chains?: string[];
+    agent_api_key?: string;
+    runtime_ids?: string[];
+    automation_ids?: string[];
   };
 }
 

@@ -720,6 +720,56 @@ export class OneClawClient {
         );
     }
 
+    async platformListTemplates(
+        appId: string,
+    ): Promise<{ templates: Array<Record<string, unknown>> }> {
+        return this.request<{ templates: Array<Record<string, unknown>> }>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/templates`,
+        );
+    }
+
+    async platformCreateTemplate(
+        appId: string,
+        data: { name: string; spec: Record<string, unknown>; description?: string },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/templates`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformListUsers(
+        appId: string,
+    ): Promise<{ users: Array<Record<string, unknown>> }> {
+        return this.request<{ users: Array<Record<string, unknown>> }>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/users`,
+        );
+    }
+
+    async platformGrantAccess(
+        connectionId: string,
+        data: {
+            vault_ids?: string[];
+            agent_ids?: string[];
+            allowed_paths?: string[];
+            permissions?: string[];
+            expires_at?: string;
+        },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/grant`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformListGrants(
+        connectionId: string,
+    ): Promise<{ grants: Array<Record<string, unknown>> }> {
+        return this.request<{ grants: Array<Record<string, unknown>> }>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/grants`,
+        );
+    }
+
     // ── Treasury Proposals ──────────────────────────────────────────
 
     async treasuryPropose(
