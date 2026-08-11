@@ -1112,4 +1112,23 @@ export class OneClawClient {
             `${this.baseUrl}/v1/agents/${agentId}/oauth/connections`,
         );
     }
+
+    // ── Org Directory ───────────────────────────────────────────────────
+
+    async orgDirectory(params?: {
+        q?: string;
+        tags?: string;
+        page?: number;
+        page_size?: number;
+    }): Promise<Record<string, unknown>> {
+        const searchParams = new URLSearchParams();
+        if (params?.q) searchParams.set("q", params.q);
+        if (params?.tags) searchParams.set("tags", params.tags);
+        if (params?.page) searchParams.set("page", String(params.page));
+        if (params?.page_size) searchParams.set("page_size", String(params.page_size));
+        const qs = searchParams.toString();
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/org-directory${qs ? `?${qs}` : ""}`,
+        );
+    }
 }

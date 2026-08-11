@@ -79,6 +79,8 @@ import { listChannelsTool } from "./tools/list_channels.js";
 import { sendChannelMessageTool } from "./tools/send_channel_message.js";
 import { listOAuthProvidersTool } from "./tools/list_oauth_providers.js";
 import { listOAuthConnectionsTool } from "./tools/list_oauth_connections.js";
+import { orgDirectoryTool } from "./tools/org_directory.js";
+import { delegateTaskTool } from "./tools/delegate_task.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -522,6 +524,8 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(sendChannelMessageTool as AnyToolFactory);
     registerTool(listOAuthProvidersTool as AnyToolFactory);
     registerTool(listOAuthConnectionsTool as AnyToolFactory);
+    registerTool(orgDirectoryTool as AnyToolFactory);
+    registerTool(delegateTaskTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
