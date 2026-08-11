@@ -950,6 +950,12 @@ export class OneClawClient {
         );
     }
 
+    async listAutomationPresets(): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/automations/presets`,
+        );
+    }
+
     async triggerAutomation(
         automationId: string,
         input?: Record<string, unknown>,

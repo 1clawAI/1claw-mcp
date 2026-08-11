@@ -114,6 +114,7 @@ pnpm run build
 | `delete_memory`        | Delete a memory entry by namespace and key. |
 | `search_memory`        | Search agent memory using semantic similarity (vector search). |
 | `list_automations`     | List automation workflows for the agent. |
+| `list_automation_presets` | List available automation presets with pre-built workflow templates. |
 | `trigger_automation`   | Manually trigger an automation workflow. |
 | `list_runtimes`        | List cloud runtimes for the agent. |
 | `manage_runtime`       | Start or stop a cloud runtime. |
@@ -334,4 +335,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.43.1
+npm: `@1claw/mcp` v0.44.0
