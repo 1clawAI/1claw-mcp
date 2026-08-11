@@ -1096,4 +1096,20 @@ export class OneClawClient {
             },
         );
     }
+
+    // ── OAuth Connect ───────────────────────────────────────────────────
+
+    async listOAuthProviders(): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/oauth/providers`,
+        );
+    }
+
+    async listOAuthConnections(
+        agentId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/oauth/connections`,
+        );
+    }
 }
