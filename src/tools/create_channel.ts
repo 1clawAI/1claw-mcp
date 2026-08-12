@@ -18,6 +18,10 @@ export function createChannelTool(client: OneClawClient) {
         .describe(
           "Channel config. Telegram: { bot_token }. WhatsApp: { phone_number_id, access_token, verify_token }. Discord: { bot_token, application_id }.",
         ),
+      slash_commands_enabled: z.boolean().optional().describe("Enable slash commands"),
+      voice_transcription_enabled: z.boolean().optional().describe("Enable voice message transcription"),
+      sender_allowlist: z.array(z.string()).optional().describe("Allowed sender IDs for auto-respond"),
+      auto_respond_enabled: z.boolean().optional().describe("Enable auto-respond"),
     }),
     execute: async (
       args: {
@@ -25,6 +29,10 @@ export function createChannelTool(client: OneClawClient) {
         channel_type: string;
         channel_name?: string;
         config: Record<string, string>;
+        slash_commands_enabled?: boolean;
+        voice_transcription_enabled?: boolean;
+        sender_allowlist?: string[];
+        auto_respond_enabled?: boolean;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -36,11 +44,17 @@ export function createChannelTool(client: OneClawClient) {
       }
 
       try {
-        const result = await client.createChannel(agentId, {
+        const body: Record<string, unknown> = {
           channel_type: args.channel_type,
           channel_name: args.channel_name,
           config: args.config,
-        }) as {
+        };
+        if (args.slash_commands_enabled !== undefined) body.slash_commands_enabled = args.slash_commands_enabled;
+        if (args.voice_transcription_enabled !== undefined) body.voice_transcription_enabled = args.voice_transcription_enabled;
+        if (args.sender_allowlist !== undefined) body.sender_allowlist = args.sender_allowlist;
+        if (args.auto_respond_enabled !== undefined) body.auto_respond_enabled = args.auto_respond_enabled;
+
+        const result = await client.createChannel(agentId, body) as {
           id: string;
           channel_type: string;
           channel_name?: string;
