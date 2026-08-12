@@ -44,15 +44,15 @@ export function createChannelTool(client: OneClawClient) {
       }
 
       try {
-        const body: Record<string, unknown> = {
+        const body = {
           channel_type: args.channel_type,
           channel_name: args.channel_name,
           config: args.config,
+          slash_commands_enabled: args.slash_commands_enabled,
+          voice_transcription_enabled: args.voice_transcription_enabled,
+          sender_allowlist: args.sender_allowlist,
+          auto_respond_enabled: args.auto_respond_enabled,
         };
-        if (args.slash_commands_enabled !== undefined) body.slash_commands_enabled = args.slash_commands_enabled;
-        if (args.voice_transcription_enabled !== undefined) body.voice_transcription_enabled = args.voice_transcription_enabled;
-        if (args.sender_allowlist !== undefined) body.sender_allowlist = args.sender_allowlist;
-        if (args.auto_respond_enabled !== undefined) body.auto_respond_enabled = args.auto_respond_enabled;
 
         const result = await client.createChannel(agentId, body) as {
           id: string;

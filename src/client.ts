@@ -1061,6 +1061,10 @@ export class OneClawClient {
             channel_type: string;
             channel_name?: string;
             config: Record<string, string>;
+            slash_commands_enabled?: boolean;
+            voice_transcription_enabled?: boolean;
+            sender_allowlist?: string[];
+            auto_respond_enabled?: boolean;
         },
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
