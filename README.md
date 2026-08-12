@@ -2,13 +2,15 @@
 
 <!-- mcp-name: io.github.1clawAI/1claw-mcp -->
 
-An MCP (Model Context Protocol) server that gives AI agents secure, just-in-time access to secrets stored in the [1claw](https://1claw.xyz) vault — and a standalone security inspection pipeline for detecting malicious LLM content. Secrets are fetched at runtime via the 1claw Agent API and never persisted in the LLM context window beyond the moment they are used.
+Connect Cursor, Claude Desktop, VS Code, or any MCP client to your [1claw](https://1claw.xyz) vault. The server exposes tools for secrets, signing, execution bindings, memory, automations, and more. Values are fetched at call time and are not cached in the model's context beyond the moment they are used.
 
-**Local-only mode**: Run without vault credentials for security-only tools (e.g., `inspect_content`). Ideal for users running local models (Ollama, LM Studio, llama.cpp) who want prompt injection and threat detection without a 1claw account.
+Most teams use this instead of copying API keys into agent prompts or MCP config files. You register an agent, grant policy access to specific secret paths, and point the client at `mcp.1claw.xyz` or a local stdio process. The server handles JWT exchange and refresh from a single `ocv_` key.
 
-**Local daemon mode**: Connect to the local 1claw daemon instead of the cloud API. Secrets stay on your machine, injected into HTTP requests via a Unix socket proxy — the model never sees the raw value. Set `ONECLAW_LOCAL_VAULT=true` and optionally `ONECLAW_DAEMON_SOCKET`.
+**Local-only mode:** Run without vault credentials for the security inspection tools only (e.g. `inspect_content`). Useful with Ollama or LM Studio when you want injection detection without a 1claw account.
 
-**API contract:** Vault-facing tools use the REST API described in [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through **Shroud** is not MCP — agents call `https://shroud.1claw.xyz` directly with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`). When the MCP server exchanges an agent API key for a JWT, that token may carry **`shroud_config`** for Shroud’s PolicyEngine; MCP itself does not proxy LLM requests.
+**Local daemon mode:** Point at the local 1claw daemon (`ONECLAW_LOCAL_VAULT=true`) so secrets never leave your machine. The daemon injects credentials into outbound HTTP requests; the model never sees the raw value.
+
+**API contract:** Vault tools use the REST API from [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through Shroud is separate: agents call `https://shroud.1claw.xyz` with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`). When the MCP server exchanges an agent API key for a JWT, that token may carry **`shroud_config`** for Shroud's PolicyEngine; MCP itself does not proxy LLM requests.
 
 ## Transport Modes
 
