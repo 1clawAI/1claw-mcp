@@ -83,6 +83,7 @@ import { oauthRevokeTokenTool } from "./tools/oauth_revoke_token.js";
 import { oauthRevokeConsentTool } from "./tools/oauth_revoke_consent.js";
 import { orgDirectoryTool } from "./tools/org_directory.js";
 import { delegateTaskTool } from "./tools/delegate_task.js";
+import { listDelegationsTool, createDelegationTool, getEffectiveDelegationsTool } from "./tools/delegation.js";
 import { platformMarketplaceTool } from "./tools/platform_marketplace.js";
 import { platformAppStatsTool } from "./tools/platform_app_stats.js";
 import { platformRotateWebhookSecretTool } from "./tools/platform_rotate_webhook_secret.js";
@@ -533,6 +534,9 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(oauthRevokeConsentTool as AnyToolFactory);
     registerTool(orgDirectoryTool as AnyToolFactory);
     registerTool(delegateTaskTool as AnyToolFactory);
+    registerTool(listDelegationsTool as AnyToolFactory);
+    registerTool(createDelegationTool as AnyToolFactory);
+    registerTool(getEffectiveDelegationsTool as AnyToolFactory);
     registerTool(platformMarketplaceTool as AnyToolFactory);
     registerTool(platformAppStatsTool as AnyToolFactory);
     registerTool(platformRotateWebhookSecretTool as AnyToolFactory);
