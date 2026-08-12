@@ -79,8 +79,13 @@ import { listChannelsTool } from "./tools/list_channels.js";
 import { sendChannelMessageTool } from "./tools/send_channel_message.js";
 import { listOAuthProvidersTool } from "./tools/list_oauth_providers.js";
 import { listOAuthConnectionsTool } from "./tools/list_oauth_connections.js";
+import { oauthRevokeTokenTool } from "./tools/oauth_revoke_token.js";
+import { oauthRevokeConsentTool } from "./tools/oauth_revoke_consent.js";
 import { orgDirectoryTool } from "./tools/org_directory.js";
 import { delegateTaskTool } from "./tools/delegate_task.js";
+import { platformMarketplaceTool } from "./tools/platform_marketplace.js";
+import { platformAppStatsTool } from "./tools/platform_app_stats.js";
+import { platformRotateWebhookSecretTool } from "./tools/platform_rotate_webhook_secret.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -524,8 +529,13 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(sendChannelMessageTool as AnyToolFactory);
     registerTool(listOAuthProvidersTool as AnyToolFactory);
     registerTool(listOAuthConnectionsTool as AnyToolFactory);
+    registerTool(oauthRevokeTokenTool as AnyToolFactory);
+    registerTool(oauthRevokeConsentTool as AnyToolFactory);
     registerTool(orgDirectoryTool as AnyToolFactory);
     registerTool(delegateTaskTool as AnyToolFactory);
+    registerTool(platformMarketplaceTool as AnyToolFactory);
+    registerTool(platformAppStatsTool as AnyToolFactory);
+    registerTool(platformRotateWebhookSecretTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────

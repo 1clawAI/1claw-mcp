@@ -92,6 +92,11 @@ pnpm run build
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
 | `platform_reissue_claim` | Reissue a claim URL for an already-bootstrapped connection without re-provisioning resources.       |
 | `platform_rotate_key`  | Rotate the API key for a platform app. Returns the new `plt_` key (one-time).                        |
+| `platform_marketplace` | List apps on the public platform marketplace. Browse by category, tags, or search query. No auth required. |
+| `platform_app_stats`   | Get usage statistics for a platform app — connected users, bootstraps, API request volume.            |
+| `platform_rotate_webhook_secret` | Rotate the webhook secret for a platform app. New secret used for HMAC-SHA256 signatures on deliveries. |
+| `oauth_revoke_token`   | Revoke an OAuth access or refresh token issued by 1Claw (RFC 7009).                                  |
+| `oauth_revoke_consent` | Revoke OAuth consent previously granted to a platform app, invalidating all its tokens.              |
 | `treasury_propose`     | Create a treasury multisig proposal (transaction intent for Safe signers to approve).                                    |
 | `treasury_sign_proposal` | Sign or reject a treasury proposal. Submits an EIP-712 signature; auto-executes if threshold is met.                  |
 | `treasury_list_proposals` | List proposals for a treasury, optionally filtered by status (pending, approved, executed, rejected, expired).        |
@@ -337,4 +342,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.44.0
+npm: `@1claw/mcp` v0.44.4

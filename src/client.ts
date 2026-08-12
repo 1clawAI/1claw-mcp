@@ -1113,6 +1113,64 @@ export class OneClawClient {
         );
     }
 
+    // ── Platform Marketplace & Stats ────────────────────────────────────
+
+    async platformMarketplace(params?: {
+        category?: string;
+        tags?: string;
+        q?: string;
+        page?: number;
+        page_size?: number;
+    }): Promise<Record<string, unknown>> {
+        const searchParams = new URLSearchParams();
+        if (params?.category) searchParams.set("category", params.category);
+        if (params?.tags) searchParams.set("tags", params.tags);
+        if (params?.q) searchParams.set("q", params.q);
+        if (params?.page) searchParams.set("page", String(params.page));
+        if (params?.page_size) searchParams.set("page_size", String(params.page_size));
+        const qs = searchParams.toString();
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/marketplace${qs ? `?${qs}` : ""}`,
+        );
+    }
+
+    async platformAppStats(
+        appId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/stats`,
+        );
+    }
+
+    async platformRotateWebhookSecret(
+        appId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/rotate-webhook-secret`,
+            { method: "POST" },
+        );
+    }
+
+    // ── OAuth Token/Consent Revocation ───────────────────────────────────
+
+    async oauthRevokeToken(
+        body: { token: string; token_type_hint?: string },
+    ): Promise<void> {
+        await this.request<void>(
+            `${this.baseUrl}/v1/oauth/revoke`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    async oauthRevokeConsent(
+        appId: string,
+    ): Promise<void> {
+        await this.request<void>(
+            `${this.baseUrl}/v1/oauth/consents/${appId}`,
+            { method: "DELETE" },
+        );
+    }
+
     // ── Org Directory ───────────────────────────────────────────────────
 
     async orgDirectory(params?: {
