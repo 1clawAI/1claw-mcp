@@ -128,6 +128,9 @@ pnpm run build
 | `runtime_status`       | Get the current status and resource usage of a runtime. |
 | `runtime_logs`         | Get recent logs from a runtime container. |
 | `search_agent_directory` | Search the public agent directory for discoverable agents. |
+| `list_delegations`     | List agent-to-agent delegations for the current agent or a specified agent.  |
+| `create_delegation`    | Create a delegation from one agent to another (human-only). Configures allowed tools, daily limits, depth, and mode. |
+| `get_effective_delegations` | Get the effective delegations for the current agent — used by runtime tools for sub-agent discovery. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
@@ -342,4 +345,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.44.4
+npm: `@1claw/mcp` v0.46.0
