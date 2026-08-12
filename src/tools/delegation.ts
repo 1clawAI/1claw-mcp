@@ -28,13 +28,13 @@ export function listDelegationsTool(client: OneClawClient) {
         }
 
         const result = await client.listDelegations(agentId);
-        const delegations = (result as { delegations?: unknown[] }).delegations ?? [];
+        const delegations = (result as { delegations?: Record<string, unknown>[] }).delegations ?? [];
         log.info(`listed ${delegations.length} delegation(s)`);
 
         if (delegations.length === 0) return "No delegations found.";
 
-        return delegations
-          .map((d: Record<string, unknown>) => {
+        return (delegations as Record<string, unknown>[])
+          .map((d) => {
             const parts = [
               `ID: ${d.id}`,
               `Delegate: ${d.delegate_name || d.delegate_id}`,
@@ -168,7 +168,7 @@ export function getEffectiveDelegationsTool(client: OneClawClient) {
         }
 
         const result = await client.getEffectiveDelegations(agentId);
-        const delegations = (result as { delegations?: unknown[] }).delegations ?? [];
+        const delegations = (result as { delegations?: Record<string, unknown>[] }).delegations ?? [];
         log.info(`fetched ${delegations.length} effective delegation(s)`);
 
         if (delegations.length === 0)
