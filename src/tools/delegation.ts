@@ -174,8 +174,8 @@ export function getEffectiveDelegationsTool(client: OneClawClient) {
         if (delegations.length === 0)
           return "No delegations configured — you are not authorized to delegate to any agents.";
 
-        return delegations
-          .map((d: Record<string, unknown>) => {
+        return (delegations as Record<string, unknown>[])
+          .map((d) => {
             const parts = [
               `Delegate: ${d.delegate_name || d.delegate_id}`,
               `Mode: ${d.delegation_mode}`,
