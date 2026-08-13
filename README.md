@@ -131,6 +131,14 @@ pnpm run build
 | `list_delegations`     | List agent-to-agent delegations for the current agent or a specified agent.  |
 | `create_delegation`    | Create a delegation from one agent to another (human-only). Configures allowed tools, daily limits, depth, and mode. |
 | `get_effective_delegations` | Get the effective delegations for the current agent — used by runtime tools for sub-agent discovery. |
+| `list_cedar_policies`  | List Cedar declarative policies for the org (Team+ tier). |
+| `test_cedar_policy`    | Dry-run a Cedar policy against a principal/action/resource. |
+| `list_opa_policies`    | List OPA Rego policies for the org (Business+ tier). |
+| `test_opa_policy`      | Dry-run an OPA policy evaluation. |
+| `list_sub_orgs`        | List sub-organizations for the parent org (Enterprise hierarchy). |
+| `create_sub_org`       | Create a sub-organization (human-only). |
+| `get_portfolio`        | Unified balance aggregator across treasury wallets, signing keys, and smart accounts. |
+| `import_smart_account` | Import an existing Gnosis Safe smart account for an agent. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
