@@ -1233,4 +1233,121 @@ export class OneClawClient {
             `${this.baseUrl}/v1/agents/${agentId}/delegations/effective`,
         );
     }
+
+    // ── Import Signing Key ──────────────────────────────────────────────
+
+    async importSigningKey(
+        agentId: string,
+        chain: string,
+        privateKey: string,
+        format: string,
+        password: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/signing-keys/${encodeURIComponent(chain)}/import`,
+            {
+                method: "POST",
+                body: JSON.stringify({ private_key: privateKey, format }),
+                headers: { "X-Auth-Confirm": password },
+            },
+        );
+    }
+
+    // ── Cedar Policies ──────────────────────────────────────────────────
+
+    async listCedarPolicies(): Promise<{ policies: Array<{ id: string; policy_text: string; description?: string; created_at: string }> }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/cedar-policies`,
+        );
+    }
+
+    async testCedarPolicy(
+        principal: string,
+        action: string,
+        resource: string,
+        context?: Record<string, unknown>,
+    ): Promise<{ decision: string; reasons: string[] }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/cedar-policies/test`,
+            { method: "POST", body: JSON.stringify({ principal, action, resource, context }) },
+        );
+    }
+
+    // ── OPA Policies ────────────────────────────────────────────────────
+
+    async listOpaPolicies(): Promise<{ policies: Array<{ id: string; rego_module: string; description?: string; created_at: string }> }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/opa-policies`,
+        );
+    }
+
+    async testOpaPolicy(
+        input: Record<string, unknown>,
+        data?: Record<string, unknown>,
+    ): Promise<{ decision: string; result: unknown }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/opa-policies/test`,
+            { method: "POST", body: JSON.stringify({ input, data }) },
+        );
+    }
+
+    // ── Sub-Organizations ───────────────────────────────────────────────
+
+    async listSubOrgs(): Promise<{ sub_orgs: Array<{ id: string; name: string; status: string; created_at: string }> }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/sub-orgs`,
+        );
+    }
+
+    async createSubOrg(
+        name: string,
+        description?: string,
+        billingModel?: string,
+    ): Promise<{ id: string; name: string }> {
+        const body: Record<string, unknown> = { name };
+        if (description) body.description = description;
+        if (billingModel) body.billing_model = billingModel;
+        return this.request(
+            `${this.baseUrl}/v1/org/sub-orgs`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    // ── Portfolio ────────────────────────────────────────────────────────
+
+    async getPortfolio(
+        chains?: string,
+        includeTokens?: boolean,
+    ): Promise<{ wallets: unknown[]; total_usd_estimate?: string }> {
+        const params = new URLSearchParams();
+        if (chains) params.set("chains", chains);
+        if (includeTokens) params.set("include_tokens", "true");
+        const qs = params.toString();
+        return this.request(
+            `${this.baseUrl}/v1/portfolio${qs ? `?${qs}` : ""}`,
+        );
+    }
+
+    // ── Import Smart Account ────────────────────────────────────────────
+
+    async importSmartAccount(
+        agentId: string,
+        chain: string,
+        chainId: number,
+        safeAddress: string,
+        verify?: boolean,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/smart-accounts/import`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    chain,
+                    chain_id: chainId,
+                    safe_address: safeAddress,
+                    verify: verify ?? true,
+                }),
+            },
+        );
+    }
 }

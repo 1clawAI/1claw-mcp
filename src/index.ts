@@ -87,6 +87,15 @@ import { listDelegationsTool, createDelegationTool, getEffectiveDelegationsTool 
 import { platformMarketplaceTool } from "./tools/platform_marketplace.js";
 import { platformAppStatsTool } from "./tools/platform_app_stats.js";
 import { platformRotateWebhookSecretTool } from "./tools/platform_rotate_webhook_secret.js";
+import { importSigningKeyTool } from "./tools/import_signing_key.js";
+import { listCedarPoliciesTool } from "./tools/list_cedar_policies.js";
+import { testCedarPolicyTool } from "./tools/test_cedar_policy.js";
+import { listOpaPoliciesTool } from "./tools/list_opa_policies.js";
+import { testOpaPolicyTool } from "./tools/test_opa_policy.js";
+import { listSubOrgsTool } from "./tools/list_sub_orgs.js";
+import { createSubOrgTool } from "./tools/create_sub_org.js";
+import { getPortfolioTool } from "./tools/get_portfolio.js";
+import { importSmartAccountTool } from "./tools/import_smart_account.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -540,6 +549,15 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformMarketplaceTool as AnyToolFactory);
     registerTool(platformAppStatsTool as AnyToolFactory);
     registerTool(platformRotateWebhookSecretTool as AnyToolFactory);
+    registerTool(importSigningKeyTool as AnyToolFactory);
+    registerTool(listCedarPoliciesTool as AnyToolFactory);
+    registerTool(testCedarPolicyTool as AnyToolFactory);
+    registerTool(listOpaPoliciesTool as AnyToolFactory);
+    registerTool(testOpaPolicyTool as AnyToolFactory);
+    registerTool(listSubOrgsTool as AnyToolFactory);
+    registerTool(createSubOrgTool as AnyToolFactory);
+    registerTool(getPortfolioTool as AnyToolFactory);
+    registerTool(importSmartAccountTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
