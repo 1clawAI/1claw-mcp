@@ -139,6 +139,14 @@ pnpm run build
 | `create_sub_org`       | Create a sub-organization (human-only). |
 | `get_portfolio`        | Unified balance aggregator across treasury wallets, signing keys, and smart accounts. |
 | `import_smart_account` | Import an existing Gnosis Safe smart account for an agent. |
+| `get_policy_backend_settings` | Get org Cedar/OPA backend config (backend, mode, scope, circuit breaker). |
+| `update_policy_backend_settings` | Update org policy backend settings (shadow/enforce, fail-closed breaker). |
+| `get_shadow_report` | Get shadow mode divergence report (builtin vs Cedar/OPA decisions). |
+| `list_contract_abis` | List org contract ABIs for transaction decoding. |
+| `create_contract_abi` | Register a contract ABI (chain + address + JSON ABI). |
+| `delete_contract_abi` | Delete a contract ABI from the registry. |
+| `list_pending_approvals` | List consensus pending approvals for the org. |
+| `submit_pending_approval` | Submit a signing action for multi-party approval. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 

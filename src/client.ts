@@ -1350,4 +1350,76 @@ export class OneClawClient {
             },
         );
     }
+
+    // ── Policy Backend Settings ──────────────────────────────────────────
+
+    async getPolicyBackendSettings(): Promise<{ backend: string; mode: string; scope: string[]; breaker_behavior: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/settings/policy-backend`,
+        );
+    }
+
+    async updatePolicyBackendSettings(
+        body: Record<string, unknown>,
+    ): Promise<{ backend: string; mode: string; scope: string[]; breaker_behavior: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/settings/policy-backend`,
+            { method: "PATCH", body: JSON.stringify(body) },
+        );
+    }
+
+    async getShadowReport(): Promise<{ concordance_rate: number; total_evaluated: number; divergent_count: number; sample_events: unknown[] }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/policy-shadow-report`,
+        );
+    }
+
+    // ── Contract ABI Registry ────────────────────────────────────────────
+
+    async uploadContractAbi(
+        body: Record<string, unknown>,
+    ): Promise<{ id: string; chain: string; contract_address: string; name?: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/org/contract-abis`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    async listContractAbis(chain?: string): Promise<{ abis: Array<{ id: string; chain: string; contract_address: string; name?: string; created_at: string }> }> {
+        const qs = chain ? `?chain=${encodeURIComponent(chain)}` : "";
+        return this.request(
+            `${this.baseUrl}/v1/org/contract-abis${qs}`,
+        );
+    }
+
+    // ── Pending Approvals (Consensus) ────────────────────────────────────
+
+    async listPendingApprovals(
+        params?: { status?: string; agent_id?: string },
+    ): Promise<{ pending_approvals: Array<{ id: string; action: string; status: string; current_approvals: number; required_approvals: number; submitted_by: string; submitted_by_type: string; expires_at?: string }> }> {
+        const qs = new URLSearchParams();
+        if (params?.status) qs.set("status", params.status);
+        if (params?.agent_id) qs.set("agent_id", params.agent_id);
+        const q = qs.toString();
+        return this.request(
+            `${this.baseUrl}/v1/pending-approvals${q ? `?${q}` : ""}`,
+        );
+    }
+
+    async approvePendingApproval(
+        id: string,
+        body: { decision: string; payload_hash: string; reason?: string },
+    ): Promise<unknown> {
+        return this.request(
+            `${this.baseUrl}/v1/pending-approvals/${id}/approve`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
+    async executePendingApproval(id: string): Promise<unknown> {
+        return this.request(
+            `${this.baseUrl}/v1/pending-approvals/${id}/execute`,
+            { method: "POST" },
+        );
+    }
 }
