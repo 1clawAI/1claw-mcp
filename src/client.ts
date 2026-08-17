@@ -221,6 +221,10 @@ export class OneClawClient {
             Authorization: `Bearer ${this.token}`,
             "Content-Type": "application/json",
         };
+        const runtimeId = process.env.ONECLAW_RUNTIME_ID;
+        if (runtimeId) {
+            hdrs["X-1Claw-Runtime-Id"] = runtimeId;
+        }
         if (this.dpopManager && url) {
             hdrs["DPoP"] = await this.dpopManager.generateProof(method, url);
         }
@@ -398,17 +402,20 @@ export class OneClawClient {
         principalId: string,
         permissions: string[],
         secretPathPattern = "**",
+        txConditions?: Record<string, unknown>,
     ): Promise<PolicyResponse> {
+        const payload: Record<string, unknown> = {
+            secret_path_pattern: secretPathPattern,
+            principal_type: principalType,
+            principal_id: principalId,
+            permissions,
+        };
+        if (txConditions) payload.tx_conditions = txConditions;
         return this.request<PolicyResponse>(
             `${this.baseUrl}/v1/vaults/${vaultId}/policies`,
             {
                 method: "POST",
-                body: JSON.stringify({
-                    secret_path_pattern: secretPathPattern,
-                    principal_type: principalType,
-                    principal_id: principalId,
-                    permissions,
-                }),
+                body: JSON.stringify(payload),
             },
         );
     }

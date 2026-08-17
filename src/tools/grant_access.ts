@@ -24,6 +24,10 @@ export function grantAccessTool(client: OneClawClient) {
         .string()
         .default("**")
         .describe("Glob pattern for which secrets the policy covers (default: all)"),
+      tx_conditions: z
+        .record(z.unknown())
+        .optional()
+        .describe("Signing-time AND conditions on this policy (e.g. chain_in, value_below, to_address_in)"),
     }),
     execute: async (args: {
       vault_id: string;
@@ -31,6 +35,7 @@ export function grantAccessTool(client: OneClawClient) {
       principal_id: string;
       permissions: string[];
       secret_path_pattern: string;
+      tx_conditions?: Record<string, unknown>;
     }) => {
       const policy = await client.createPolicy(
         args.vault_id,
@@ -38,6 +43,7 @@ export function grantAccessTool(client: OneClawClient) {
         args.principal_id,
         args.permissions,
         args.secret_path_pattern,
+        args.tx_conditions,
       );
       return (
         `Access granted.\n` +
@@ -45,7 +51,8 @@ export function grantAccessTool(client: OneClawClient) {
         `  Vault: ${policy.vault_id}\n` +
         `  Granted to: ${policy.principal_type}:${policy.principal_id}\n` +
         `  Permissions: ${policy.permissions.join(", ")}\n` +
-        `  Path pattern: ${policy.secret_path_pattern}`
+        `  Path pattern: ${policy.secret_path_pattern}` +
+        (args.tx_conditions ? `\n  Tx conditions: ${JSON.stringify(args.tx_conditions)}` : "")
       );
     },
   };
