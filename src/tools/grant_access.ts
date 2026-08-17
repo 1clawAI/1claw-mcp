@@ -25,9 +25,22 @@ export function grantAccessTool(client: OneClawClient) {
         .default("**")
         .describe("Glob pattern for which secrets the policy covers (default: all)"),
       tx_conditions: z
-        .record(z.unknown())
+        .object({
+          match_mode: z.enum(["all", "any"]).optional().describe("Combine fields with AND (all, default) or OR (any) logic"),
+          function_name_in: z.array(z.string()).optional(),
+          function_selector_in: z.array(z.string()).optional(),
+          erc20_amount_above: z.string().optional(),
+          value_above: z.string().optional().describe("Native value threshold in gwei"),
+          to_address_in: z.array(z.string()).optional(),
+          chain_in: z.array(z.string()).optional(),
+          intent_type_in: z.array(z.string()).optional(),
+          decode_failed: z.boolean().optional(),
+          program_id_in: z.array(z.string()).optional(),
+          deep_inspect: z.boolean().optional().describe("When true, also inspect inner calls from multicall/Safe/ERC-4337 wrappers"),
+        })
+        .passthrough()
         .optional()
-        .describe("Signing-time AND conditions on this policy (e.g. chain_in, value_below, to_address_in)"),
+        .describe("Signing-time conditions on this policy (e.g. chain_in, value_above, to_address_in)"),
     }),
     execute: async (args: {
       vault_id: string;
