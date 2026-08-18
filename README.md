@@ -72,6 +72,7 @@ pnpm run build
 | `rotate_generate`      | Server-side secret rotation with generated value (length, charset configurable) |
 | `list_versions`        | List all versions of a secret (version numbers, dates, disabled status)      |
 | `get_env_bundle`       | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
+| `resolve_env`          | Resolve environment variables for a vault and environment (returns the final KEY=VALUE set with precedence applied) |
 | `create_vault`         | Create a new vault (auto-shared with the agent's human creator)              |
 | `list_vaults`          | List all vaults the agent can access (own + shared)                          |
 | `grant_access`         | Share a vault with a user or agent (own vaults only)                         |
@@ -362,4 +363,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.46.0
+npm: `@1claw/mcp` v0.51.0

@@ -697,6 +697,49 @@ const getEnvBundleTool = (client: OneClawClient) => ({
 });
 registerTool(getEnvBundleTool as AnyToolFactory);
 
+// ── resolve_env: Resolve env vars for a vault (Phase 4) ──────────────────────────
+
+const resolveEnvTool = (client: OneClawClient) => ({
+    name: "resolve_env",
+    description:
+        "Resolve environment variables for a vault, returning the final KEY=VALUE set with precedence applied (shared < vault < branch override).",
+    parameters: z.object({
+        environment: z
+            .string()
+            .min(1)
+            .describe(
+                "Target environment (production, preview, development, or custom)",
+            ),
+        git_branch: z
+            .string()
+            .optional()
+            .describe("Optional git branch for preview overrides"),
+    }),
+    execute: async (
+        args: { environment: string; git_branch?: string },
+        context: { log: { info: (msg: string) => void } },
+    ) => {
+        const vaultId = client.vaultId;
+        if (!vaultId) {
+            throw new UserError(
+                "No vault configured. Set ONECLAW_VAULT_ID or use a key that auto-discovers a vault.",
+            );
+        }
+
+        let url = `/v1/vaults/${vaultId}/env-vars/resolve?environment=${encodeURIComponent(args.environment)}`;
+        if (args.git_branch) {
+            url += `&git_branch=${encodeURIComponent(args.git_branch)}`;
+        }
+
+        const result = await client.request("GET", url);
+        context.log.info(
+            `Resolved env vars for ${args.environment}${args.git_branch ? ` (branch: ${args.git_branch})` : ""}: ${Object.keys(result.vars ?? {}).length} variables`,
+        );
+        return JSON.stringify(result, null, 2);
+    },
+});
+registerTool(resolveEnvTool as AnyToolFactory);
+
 } // end if (!localOnly) — stretch tools
 
 // ── Resource: browsable secret listing ───────────────
