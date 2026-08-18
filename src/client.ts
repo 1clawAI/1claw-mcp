@@ -1415,7 +1415,12 @@ export class OneClawClient {
 
     async approvePendingApproval(
         id: string,
-        body: { decision: string; payload_hash: string; reason?: string },
+        body: {
+            decision: string;
+            payload_hash: string;
+            reason?: string;
+            credential_type?: string;
+        },
     ): Promise<unknown> {
         return this.request(
             `${this.baseUrl}/v1/pending-approvals/${id}/approve`,

@@ -146,7 +146,8 @@ pnpm run build
 | `create_contract_abi` | Register a contract ABI (chain + address + JSON ABI). |
 | `delete_contract_abi` | Delete a contract ABI from the registry. |
 | `list_pending_approvals` | List consensus pending approvals for the org. |
-| `submit_pending_approval` | Submit a signing action for multi-party approval. |
+| `approve_pending_approval` | Approve or reject a pending approval (supports `credential_type`: passkey, totp, biometric, password, api_key). |
+| `execute_pending_approval` | Execute an approved pending approval action. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 

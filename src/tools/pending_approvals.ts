@@ -44,15 +44,26 @@ export function approvePendingApprovalTool(client: OneClawClient) {
             decision: z.enum(["approve", "reject"]).describe("Decision: approve or reject"),
             payload_hash: z.string().describe("SHA-256 hash of the action payload for integrity verification"),
             reason: z.string().optional().describe("Reason for the decision"),
+            credential_type: z
+                .enum(["password", "passkey", "totp", "biometric", "api_key"])
+                .optional()
+                .describe("Authentication method used for this approval vote"),
         }),
         execute: async (
-            args: { id: string; decision: "approve" | "reject"; payload_hash: string; reason?: string },
+            args: {
+                id: string;
+                decision: "approve" | "reject";
+                payload_hash: string;
+                reason?: string;
+                credential_type?: "password" | "passkey" | "totp" | "biometric" | "api_key";
+            },
             { log }: { log: { info: (msg: string) => void } },
         ) => {
             await client.approvePendingApproval(args.id, {
                 decision: args.decision,
                 payload_hash: args.payload_hash,
                 reason: args.reason,
+                credential_type: args.credential_type,
             });
             log.info(`${args.decision}d pending approval ${args.id}`);
             return `Pending approval ${args.id} ${args.decision}d.`;
