@@ -719,19 +719,7 @@ const resolveEnvTool = (client: OneClawClient) => ({
         args: { environment: string; git_branch?: string },
         context: { log: { info: (msg: string) => void } },
     ) => {
-        const vaultId = client.vaultId;
-        if (!vaultId) {
-            throw new UserError(
-                "No vault configured. Set ONECLAW_VAULT_ID or use a key that auto-discovers a vault.",
-            );
-        }
-
-        let url = `/v1/vaults/${vaultId}/env-vars/resolve?environment=${encodeURIComponent(args.environment)}`;
-        if (args.git_branch) {
-            url += `&git_branch=${encodeURIComponent(args.git_branch)}`;
-        }
-
-        const result = await client.request("GET", url);
+        const result = await client.resolveEnvVars(args.environment, args.git_branch);
         context.log.info(
             `Resolved env vars for ${args.environment}${args.git_branch ? ` (branch: ${args.git_branch})` : ""}: ${Object.keys(result.vars ?? {}).length} variables`,
         );

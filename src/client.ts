@@ -1241,6 +1241,19 @@ export class OneClawClient {
         );
     }
 
+    // ── Environment Variables ─────────────────────────────────────────────
+
+    async resolveEnvVars(
+        environment: string,
+        gitBranch?: string,
+    ): Promise<{ vars: Record<string, string>; sources: Record<string, string>; environment: string; git_branch?: string; resolved_at: string }> {
+        let url = await this.resolveVaultUrl(`/env-vars/resolve?environment=${encodeURIComponent(environment)}`);
+        if (gitBranch) {
+            url += `&git_branch=${encodeURIComponent(gitBranch)}`;
+        }
+        return this.request(url);
+    }
+
     // ── Import Signing Key ──────────────────────────────────────────────
 
     async importSigningKey(
