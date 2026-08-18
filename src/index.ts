@@ -702,13 +702,13 @@ registerTool(getEnvBundleTool as AnyToolFactory);
 const resolveEnvTool = (client: OneClawClient) => ({
     name: "resolve_env",
     description:
-        "Resolve environment variables for a vault, returning the final KEY=VALUE set with precedence applied (shared < vault < branch override).",
+        "Resolve environment variables for a vault, returning the final KEY=VALUE set with precedence applied (shared < vault < branch override). If environment is omitted, the agent's tagged environment is used automatically.",
     parameters: z.object({
         environment: z
             .string()
-            .min(1)
+            .optional()
             .describe(
-                "Target environment (production, preview, development, or custom)",
+                "Target environment (production, preview, development, or custom). Omit to use the agent's tagged environment.",
             ),
         git_branch: z
             .string()
@@ -716,12 +716,13 @@ const resolveEnvTool = (client: OneClawClient) => ({
             .describe("Optional git branch for preview overrides"),
     }),
     execute: async (
-        args: { environment: string; git_branch?: string },
+        args: { environment?: string; git_branch?: string },
         context: { log: { info: (msg: string) => void } },
     ) => {
         const result = await client.resolveEnvVars(args.environment, args.git_branch);
+        const envLabel = args.environment ?? "(agent default)";
         context.log.info(
-            `Resolved env vars for ${args.environment}${args.git_branch ? ` (branch: ${args.git_branch})` : ""}: ${Object.keys(result.vars ?? {}).length} variables`,
+            `Resolved env vars for ${envLabel}${args.git_branch ? ` (branch: ${args.git_branch})` : ""}: ${Object.keys(result.vars ?? {}).length} variables`,
         );
         return JSON.stringify(result, null, 2);
     },

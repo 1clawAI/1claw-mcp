@@ -1244,12 +1244,19 @@ export class OneClawClient {
     // ── Environment Variables ─────────────────────────────────────────────
 
     async resolveEnvVars(
-        environment: string,
+        environment?: string,
         gitBranch?: string,
     ): Promise<{ vars: Record<string, string>; sources: Record<string, string>; environment: string; git_branch?: string; resolved_at: string }> {
-        let url = await this.resolveVaultUrl(`/env-vars/resolve?environment=${encodeURIComponent(environment)}`);
+        let url = await this.resolveVaultUrl(`/env-vars/resolve`);
+        const params: string[] = [];
+        if (environment) {
+            params.push(`environment=${encodeURIComponent(environment)}`);
+        }
         if (gitBranch) {
-            url += `&git_branch=${encodeURIComponent(gitBranch)}`;
+            params.push(`git_branch=${encodeURIComponent(gitBranch)}`);
+        }
+        if (params.length > 0) {
+            url += `?${params.join("&")}`;
         }
         return this.request(url);
     }
