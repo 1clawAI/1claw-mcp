@@ -25,6 +25,8 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 **stdio and environment:** The server does **not** cache a single vault client for the whole process. Each tool invocation builds a `OneClawClient` from the **current** `process.env` (`ONECLAW_AGENT_API_KEY`, `ONECLAW_VAULT_ID`, etc.), so changing env vars (or vault binding) takes effect on the next call without restarting the MCP process.
 
+**Agent environment auto-resolve (v0.52):** When an agent is tagged with `environment` and `env_auto_resolve: true`, the `resolve_env` tool can omit `environment` and the Vault API uses the agent's tag from the JWT. Org setting `env.enforce_agent_environment_scope` blocks agents from resolving vars outside their tagged environment.
+
 ## Installation (local / stdio)
 
 ### Homebrew (macOS / Linux)
@@ -72,7 +74,7 @@ pnpm run build
 | `rotate_generate`      | Server-side secret rotation with generated value (length, charset configurable) |
 | `list_versions`        | List all versions of a secret (version numbers, dates, disabled status)      |
 | `get_env_bundle`       | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
-| `resolve_env`          | Resolve environment variables for a vault and environment (returns the final KEY=VALUE set with precedence applied) |
+| `resolve_env`          | Resolve environment variables for a vault and environment (returns the final KEY=VALUE set with precedence applied). When the agent has `env_auto_resolve: true`, omit `environment` and the server uses the agent's tagged environment from the JWT. |
 | `create_vault`         | Create a new vault (auto-shared with the agent's human creator)              |
 | `list_vaults`          | List all vaults the agent can access (own + shared)                          |
 | `grant_access`         | Share a vault with a user or agent (own vaults only)                         |
