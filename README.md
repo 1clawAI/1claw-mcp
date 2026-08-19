@@ -27,7 +27,7 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 **Agent environment auto-resolve (v0.52):** When an agent is tagged with `environment` and `env_auto_resolve: true`, the `resolve_env` tool can omit `environment` and the Vault API uses the agent's tag from the JWT. Org setting `env.enforce_agent_environment_scope` blocks agents from resolving vars outside their tagged environment.
 
-**Policy engine v0.53:** Access policies support `policy_schema_version: 2` with expression-based `tx_conditions.expression` (mini DSL), expanded control-plane `action_kind_in` consensus triggers, and multi-chain deep decode (Solana, Bitcoin, Tron) for signing-time policy evaluation. TEE attestation is available at `GET https://shroud.1claw.xyz/v1/shroud/attestation`; audit chain verification at `GET /v1/audit/verify`.
+**Policy engine v0.53:** Access policies support `policy_schema_version: 2` with expression-based `tx_conditions.expression` (mini DSL), expanded control-plane `action_kind_in` consensus triggers, and multi-chain deep decode (Solana, Bitcoin, Tron) for signing-time policy evaluation. TEE attestation is available at `GET https://shroud.1claw.xyz/v1/shroud/attestation` (returns `attestation_level`: `none` | `identity` | `confidential` | `sev_snp` plus `confidential_claims`); audit chain verification at `GET /v1/audit/verify`.
 
 ## Installation (local / stdio)
 
