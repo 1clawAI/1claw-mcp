@@ -1,3 +1,4 @@
+# Rebuild regularly so Debian security updates land. Digest-pin with Renovate.
 FROM node:22-slim AS builder
 
 WORKDIR /app
