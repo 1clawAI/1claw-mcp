@@ -98,6 +98,11 @@ import { createSubOrgTool } from "./tools/create_sub_org.js";
 import { getPortfolioTool } from "./tools/get_portfolio.js";
 import { importSmartAccountTool } from "./tools/import_smart_account.js";
 import { getPolicyBackendSettingsTool, updatePolicyBackendSettingsTool, getShadowReportTool } from "./tools/policy_backend.js";
+import {
+    getGuardrailShadowReportTool,
+    listGuardrailRevisionsTool,
+    replayAgentGuardrailsTool,
+} from "./tools/guardrail_governance.js";
 import { uploadContractAbiTool, listContractAbisTool } from "./tools/contract_abis.js";
 import { listPendingApprovalsTool, approvePendingApprovalTool, executePendingApprovalTool } from "./tools/pending_approvals.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
@@ -566,6 +571,9 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(getPolicyBackendSettingsTool as AnyToolFactory);
     registerTool(updatePolicyBackendSettingsTool as AnyToolFactory);
     registerTool(getShadowReportTool as AnyToolFactory);
+    registerTool(getGuardrailShadowReportTool as AnyToolFactory);
+    registerTool(listGuardrailRevisionsTool as AnyToolFactory);
+    registerTool(replayAgentGuardrailsTool as AnyToolFactory);
     registerTool(uploadContractAbiTool as AnyToolFactory);
     registerTool(listContractAbisTool as AnyToolFactory);
     registerTool(listPendingApprovalsTool as AnyToolFactory);

@@ -1411,6 +1411,41 @@ export class OneClawClient {
         );
     }
 
+    async getGuardrailShadowReport(params?: {
+        since?: string;
+        until?: string;
+    }): Promise<{
+        org_id: string;
+        since: string;
+        until: string;
+        total_would_deny: number;
+        by_reason: Array<{ reason_code: string; would_deny_count: number; enforced_count: number }>;
+    }> {
+        const query = new URLSearchParams();
+        if (params?.since) query.set("since", params.since);
+        if (params?.until) query.set("until", params.until);
+        const qs = query.toString();
+        return this.request(`${this.baseUrl}/v1/org/guardrail-shadow-report${qs ? `?${qs}` : ""}`);
+    }
+
+    async listGuardrailRevisions(): Promise<{ revisions: unknown[] }> {
+        return this.request(`${this.baseUrl}/v1/org/guardrail-revisions`);
+    }
+
+    async replayAgentGuardrails(
+        agentId: string,
+        body?: {
+            days?: number;
+            draft_guardrails?: Record<string, unknown>;
+            draft_approval_policy?: Record<string, unknown>;
+        },
+    ): Promise<Record<string, unknown>> {
+        return this.request(`${this.baseUrl}/v1/agents/${agentId}/guardrails/replay`, {
+            method: "POST",
+            body: JSON.stringify(body ?? {}),
+        });
+    }
+
     // ── Contract ABI Registry ────────────────────────────────────────────
 
     async uploadContractAbi(
