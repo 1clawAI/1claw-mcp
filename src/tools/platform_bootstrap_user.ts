@@ -22,12 +22,17 @@ export function platformBootstrapUserTool(client: OneClawClient) {
         .url()
         .optional()
         .describe("URL to redirect the user to after claiming"),
+      parameters: z
+        .record(z.unknown())
+        .optional()
+        .describe("Template parameters substituted as {{params.*}} during bootstrap"),
     }),
     execute: async (
       args: {
         connection_id: string;
         template_id?: string;
         return_to?: string;
+        parameters?: Record<string, unknown>;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -37,6 +42,7 @@ export function platformBootstrapUserTool(client: OneClawClient) {
           {
             template_id: args.template_id,
             return_to: args.return_to,
+            parameters: args.parameters,
           },
         );
         log.info(`user bootstrapped: connection=${args.connection_id}`);

@@ -88,6 +88,13 @@ import { listDelegationsTool, createDelegationTool, getEffectiveDelegationsTool 
 import { platformMarketplaceTool } from "./tools/platform_marketplace.js";
 import { platformAppStatsTool } from "./tools/platform_app_stats.js";
 import { platformRotateWebhookSecretTool } from "./tools/platform_rotate_webhook_secret.js";
+import {
+    platformSiweChallengeTool,
+    platformGetConnectionTool,
+    platformConnectionUsageTool,
+    platformListEntitlementsTool,
+    platformPreviewTemplateTool,
+} from "./tools/platform_expansion.js";
 import { importSigningKeyTool } from "./tools/import_signing_key.js";
 import { listCedarPoliciesTool } from "./tools/list_cedar_policies.js";
 import { testCedarPolicyTool } from "./tools/test_cedar_policy.js";
@@ -517,6 +524,11 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformListUsersTool as AnyToolFactory);
     registerTool(platformGrantAccessTool as AnyToolFactory);
     registerTool(platformListGrantsTool as AnyToolFactory);
+    registerTool(platformSiweChallengeTool as AnyToolFactory);
+    registerTool(platformGetConnectionTool as AnyToolFactory);
+    registerTool(platformConnectionUsageTool as AnyToolFactory);
+    registerTool(platformListEntitlementsTool as AnyToolFactory);
+    registerTool(platformPreviewTemplateTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
     registerTool(getApprovalStatusTool as AnyToolFactory);

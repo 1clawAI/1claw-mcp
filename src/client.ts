@@ -707,10 +707,70 @@ export class OneClawClient {
 
     async platformBootstrapUser(
         connectionId: string,
-        data: { template_id?: string; return_to?: string },
+        data: {
+            template_id?: string;
+            return_to?: string;
+            parameters?: Record<string, unknown>;
+        },
     ): Promise<BootstrapResponse> {
         return this.request<BootstrapResponse>(
             `${this.baseUrl}/v1/platform/connections/${connectionId}/bootstrap`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformSiweChallenge(data?: {
+        domain?: string;
+    }): Promise<{ nonce: string; expires_in: number; domain: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/siwe/challenge`,
+            { method: "POST", body: JSON.stringify(data ?? {}) },
+        );
+    }
+
+    async platformGetConnection(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}`,
+        );
+    }
+
+    async platformGetConnectionUsage(connectionId: string): Promise<{
+        connection_id: string;
+        period: string;
+        inference_spent_usd: string;
+    }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/usage`,
+        );
+    }
+
+    async platformListEntitlements(
+        connectionId: string,
+    ): Promise<{ evaluations: unknown[] }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/entitlements`,
+        );
+    }
+
+    async platformRefreshEntitlements(connectionId: string): Promise<void> {
+        await this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/entitlements/refresh`,
+            { method: "POST" },
+        );
+    }
+
+    async platformPreviewTemplate(
+        appId: string,
+        templateId: string,
+        data: {
+            parameters?: Record<string, unknown>;
+            subject?: Record<string, unknown>;
+        },
+    ): Promise<{ resolved_spec: Record<string, unknown> }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/apps/${appId}/templates/${templateId}/preview`,
             { method: "POST", body: JSON.stringify(data) },
         );
     }
