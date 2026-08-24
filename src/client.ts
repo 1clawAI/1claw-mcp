@@ -1499,4 +1499,82 @@ export class OneClawClient {
             { method: "POST" },
         );
     }
+
+    // ── Agent Safe accounts (Phase 5) ────────────────────────────────────
+
+    async listAgentAccounts(
+        agentId: string,
+    ): Promise<{
+        accounts: Array<{
+            id: string;
+            chain: string;
+            account_type: string;
+            address?: string | null;
+            safe_version?: string | null;
+            modules_enabled?: string[];
+            deploy_status: string;
+            cosign_enabled?: boolean;
+            metadata?: Record<string, unknown>;
+        }>;
+    }> {
+        return this.request(`${this.baseUrl}/v1/agents/${agentId}/accounts`);
+    }
+
+    async migrateAgentToSafe(
+        agentId: string,
+        body: { chain: string; deprecate_eoa?: boolean },
+    ): Promise<{
+        agent_id: string;
+        chain: string;
+        safe_address: string;
+        safe_version: string;
+        modules: string[];
+        eoa_address?: string | null;
+        deploy_status: string;
+        roles_config_hash: string;
+        allowance_config_hash: string;
+        warnings: string[];
+    }> {
+        return this.request(`${this.baseUrl}/v1/agents/${agentId}/accounts/migrate`, {
+            method: "POST",
+            body: JSON.stringify(body),
+        });
+    }
+
+    async deprecateAgentEoa(
+        agentId: string,
+        chain: string,
+    ): Promise<{
+        id: string;
+        chain: string;
+        account_type: string;
+        address?: string | null;
+        deploy_status: string;
+    }> {
+        return this.request(
+            `${this.baseUrl}/v1/agents/${agentId}/accounts/${encodeURIComponent(chain)}/deprecate-eoa`,
+            { method: "POST" },
+        );
+    }
+
+    async getSafeModuleRegistry(chain: string): Promise<{
+        chain: string;
+        modules: Array<{ name: string; address: string; version: string }>;
+    }> {
+        return this.request(
+            `${this.baseUrl}/v1/safe/module-registry/${encodeURIComponent(chain)}`,
+        );
+    }
+
+    async syncOrgSafeAllowances(): Promise<{
+        org_id: string;
+        agents_checked: number;
+        compiled: unknown[];
+        drift_detected: Array<{ agent_id: string; chain: string; reason: string }>;
+        onchain_sync: string;
+    }> {
+        return this.request(`${this.baseUrl}/v1/org/safe/sync-allowances`, {
+            method: "POST",
+        });
+    }
 }

@@ -105,6 +105,13 @@ import {
 } from "./tools/guardrail_governance.js";
 import { uploadContractAbiTool, listContractAbisTool } from "./tools/contract_abis.js";
 import { listPendingApprovalsTool, approvePendingApprovalTool, executePendingApprovalTool } from "./tools/pending_approvals.js";
+import {
+    listAgentAccountsTool,
+    migrateAgentToSafeTool,
+    deprecateAgentEoaTool,
+    getSafeModuleRegistryTool,
+    syncOrgSafeAllowancesTool,
+} from "./tools/safe_accounts.js";
 import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecretRedactionEnabled, clearSecrets } from "./security/index.js";
 import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
@@ -579,6 +586,11 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(listPendingApprovalsTool as AnyToolFactory);
     registerTool(approvePendingApprovalTool as AnyToolFactory);
     registerTool(executePendingApprovalTool as AnyToolFactory);
+    registerTool(listAgentAccountsTool as AnyToolFactory);
+    registerTool(migrateAgentToSafeTool as AnyToolFactory);
+    registerTool(deprecateAgentEoaTool as AnyToolFactory);
+    registerTool(getSafeModuleRegistryTool as AnyToolFactory);
+    registerTool(syncOrgSafeAllowancesTool as AnyToolFactory);
 }
 
 // ── Vault-dependent stretch tools + resource ─────────
