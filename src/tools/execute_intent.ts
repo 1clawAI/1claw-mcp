@@ -26,12 +26,17 @@ export function executeIntentTool(client: OneClawClient) {
         .enum(["vault", "tee"])
         .default("vault")
         .describe("Execution surface: 'vault' (standard) or 'tee' (Shroud TEE, Business+ only)"),
+      dry_run: z
+        .boolean()
+        .default(false)
+        .describe("Validate guardrails without executing (no side effects)"),
     }),
     execute: async (args: {
       binding: string;
       intent_type?: string;
       params?: Record<string, unknown>;
       execution_mode?: string;
+      dry_run?: boolean;
     }) => {
       try {
         const agentId = client.agentId;
@@ -43,6 +48,7 @@ export function executeIntentTool(client: OneClawClient) {
           intent_type: args.intent_type ?? "http",
           execution_mode: args.execution_mode ?? "vault",
           params: args.params ?? {},
+          dry_run: args.dry_run ?? false,
         });
         return JSON.stringify(res, null, 2);
       } catch (err) {

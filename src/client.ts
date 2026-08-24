@@ -834,6 +834,8 @@ export class OneClawClient {
             intent_type: string;
             execution_mode?: string;
             params: Record<string, unknown>;
+            dry_run?: boolean;
+            resume_after_approval_id?: string;
         },
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
