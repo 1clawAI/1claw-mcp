@@ -37,6 +37,8 @@ export interface ClientConfig {
     baseUrl: string;
     token: string;
     vaultId: string;
+    /** Runtime-bound agent JWTs require this on every Vault API call. */
+    runtimeId?: string;
 }
 
 export interface AgentCredentials {
@@ -44,6 +46,7 @@ export interface AgentCredentials {
     agentId?: string;
     apiKey: string;
     vaultId?: string;
+    runtimeId?: string;
 }
 
 interface AgentTokenResponse {
@@ -69,7 +72,7 @@ function encodePath(path: string): string {
  * only read the claim to know which `/v1/agents/{id}` path to call. Returns
  * `undefined` for non-agent tokens (e.g. user JWTs) or unparseable input.
  */
-function agentIdFromJwt(token: string): string | undefined {
+function decodeJwtPayload(token: string): Record<string, unknown> | undefined {
     try {
         const parts = token.split(".");
         if (parts.length !== 3) return undefined;
@@ -79,14 +82,30 @@ function agentIdFromJwt(token: string): string | undefined {
             "=",
         );
         const json = Buffer.from(padded, "base64").toString("utf8");
-        const sub = (JSON.parse(json) as { sub?: string }).sub;
-        if (typeof sub === "string" && sub.startsWith("agent:")) {
-            return sub.slice("agent:".length);
-        }
+        const parsed = JSON.parse(json);
+        return typeof parsed === "object" && parsed !== null
+            ? (parsed as Record<string, unknown>)
+            : undefined;
     } catch {
-        /* not a decodable JWT — leave agentId unresolved */
+        return undefined;
+    }
+}
+
+function agentIdFromJwt(token: string): string | undefined {
+    const payload = decodeJwtPayload(token);
+    const sub = payload?.sub;
+    if (typeof sub === "string" && sub.startsWith("agent:")) {
+        return sub.slice("agent:".length);
     }
     return undefined;
+}
+
+function runtimeIdFromJwt(token: string): string | undefined {
+    const payload = decodeJwtPayload(token);
+    const runtimeId = payload?.runtime_id;
+    return typeof runtimeId === "string" && runtimeId.length > 0
+        ? runtimeId
+        : undefined;
 }
 
 const REFRESH_BUFFER_MS = 60_000;
@@ -96,6 +115,7 @@ export class OneClawClient {
     private token: string;
     private _vaultId: string;
     private _resolvedAgentId?: string;
+    private _runtimeId?: string;
 
     private agentCredentials?: { agentId?: string; apiKey: string };
     private tokenExpiresAt = 0;
@@ -116,12 +136,19 @@ export class OneClawClient {
                 apiKey: config.apiKey,
             };
             this.token = "";
+            this._runtimeId =
+                config.runtimeId || process.env.ONECLAW_RUNTIME_ID || undefined;
         } else {
             this.token = (config as ClientConfig).token;
             // Static-token (legacy ONECLAW_AGENT_TOKEN) mode: resolve the agent
             // id from the JWT sub claim so agent-scoped tools work without a key
             // exchange.
             this._resolvedAgentId = agentIdFromJwt(this.token);
+            this._runtimeId =
+                (config as ClientConfig).runtimeId ||
+                runtimeIdFromJwt(this.token) ||
+                process.env.ONECLAW_RUNTIME_ID ||
+                undefined;
         }
     }
 
@@ -221,7 +248,7 @@ export class OneClawClient {
             Authorization: `Bearer ${this.token}`,
             "Content-Type": "application/json",
         };
-        const runtimeId = process.env.ONECLAW_RUNTIME_ID;
+        const runtimeId = this._runtimeId || process.env.ONECLAW_RUNTIME_ID;
         if (runtimeId) {
             hdrs["X-1Claw-Runtime-Id"] = runtimeId;
         }

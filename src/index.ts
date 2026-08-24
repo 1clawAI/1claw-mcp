@@ -124,8 +124,8 @@ import { isLocalDaemonMode, createLocalClient } from "./local-client.js";
 import { proxyRequestTool } from "./tools/proxy_request.js";
 
 type SessionAuth =
-    | { token: string; vaultId: string }
-    | { agentApiKey: string; agentId?: string; vaultId?: string };
+    | { token: string; vaultId: string; runtimeId?: string }
+    | { agentApiKey: string; agentId?: string; vaultId?: string; runtimeId?: string };
 
 const baseUrl = process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz";
 const transport = process.env.MCP_TRANSPORT ?? "stdio";
@@ -157,7 +157,7 @@ function createStdioClientFromEnv(): OneClawClient {
                 "ONECLAW_VAULT_ID is required when using ONECLAW_AGENT_TOKEN (static JWT).",
             );
         }
-        return new OneClawClient({ baseUrl, token, vaultId });
+        return new OneClawClient({ baseUrl, token, vaultId, runtimeId: process.env.ONECLAW_RUNTIME_ID || undefined });
     }
     throw new UserError(
         "Authentication required. Set ONECLAW_AGENT_API_KEY or ONECLAW_AGENT_TOKEN + ONECLAW_VAULT_ID.",
@@ -194,12 +194,14 @@ function resolveClient(session?: SessionAuth): OneClawClient {
                 agentId: session.agentId,
                 apiKey: session.agentApiKey,
                 vaultId: session.vaultId,
+                runtimeId: session.runtimeId,
             });
         }
         return new OneClawClient({
             baseUrl,
             token: session.token,
             vaultId: session.vaultId,
+            runtimeId: session.runtimeId,
         });
     }
     if (transport === "stdio" && !localOnly) {
@@ -232,6 +234,41 @@ if (transport === "httpStream") {
         const credential = auth.replace(/^Bearer\s+/i, "").trim();
         const vaultIdHeader = (request.headers["x-vault-id"] ?? "") as string;
         const agentIdHeader = (request.headers["x-agent-id"] ?? "") as string;
+        const runtimeIdHeader = (request.headers["x-1claw-runtime-id"] ??
+            request.headers["X-1Claw-Runtime-Id"] ??
+            "") as string;
+
+        const runtimeIdFromJwtPayload = (token: string): string | undefined => {
+            try {
+                const parts = token.split(".");
+                if (parts.length !== 3) return undefined;
+                const payload = JSON.parse(
+                    Buffer.from(
+                        parts[1].replace(/-/g, "+").replace(/_/g, "/"),
+                        "base64",
+                    ).toString(),
+                ) as { runtime_id?: string };
+                return typeof payload.runtime_id === "string" &&
+                    payload.runtime_id.length > 0
+                    ? payload.runtime_id
+                    : undefined;
+            } catch {
+                return undefined;
+            }
+        };
+
+        const vaultAuthHeaders = (
+            token: string,
+            runtimeId?: string,
+        ): Record<string, string> => {
+            const headers: Record<string, string> = {
+                Authorization: `Bearer ${token}`,
+            };
+            if (runtimeId) {
+                headers["X-1Claw-Runtime-Id"] = runtimeId;
+            }
+            return headers;
+        };
 
         if (!credential)
             throw new Error(
@@ -285,7 +322,12 @@ if (transport === "httpStream") {
             if (resolvedVaultId && data.access_token) {
                 const checkRes = await fetch(
                     `${baseUrl}/v1/vaults/${resolvedVaultId}`,
-                    { headers: { Authorization: `Bearer ${data.access_token}` } },
+                    {
+                        headers: vaultAuthHeaders(
+                            data.access_token,
+                            runtimeIdHeader || undefined,
+                        ),
+                    },
                 );
                 if (!checkRes.ok && checkRes.status === 404) {
                     throw new Error(`Vault ${resolvedVaultId} not found`);
@@ -296,6 +338,7 @@ if (transport === "httpStream") {
                 agentApiKey: credential,
                 agentId: data.agent_id || agentIdHeader || undefined,
                 vaultId: resolvedVaultId || undefined,
+                runtimeId: runtimeIdHeader || undefined,
             };
         }
 
@@ -323,8 +366,10 @@ if (transport === "httpStream") {
         }
 
         // H-9: Validate token against the vault API (not just pass-through).
+        const runtimeId =
+            runtimeIdHeader || runtimeIdFromJwtPayload(credential) || undefined;
         const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultIdHeader}`, {
-            headers: { Authorization: `Bearer ${credential}` },
+            headers: vaultAuthHeaders(credential, runtimeId),
         });
         if (!validationRes.ok) {
             const status = validationRes.status;
@@ -344,7 +389,7 @@ if (transport === "httpStream") {
             );
         }
 
-        return { token: credential, vaultId: vaultIdHeader };
+        return { token: credential, vaultId: vaultIdHeader, runtimeId };
     };
 }
 
