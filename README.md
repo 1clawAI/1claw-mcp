@@ -29,6 +29,8 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 **Policy engine v0.53:** Access policies support `policy_schema_version: 2` with expression-based `tx_conditions.expression` (mini DSL), expanded control-plane `action_kind_in` consensus triggers, and multi-chain deep decode (Solana, Bitcoin, Tron) for signing-time policy evaluation. TEE attestation is available at `GET https://shroud.1claw.xyz/v1/shroud/attestation` (returns `attestation_level`: `none` | `identity` | `confidential` | `sev_snp` plus `confidential_claims`); audit chain verification at `GET /v1/audit/verify`.
 
+**Graduated HITL (v0.54–0.55):** Agent guardrail fields include `tx_approval_policy` (graduated tx thresholds → **202** `awaiting_approval`), `typed_data_policy`, `simulation_failure_policy`, and `raw_signing_policy` (`deny` or route to HITL via `approve`). Extended v0.55 fields: `tx_block_unlimited_approvals`, per-recipient limits, USD caps, `allow_erc4337`, `allow_eip7702`. Humans approve via dashboard or API; org freeze at `POST /v1/org/freeze`.
+
 ## Installation (local / stdio)
 
 ### Homebrew (macOS / Linux)
