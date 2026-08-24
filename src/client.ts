@@ -666,6 +666,14 @@ export class OneClawClient {
         );
     }
 
+    async getApprovalStatus(
+        approvalId: string,
+    ): Promise<{ status: string; expires_at?: string | null }> {
+        return this.request<{ status: string; expires_at?: string | null }>(
+            `${this.baseUrl}/v1/approvals/${approvalId}/status`,
+        );
+    }
+
     async requestApproval(data: {
         action: string;
         target_type: string;

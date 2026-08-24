@@ -48,6 +48,7 @@ import { platformGrantAccessTool } from "./tools/platform_grant_access.js";
 import { platformListGrantsTool } from "./tools/platform_list_grants.js";
 import { listApprovalsTool } from "./tools/list_approvals.js";
 import { getApprovalTool } from "./tools/get_approval.js";
+import { getApprovalStatusTool } from "./tools/get_approval_status.js";
 import { requestApprovalTool } from "./tools/request_approval.js";
 import { treasuryProposeTool } from "./tools/treasury_propose.js";
 import { treasurySignProposalTool } from "./tools/treasury_sign_proposal.js";
@@ -506,6 +507,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformListGrantsTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
+    registerTool(getApprovalStatusTool as AnyToolFactory);
     registerTool(requestApprovalTool as AnyToolFactory);
     registerTool(treasuryProposeTool as AnyToolFactory);
     registerTool(treasurySignProposalTool as AnyToolFactory);
