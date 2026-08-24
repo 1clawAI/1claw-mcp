@@ -155,6 +155,14 @@ pnpm run build
 | `list_pending_approvals` | List consensus pending approvals for the org. |
 | `approve_pending_approval` | Approve or reject a pending approval (supports `credential_type`: passkey, totp, biometric, password, api_key). |
 | `execute_pending_approval` | Execute an approved pending approval action. |
+| `list_agent_accounts` | List agent on-chain accounts (EOA and Safe) per chain with deploy status and modules. |
+| `migrate_agent_to_safe` | Build EOA→Safe migration plan and provision counterfactual Safe (human-only). |
+| `deprecate_agent_eoa` | Mark agent EOA deprecated for a chain (human-only). |
+| `get_safe_module_registry` | List pinned Safe module addresses for a chain (public, no auth). |
+| `sync_org_safe_allowances` | Reconcile org Safe allowance configs against agent guardrails (owner/admin). |
+| `get_guardrail_shadow_report` | Convention 6 guardrail shadow violations (`guardrail_shadow.would_deny` audit events). |
+| `list_guardrail_revisions` | Audit trail of agent and binding guardrail changes. |
+| `replay_agent_guardrails` | Dry-run draft guardrails against an agent's recent transactions. |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
