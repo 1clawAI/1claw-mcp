@@ -802,6 +802,95 @@ export class OneClawClient {
         );
     }
 
+    async platformTransferOwnership(
+        appId: string,
+        data: { target_org_id: string; target_user_email?: string },
+        confirmToken?: string,
+    ): Promise<Record<string, unknown>> {
+        const headers: Record<string, string> = {};
+        if (confirmToken) headers["X-Auth-Confirm"] = confirmToken;
+        return this.request(
+            `${this.baseUrl}/v1/platform/apps/${appId}/transfer-ownership`,
+            { method: "POST", body: JSON.stringify(data), headers },
+        );
+    }
+
+    async platformDeleteApp(
+        appId: string,
+    ): Promise<{ id: string; slug: string; deleted_at: string }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/apps/${appId}`,
+            { method: "DELETE" },
+        );
+    }
+
+    async platformGetSpendPolicy(
+        appId: string,
+        policyId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/apps/${appId}/spend-policies/${policyId}`,
+        );
+    }
+
+    async platformGetConnectionSpendPolicy(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/spend-policy`,
+        );
+    }
+
+    async platformListConnectionApprovals(
+        connectionId: string,
+        params?: { status?: string; limit?: number; offset?: number },
+    ): Promise<{ approvals: unknown[]; total: number }> {
+        const qs = new URLSearchParams();
+        if (params?.status) qs.set("status", params.status);
+        if (params?.limit != null) qs.set("limit", String(params.limit));
+        if (params?.offset != null) qs.set("offset", String(params.offset));
+        const suffix = qs.toString() ? `?${qs}` : "";
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/approvals${suffix}`,
+        );
+    }
+
+    async platformGetConnectionApproval(
+        connectionId: string,
+        approvalId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/approvals/${approvalId}`,
+        );
+    }
+
+    async platformListConnectionPendingApprovals(
+        connectionId: string,
+        params?: { status?: string; limit?: number; offset?: number },
+    ): Promise<{ pending_approvals: unknown[]; total: number }> {
+        const qs = new URLSearchParams();
+        if (params?.status) qs.set("status", params.status);
+        if (params?.limit != null) qs.set("limit", String(params.limit));
+        if (params?.offset != null) qs.set("offset", String(params.offset));
+        const suffix = qs.toString() ? `?${qs}` : "";
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/pending-approvals${suffix}`,
+        );
+    }
+
+    async platformSetConnectionSpendPolicy(
+        connectionId: string,
+        data: Record<string, unknown>,
+        idempotencyKey?: string,
+    ): Promise<Record<string, unknown>> {
+        const headers: Record<string, string> = {};
+        if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/spend-policy`,
+            { method: "PUT", body: JSON.stringify(data), headers },
+        );
+    }
+
     async platformRotateKey(
         appId: string,
         data?: { api_key_expires_at?: string },
