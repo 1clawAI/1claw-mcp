@@ -1,10 +1,9 @@
+# Registry publish runs in publish.yml after npm (needs: publish).
+# This workflow is for manual retries only.
 name: Publish to MCP Registry
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
 
 permissions:
   id-token: write
