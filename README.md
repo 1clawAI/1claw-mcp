@@ -31,6 +31,8 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 **Graduated HITL (v0.54–0.55):** Agent guardrail fields include `tx_approval_policy` (graduated tx thresholds → **202** `awaiting_approval`), `typed_data_policy`, `simulation_failure_policy`, and `raw_signing_policy` (`deny` or route to HITL via `approve`). Extended v0.55 fields: `tx_block_unlimited_approvals`, per-recipient limits, USD caps, `allow_erc4337`, `allow_eip7702`. Humans approve via dashboard or API; org freeze at `POST /v1/org/freeze`.
 
+**Guardrail governance & Safe (v0.56–0.57):** Convention 6 execution shadow/enforce; shadow report, revisions, replay; address screening; guardrail widening approvals (**202**); agent Safe accounts + module registry MCP tools (`list_agent_accounts`, `migrate_agent_to_safe`, `get_guardrail_shadow_report`, etc.). See package README tool table.
+
 ## Installation (local / stdio)
 
 ### Homebrew (macOS / Linux)
