@@ -69,6 +69,8 @@ pnpm run build
 
 ## Tools
 
+The server exposes **126 tools** (plus the `vault://secrets` resource when vault credentials are configured).
+
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
 | `list_secrets`         | List all secrets (metadata only — never values)                              |
@@ -93,6 +95,8 @@ pnpm run build
 | `get_transaction`      | Get one transaction by id (optional `include_signed_tx`).                    |
 | `provision_signing_key`| Generate a multi-chain signing key for an agent. Returns public key, address, and metadata. Private key stored securely in vault. |
 | `list_signing_keys`    | List all signing keys for an agent across all chains.                        |
+| `get_signing_key_balance` | Get native and optional token balances for an agent signing key on a chain. |
+| `import_signing_key`   | Import an existing private key as a signing key (human-only, step-up auth).   |
 | `sign_message`         | Sign a message using EIP-191 personal_sign. Returns signature and signer address. |
 | `sign_typed_data`      | Sign EIP-712 typed structured data. Returns signature, typed data hash, and signer address. |
 | `sign_digest`          | Sign a client-computed 32-byte digest directly (raw/blind signing) for ERC-1271/ERC-7739 nested EIP-712 flows (e.g. Polymarket). Requires `raw_signing_enabled`; audit-logged. |
@@ -101,6 +105,23 @@ pnpm run build
 | `platform_bootstrap_user` | Bootstrap resources (vault, agent, policies) for a connected user from a template.                |
 | `platform_reissue_claim` | Reissue a claim URL for an already-bootstrapped connection without re-provisioning resources.       |
 | `platform_rotate_key`  | Rotate the API key for a platform app. Returns the new `plt_` key (one-time).                        |
+| `platform_list_templates` | List bootstrap templates for a platform app.                                    |
+| `platform_create_template` | Create a bootstrap template (vault, agents, policies, signing keys).         |
+| `platform_list_users`  | List connected users for a platform app (status, resources, claim state).   |
+| `platform_grant_access` | Grant a platform app access to vaults/agents for a connected user.           |
+| `platform_list_grants` | List active resource grants for a platform connection.                      |
+| `platform_siwe_challenge` | Issue a SIWE nonce for wallet-native platform user provisioning (`plt_`).  |
+| `platform_get_connection` | Get connection detail: status, claim state, entitlements, wallet address.  |
+| `platform_connection_usage` | Per-connection LLM inference spend for the current UTC month.              |
+| `platform_list_entitlements` | List on-chain entitlement evaluations for a connection.                   |
+| `platform_preview_template` | Dry-run template spec with `{{params.*}}` / `{{subject.*}}` substitution. |
+| `platform_transfer_ownership` | Transfer a platform app to another org (step-up auth).                    |
+| `platform_delete_app`  | Soft-delete a platform app and release its slug.                              |
+| `platform_get_spend_policy` | Get a platform app spend policy by ID.                                   |
+| `platform_get_connection_spend_policy` | Get effective spend policy for a connection.                      |
+| `platform_list_connection_approvals` | List human approvals for a platform connection.                      |
+| `platform_get_connection_approval` | Get one approval for a platform connection.                          |
+| `platform_list_connection_pending_approvals` | List pending approvals for a connection (includes payload hash). |
 | `platform_marketplace` | List apps on the public platform marketplace. Browse by category, tags, or search query. No auth required. |
 | `platform_app_stats`   | Get usage statistics for a platform app — connected users, bootstraps, API request volume.            |
 | `platform_rotate_webhook_secret` | Rotate the webhook secret for a platform app. New secret used for HMAC-SHA256 signatures on deliveries. |
@@ -112,6 +133,7 @@ pnpm run build
 | `request_approval`     | Request human approval for a policy change or sensitive action. Creates a pending approval for the agent's human operator. |
 | `list_approvals`       | List approval requests, optionally filtered by status (pending, approved, denied).                   |
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
+| `get_approval_status`  | Lightweight approval poll for agents (status + `expires_at` only).          |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
 | `execute_http`         | Execute an HTTP request through a pre-configured binding. Credentials are injected server-side and never exposed to the agent. Requires `execution_intents_enabled` on the agent. |
 | `execute_intent`       | Execute a generic intent (HTTP, GraphQL, etc.) through a named binding. |
@@ -132,10 +154,21 @@ pnpm run build
 | `list_automations`     | List automation workflows for the agent. |
 | `list_automation_presets` | List available automation presets with pre-built workflow templates. |
 | `trigger_automation`   | Manually trigger an automation workflow. |
+| `create_agent_automation` | Create a simple automation for the calling agent (manual or webhook).   |
+| `cancel_automation_run` | Cancel a running or `awaiting_approval` automation run.                 |
 | `list_runtimes`        | List cloud runtimes for the agent. |
 | `manage_runtime`       | Start or stop a cloud runtime. |
 | `runtime_status`       | Get the current status and resource usage of a runtime. |
 | `runtime_logs`         | Get recent logs from a runtime container. |
+| `send_chat_message`    | Send a chat message to an agent via Shroud LLM (optional conversation id).  |
+| `list_chat_conversations` | List chat conversations for an agent.                                    |
+| `create_channel`       | Register a Telegram, WhatsApp, or Discord channel for an agent.             |
+| `list_channels`        | List messaging channels for an agent.                                     |
+| `send_channel_message` | Send an outbound message via a registered channel.                          |
+| `list_oauth_providers` | List available OAuth providers (Google, GitHub, Slack, etc.).               |
+| `list_oauth_connections` | List OAuth connected accounts for an agent.                               |
+| `org_directory`        | List org agents for sub-agent discovery (capabilities, tags).               |
+| `delegate_task`        | Send a task to another agent via chat (same-org delegation).                |
 | `search_agent_directory` | Search the public agent directory for discoverable agents. |
 | `list_delegations`     | List agent-to-agent delegations for the current agent or a specified agent.  |
 | `create_delegation`    | Create a delegation from one agent to another (human-only). Configures allowed tools, daily limits, depth, and mode. |
@@ -152,8 +185,7 @@ pnpm run build
 | `update_policy_backend_settings` | Update org policy backend settings (shadow/enforce, fail-closed breaker). |
 | `get_shadow_report` | Get shadow mode divergence report (builtin vs Cedar/OPA decisions). |
 | `list_contract_abis` | List org contract ABIs for transaction decoding. |
-| `create_contract_abi` | Register a contract ABI (chain + address + JSON ABI). |
-| `delete_contract_abi` | Delete a contract ABI from the registry. |
+| `upload_contract_abi` | Upload a contract ABI to the org registry (enables decoded tx policy evaluation). |
 | `list_pending_approvals` | List consensus pending approvals for the org. |
 | `approve_pending_approval` | Approve or reject a pending approval (supports `credential_type`: passkey, totp, biometric, password, api_key). |
 | `execute_pending_approval` | Execute an approved pending approval action. |
@@ -379,4 +411,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.51.0
+npm: `@1claw/mcp` v0.58.0
