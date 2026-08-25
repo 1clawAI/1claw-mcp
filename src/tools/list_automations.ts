@@ -18,7 +18,11 @@ export function listAutomationsTool(client: OneClawClient) {
 
         const automations = (result as { automations?: Array<Record<string, unknown>> }).automations ?? [];
         if (automations.length === 0) {
-          return "No automations found.";
+          return (
+            "No automations found.\n\n" +
+            "Hint: use create_agent_automation to create a simple manual/webhook workflow " +
+            "(log, notify, memory, wait steps), or ask your operator to configure advanced automations in the dashboard."
+          );
         }
 
         const lines = automations.map((a) => {

@@ -64,6 +64,7 @@ import { getMemoryTool } from "./tools/get_memory.js";
 import { listMemoryTool } from "./tools/list_memory.js";
 import { deleteMemoryTool } from "./tools/delete_memory.js";
 import { listAutomationsTool } from "./tools/list_automations.js";
+import { createAgentAutomationTool } from "./tools/create_agent_automation.js";
 import { listAutomationPresetsTool } from "./tools/list_automation_presets.js";
 import { triggerAutomationTool } from "./tools/trigger_automation.js";
 import { cancelAutomationRunTool } from "./tools/cancel_automation_run.js";
@@ -611,6 +612,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(listMemoryTool as AnyToolFactory);
     registerTool(deleteMemoryTool as AnyToolFactory);
     registerTool(listAutomationsTool as AnyToolFactory);
+    registerTool(createAgentAutomationTool as AnyToolFactory);
     registerTool(listAutomationPresetsTool as AnyToolFactory);
     registerTool(triggerAutomationTool as AnyToolFactory);
     registerTool(cancelAutomationRunTool as AnyToolFactory);

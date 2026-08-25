@@ -1159,6 +1159,21 @@ export class OneClawClient {
         );
     }
 
+    async createAgentAutomation(
+        agentId: string,
+        body: {
+            name: string;
+            trigger_type?: "manual" | "webhook";
+            workflow_spec: unknown;
+            auto_trigger?: boolean;
+        },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/automations`,
+            { method: "POST", body: JSON.stringify(body) },
+        );
+    }
+
     async cancelAutomationRun(
         automationId: string,
         runId: string,
