@@ -69,7 +69,7 @@ pnpm run build
 
 ## Tools
 
-The server exposes **126 tools** (plus the `vault://secrets` resource when vault credentials are configured).
+The server exposes **126 tools** when vault credentials are configured (125 in hosted/stdio cloud mode plus `inspect_content`; add `proxy_request` in local daemon mode). Also includes the `vault://secrets` resource.
 
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
