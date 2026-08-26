@@ -69,7 +69,7 @@ pnpm run build
 
 ## Tools
 
-The server exposes **126 tools** when vault credentials are configured (125 in hosted/stdio cloud mode plus `inspect_content`; add `proxy_request` in local daemon mode). Also includes the `vault://secrets` resource.
+The server exposes **133 tools** when vault credentials are configured (125 in hosted/stdio cloud mode plus `inspect_content`; add `proxy_request` in local daemon mode). Also includes the `vault://secrets` resource.
 
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
@@ -122,6 +122,13 @@ The server exposes **126 tools** when vault credentials are configured (125 in h
 | `platform_list_connection_approvals` | List human approvals for a platform connection.                      |
 | `platform_get_connection_approval` | Get one approval for a platform connection.                          |
 | `platform_list_connection_pending_approvals` | List pending approvals for a connection (includes payload hash). |
+| `platform_get_template` | Get a bootstrap template by ID. |
+| `platform_set_connection_spend_policy` | Set or replace spend policy for a connection (plt_ auth). |
+| `platform_create_connection_runtime` | Create a Cloud Runtime for a connection agent. |
+| `platform_connection_agent_chat` | Chat with an agent on a platform connection. |
+| `platform_decide_connection_pending_approval` | Vote on a consensus pending approval (payload_hash required). |
+| `platform_decide_connection_approval` | Decide a mobile approval for a connection user. |
+| `platform_deactivate_connection_signing_key` | Deactivate a signing key for a connection agent. |
 | `platform_marketplace` | List apps on the public platform marketplace. Browse by category, tags, or search query. No auth required. |
 | `platform_app_stats`   | Get usage statistics for a platform app — connected users, bootstraps, API request volume.            |
 | `platform_rotate_webhook_secret` | Rotate the webhook secret for a platform app. New secret used for HMAC-SHA256 signatures on deliveries. |
@@ -411,4 +418,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.58.0
+npm: `@1claw/mcp` v0.58.2
