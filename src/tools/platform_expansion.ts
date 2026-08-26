@@ -305,3 +305,215 @@ export function platformListConnectionPendingApprovalsTool(
     },
   };
 }
+
+export function platformGetTemplateTool(client: OneClawClient) {
+  return {
+    name: "platform_get_template" as const,
+    description: "Get a platform bootstrap template by ID (plt_ auth).",
+    parameters: z.object({
+      app_id: z.string().uuid(),
+      template_id: z.string().uuid(),
+    }),
+    execute: async (args: { app_id: string; template_id: string }) => {
+      try {
+        const result = await client.platformGetTemplate(
+          args.app_id,
+          args.template_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformSetConnectionSpendPolicyTool(client: OneClawClient) {
+  return {
+    name: "platform_set_connection_spend_policy" as const,
+    description:
+      "Set or replace the spend policy for a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      policy: z.record(z.unknown()).describe("Spend policy fields"),
+      idempotency_key: z.string().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      policy: Record<string, unknown>;
+      idempotency_key?: string;
+    }) => {
+      try {
+        const result = await client.platformSetConnectionSpendPolicy(
+          args.connection_id,
+          args.policy,
+          args.idempotency_key,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformCreateConnectionRuntimeTool(client: OneClawClient) {
+  return {
+    name: "platform_create_connection_runtime" as const,
+    description:
+      "Create a Cloud Runtime for an agent on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      name: z.string(),
+      agent_id: z.string().uuid().optional(),
+      template: z.string().optional(),
+      preset: z.string().optional(),
+      expose_http: z.boolean().optional(),
+      slug: z.string().optional(),
+    }),
+    execute: async (args: Record<string, unknown>) => {
+      try {
+        const { connection_id, ...body } = args;
+        const result = await client.platformCreateConnectionRuntime(
+          connection_id as string,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformConnectionAgentChatTool(client: OneClawClient) {
+  return {
+    name: "platform_connection_agent_chat" as const,
+    description:
+      "Send a chat message to an agent on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      agent_id: z.string().uuid(),
+      message: z.string(),
+      conversation_id: z.string().uuid().optional(),
+      model: z.string().optional(),
+      provider: z.string().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      agent_id: string;
+      message: string;
+      conversation_id?: string;
+      model?: string;
+      provider?: string;
+    }) => {
+      try {
+        const { connection_id, agent_id, ...body } = args;
+        const result = await client.platformConnectionAgentChat(
+          connection_id,
+          agent_id,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformDecideConnectionPendingApprovalTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_decide_connection_pending_approval" as const,
+    description:
+      "Vote on a consensus pending approval for a connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      approval_id: z.string().uuid(),
+      decision: z.enum(["approve", "reject", "approved", "rejected"]),
+      payload_hash: z.string(),
+      reason: z.string().optional(),
+      credential_type: z.string().optional(),
+    }),
+    execute: async (args: Record<string, unknown>) => {
+      try {
+        const { connection_id, approval_id, ...body } = args;
+        const result = await client.platformDecideConnectionPendingApproval(
+          connection_id as string,
+          approval_id as string,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformDecideConnectionApprovalTool(client: OneClawClient) {
+  return {
+    name: "platform_decide_connection_approval" as const,
+    description:
+      "Decide a mobile approval for a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      approval_id: z.string().uuid(),
+      decision: z.enum(["approved", "rejected", "approve", "reject"]),
+      reason: z.string().optional(),
+    }),
+    execute: async (args: Record<string, unknown>) => {
+      try {
+        const { connection_id, approval_id, ...body } = args;
+        const result = await client.platformDecideConnectionApproval(
+          connection_id as string,
+          approval_id as string,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformDeactivateConnectionSigningKeyTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_deactivate_connection_signing_key" as const,
+    description:
+      "Deactivate a signing key for an agent on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      chain: z.string(),
+      agent_id: z.string().uuid().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      chain: string;
+      agent_id?: string;
+    }) => {
+      try {
+        await client.platformDeactivateConnectionSigningKey(
+          args.connection_id,
+          args.chain,
+          args.agent_id,
+        );
+        return JSON.stringify({ status: "deactivated", chain: args.chain });
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}

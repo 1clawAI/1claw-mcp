@@ -102,6 +102,13 @@ import {
     platformListConnectionApprovalsTool,
     platformGetConnectionApprovalTool,
     platformListConnectionPendingApprovalsTool,
+    platformGetTemplateTool,
+    platformSetConnectionSpendPolicyTool,
+    platformCreateConnectionRuntimeTool,
+    platformConnectionAgentChatTool,
+    platformDecideConnectionPendingApprovalTool,
+    platformDecideConnectionApprovalTool,
+    platformDeactivateConnectionSigningKeyTool,
 } from "./tools/platform_expansion.js";
 import { importSigningKeyTool } from "./tools/import_signing_key.js";
 import { listCedarPoliciesTool } from "./tools/list_cedar_policies.js";
@@ -589,6 +596,13 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformListConnectionApprovalsTool as AnyToolFactory);
     registerTool(platformGetConnectionApprovalTool as AnyToolFactory);
     registerTool(platformListConnectionPendingApprovalsTool as AnyToolFactory);
+    registerTool(platformGetTemplateTool as AnyToolFactory);
+    registerTool(platformSetConnectionSpendPolicyTool as AnyToolFactory);
+    registerTool(platformCreateConnectionRuntimeTool as AnyToolFactory);
+    registerTool(platformConnectionAgentChatTool as AnyToolFactory);
+    registerTool(platformDecideConnectionPendingApprovalTool as AnyToolFactory);
+    registerTool(platformDecideConnectionApprovalTool as AnyToolFactory);
+    registerTool(platformDeactivateConnectionSigningKeyTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
     registerTool(getApprovalStatusTool as AnyToolFactory);

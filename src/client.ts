@@ -919,6 +919,79 @@ export class OneClawClient {
         );
     }
 
+    async platformGetTemplate(
+        appId: string,
+        templateId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/templates/${templateId}`,
+        );
+    }
+
+    async platformCreateConnectionRuntime(
+        connectionId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/runtimes`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformConnectionAgentChat(
+        connectionId: string,
+        agentId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/agents/${agentId}/chat`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformGetConnectionPendingApproval(
+        connectionId: string,
+        approvalId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/pending-approvals/${approvalId}`,
+        );
+    }
+
+    async platformDecideConnectionPendingApproval(
+        connectionId: string,
+        approvalId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/pending-approvals/${approvalId}/decide`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformDecideConnectionApproval(
+        connectionId: string,
+        approvalId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/approvals/${approvalId}/decide`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformDeactivateConnectionSigningKey(
+        connectionId: string,
+        chain: string,
+        agentId?: string,
+    ): Promise<void> {
+        const qs = agentId ? `?agent_id=${encodeURIComponent(agentId)}` : "";
+        await this.request<void>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/signing-keys/${encodeURIComponent(chain)}${qs}`,
+            { method: "DELETE" },
+        );
+    }
+
     async platformCreateTemplate(
         appId: string,
         data: { name: string; spec: Record<string, unknown>; description?: string },
