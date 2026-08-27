@@ -69,7 +69,7 @@ pnpm run build
 
 ## Tools
 
-The server exposes **133 tools** when vault credentials are configured (125 in hosted/stdio cloud mode plus `inspect_content`; add `proxy_request` in local daemon mode). Also includes the `vault://secrets` resource.
+The server exposes **138 tools** when vault credentials are configured (add `proxy_request` in local daemon mode). **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
 
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
@@ -127,7 +127,11 @@ The server exposes **133 tools** when vault credentials are configured (125 in h
 | `platform_create_connection_runtime` | Create a Cloud Runtime for a connection agent. |
 | `platform_get_connection_runtime` | Get a connection-scoped runtime by ID. |
 | `platform_connection_passkey_enroll_begin` | Begin WebAuthn passkey enrollment for a connected user. |
+| `platform_connection_passkey_enroll_complete` | Complete passkey enrollment for a connected end-user (plt_ auth). |
 | `platform_connection_agent_chat` | Chat with an agent on a platform connection. |
+| `platform_list_connection_signing_keys` | List agent signing keys on a connection (public metadata only; optional `agent_id`). |
+| `platform_get_connection_signing_key` | Get signing key for one chain on a connection agent. |
+| `platform_patch_connection_agent` | Enable Intents/Execution Intents or update `system_prompt` on a connection agent. |
 | `platform_decide_connection_pending_approval` | Vote on a consensus pending approval (payload_hash required). |
 | `platform_decide_connection_approval` | Decide a mobile approval for a connection user. |
 | `platform_deactivate_connection_signing_key` | Deactivate a signing key for a connection agent. |
