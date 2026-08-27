@@ -579,6 +579,44 @@ export function platformDeactivateConnectionSigningKeyTool(
   };
 }
 
+export function platformPatchConnectionAgentTool(client: OneClawClient) {
+  return {
+    name: "platform_patch_connection_agent" as const,
+    description:
+      "Enable Intents API, Execution Intents, or update system prompt for a connection agent (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      agent_id: z.string().uuid(),
+      intents_api_enabled: z.boolean().optional(),
+      execution_intents_enabled: z.boolean().optional(),
+      system_prompt: z.string().nullable().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      agent_id: string;
+      intents_api_enabled?: boolean;
+      execution_intents_enabled?: boolean;
+      system_prompt?: string | null;
+    }) => {
+      try {
+        const result = await client.platformPatchConnectionAgent(
+          args.connection_id,
+          args.agent_id,
+          {
+            intents_api_enabled: args.intents_api_enabled,
+            execution_intents_enabled: args.execution_intents_enabled,
+            system_prompt: args.system_prompt,
+          },
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
 export function platformGetConnectionRuntimeTool(client: OneClawClient) {
   return {
     name: "platform_get_connection_runtime" as const,

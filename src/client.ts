@@ -1043,6 +1043,26 @@ export class OneClawClient {
         );
     }
 
+    async platformPatchConnectionAgent(
+        connectionId: string,
+        agentId: string,
+        data: {
+            intents_api_enabled?: boolean;
+            execution_intents_enabled?: boolean;
+            system_prompt?: string | null;
+        },
+    ): Promise<{
+        agent_id: string;
+        intents_api_enabled: boolean;
+        execution_intents_enabled: boolean;
+        system_prompt?: string | null;
+    }> {
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/agents/${agentId}`,
+            { method: "PATCH", body: JSON.stringify(data) },
+        );
+    }
+
     async platformCreateTemplate(
         appId: string,
         data: { name: string; spec: Record<string, unknown>; description?: string },
