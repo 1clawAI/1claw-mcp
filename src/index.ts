@@ -107,6 +107,7 @@ import {
     platformCreateConnectionRuntimeTool,
     platformGetConnectionRuntimeTool,
     platformConnectionPasskeyEnrollBeginTool,
+    platformConnectionPasskeyEnrollCompleteTool,
     platformConnectionAgentChatTool,
     platformDecideConnectionPendingApprovalTool,
     platformDecideConnectionApprovalTool,
@@ -603,6 +604,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformCreateConnectionRuntimeTool as AnyToolFactory);
     registerTool(platformGetConnectionRuntimeTool as AnyToolFactory);
     registerTool(platformConnectionPasskeyEnrollBeginTool as AnyToolFactory);
+    registerTool(platformConnectionPasskeyEnrollCompleteTool as AnyToolFactory);
     registerTool(platformConnectionAgentChatTool as AnyToolFactory);
     registerTool(platformDecideConnectionPendingApprovalTool as AnyToolFactory);
     registerTool(platformDecideConnectionApprovalTool as AnyToolFactory);

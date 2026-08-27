@@ -565,3 +565,41 @@ export function platformConnectionPasskeyEnrollBeginTool(
     },
   };
 }
+
+export function platformConnectionPasskeyEnrollCompleteTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_connection_passkey_enroll_complete" as const,
+    description:
+      "Complete WebAuthn passkey enrollment for a connected end-user (plt_ auth). Submit ceremony result from the browser.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      credential_id: z.string(),
+      attestation_object: z.string(),
+      client_data_json: z.string(),
+      transports: z.array(z.string()).optional(),
+      name: z.string().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      credential_id: string;
+      attestation_object: string;
+      client_data_json: string;
+      transports?: string[];
+      name?: string;
+    }) => {
+      try {
+        const { connection_id, ...body } = args;
+        const result = await client.platformConnectionPasskeyEnrollComplete(
+          connection_id,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
