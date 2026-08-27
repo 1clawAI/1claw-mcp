@@ -125,6 +125,8 @@ The server exposes **133 tools** when vault credentials are configured (125 in h
 | `platform_get_template` | Get a bootstrap template by ID. |
 | `platform_set_connection_spend_policy` | Set or replace spend policy for a connection (plt_ auth). |
 | `platform_create_connection_runtime` | Create a Cloud Runtime for a connection agent. |
+| `platform_get_connection_runtime` | Get a connection-scoped runtime by ID. |
+| `platform_connection_passkey_enroll_begin` | Begin WebAuthn passkey enrollment for a connected user. |
 | `platform_connection_agent_chat` | Chat with an agent on a platform connection. |
 | `platform_decide_connection_pending_approval` | Vote on a consensus pending approval (payload_hash required). |
 | `platform_decide_connection_approval` | Decide a mobile approval for a connection user. |
@@ -418,4 +420,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.58.2
+npm: `@1claw/mcp` v0.59.0

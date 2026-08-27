@@ -517,3 +517,51 @@ export function platformDeactivateConnectionSigningKeyTool(
     },
   };
 }
+
+export function platformGetConnectionRuntimeTool(client: OneClawClient) {
+  return {
+    name: "platform_get_connection_runtime" as const,
+    description:
+      "Get a Cloud Runtime provisioned on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      runtime_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string; runtime_id: string }) => {
+      try {
+        const result = await client.platformGetConnectionRuntime(
+          args.connection_id,
+          args.runtime_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformConnectionPasskeyEnrollBeginTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_connection_passkey_enroll_begin" as const,
+    description:
+      "Begin WebAuthn passkey enrollment for a connected end-user (plt_ auth). Returns ceremony options for the browser.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string }) => {
+      try {
+        const result = await client.platformConnectionPasskeyEnrollBegin(
+          args.connection_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}

@@ -938,6 +938,34 @@ export class OneClawClient {
         );
     }
 
+    async platformGetConnectionRuntime(
+        connectionId: string,
+        runtimeId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/runtimes/${runtimeId}`,
+        );
+    }
+
+    async platformConnectionPasskeyEnrollBegin(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/passkeys/enroll/begin`,
+            { method: "POST", body: JSON.stringify({}) },
+        );
+    }
+
+    async platformConnectionPasskeyEnrollComplete(
+        connectionId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/passkeys/enroll/complete`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
     async platformConnectionAgentChat(
         connectionId: string,
         agentId: string,
