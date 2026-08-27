@@ -486,6 +486,67 @@ export function platformDecideConnectionApprovalTool(client: OneClawClient) {
   };
 }
 
+export function platformListConnectionSigningKeysTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_list_connection_signing_keys" as const,
+    description:
+      "List public signing-key metadata (chain, address, public_key, curve) for a connection agent (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      agent_id: z.string().uuid().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      agent_id?: string;
+    }) => {
+      try {
+        const result = await client.platformListConnectionSigningKeys(
+          args.connection_id,
+          args.agent_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformGetConnectionSigningKeyTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_get_connection_signing_key" as const,
+    description:
+      "Get public signing-key metadata for one chain on a connection agent (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      chain: z.string(),
+      agent_id: z.string().uuid().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      chain: string;
+      agent_id?: string;
+    }) => {
+      try {
+        const result = await client.platformGetConnectionSigningKey(
+          args.connection_id,
+          args.chain,
+          args.agent_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
 export function platformDeactivateConnectionSigningKeyTool(
   client: OneClawClient,
 ) {

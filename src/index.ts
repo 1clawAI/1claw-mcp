@@ -111,6 +111,8 @@ import {
     platformConnectionAgentChatTool,
     platformDecideConnectionPendingApprovalTool,
     platformDecideConnectionApprovalTool,
+    platformListConnectionSigningKeysTool,
+    platformGetConnectionSigningKeyTool,
     platformDeactivateConnectionSigningKeyTool,
 } from "./tools/platform_expansion.js";
 import { importSigningKeyTool } from "./tools/import_signing_key.js";
@@ -608,6 +610,8 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformConnectionAgentChatTool as AnyToolFactory);
     registerTool(platformDecideConnectionPendingApprovalTool as AnyToolFactory);
     registerTool(platformDecideConnectionApprovalTool as AnyToolFactory);
+    registerTool(platformListConnectionSigningKeysTool as AnyToolFactory);
+    registerTool(platformGetConnectionSigningKeyTool as AnyToolFactory);
     registerTool(platformDeactivateConnectionSigningKeyTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);

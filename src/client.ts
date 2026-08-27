@@ -1020,6 +1020,27 @@ export class OneClawClient {
         );
     }
 
+    async platformListConnectionSigningKeys(
+        connectionId: string,
+        agentId?: string,
+    ): Promise<{ agent_id: string; keys: Array<{ chain: string; address: string; public_key: string; curve: string }> }> {
+        const qs = agentId ? `?agent_id=${encodeURIComponent(agentId)}` : "";
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/signing-keys${qs}`,
+        );
+    }
+
+    async platformGetConnectionSigningKey(
+        connectionId: string,
+        chain: string,
+        agentId?: string,
+    ): Promise<{ agent_id: string; chain: string; address: string; public_key: string; curve: string }> {
+        const qs = agentId ? `?agent_id=${encodeURIComponent(agentId)}` : "";
+        return this.request(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/signing-keys/${encodeURIComponent(chain)}${qs}`,
+        );
+    }
+
     async platformCreateTemplate(
         appId: string,
         data: { name: string; spec: Record<string, unknown>; description?: string },
