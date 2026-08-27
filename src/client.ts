@@ -237,9 +237,11 @@ export class OneClawClient {
 
     private async autoDiscoverVault(): Promise<void> {
         const vaults = await this.listVaults();
-        if (vaults.vaults && vaults.vaults.length > 0) {
-            this._vaultId = vaults.vaults[0].id;
+        if (!vaults.vaults || vaults.vaults.length === 0) {
+            return;
         }
+        const preferred = vaults.vaults.find((v) => v.name === "default");
+        this._vaultId = preferred?.id ?? vaults.vaults[0].id;
     }
 
     private async headers(method: string = "GET", url?: string): Promise<Record<string, string>> {

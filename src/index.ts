@@ -898,6 +898,21 @@ if (transport === "httpStream") {
     }
 
     const app = server.getApp();
+
+    app.get("/.well-known/oauth-protected-resource", (c) => {
+        const resource =
+            process.env.ONECLAW_MCP_RESOURCE_URL ??
+            `${process.env.ONECLAW_PUBLIC_MCP_URL ?? "https://mcp.1claw.xyz"}/mcp`;
+        return c.json({
+            resource,
+            authorization_servers: [
+                process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz",
+            ],
+            bearer_methods_supported: ["header"],
+            scopes_supported: ["openid", "profile", "email"],
+        });
+    });
+
     app.use("*", async (c, next) => {
         // L2: Use rightmost XFF entry (closest to the trusted edge proxy)
         const xff = c.req.header("x-forwarded-for");
