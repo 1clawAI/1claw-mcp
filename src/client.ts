@@ -999,6 +999,45 @@ export class OneClawClient {
         );
     }
 
+    async platformCreateConnectionPendingApproval(
+        connectionId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/pending-approvals`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
+    async platformGetConnectionPortfolio(
+        connectionId: string,
+        query?: Record<string, string>,
+    ): Promise<Record<string, unknown>> {
+        const qs = query
+            ? "?" + new URLSearchParams(query).toString()
+            : "";
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/portfolio${qs}`,
+        );
+    }
+
+    async platformListConnectionAutomations(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/automations`,
+        );
+    }
+
+    async inspectContent(
+        data: { content: string; context?: string },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/shroud/inspect-content`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
     async platformDecideConnectionApproval(
         connectionId: string,
         approvalId: string,

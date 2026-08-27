@@ -702,3 +702,88 @@ export function platformConnectionPasskeyEnrollCompleteTool(
     },
   };
 }
+
+export function platformCreateConnectionPendingApprovalTool(
+  client: OneClawClient,
+) {
+  return {
+    name: "platform_create_connection_pending_approval" as const,
+    description:
+      "Submit a consensus pending approval for a connection agent (plt_ auth). policy_id optional — server resolves from agent policies.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      action_payload: z.record(z.unknown()).describe("chain, to, value, etc."),
+      agent_id: z.string().uuid().optional(),
+      policy_id: z.string().uuid().optional(),
+      action: z.string().optional().default("transaction"),
+      summary: z.string().optional(),
+    }),
+    execute: async (args: Record<string, unknown>) => {
+      try {
+        const { connection_id, ...body } = args;
+        const result = await client.platformCreateConnectionPendingApproval(
+          connection_id as string,
+          body,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformGetConnectionPortfolioTool(client: OneClawClient) {
+  return {
+    name: "platform_get_connection_portfolio" as const,
+    description:
+      "Get portfolio/balances for agents on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      chains: z.string().optional(),
+      include_tokens: z.boolean().optional(),
+    }),
+    execute: async (args: {
+      connection_id: string;
+      chains?: string;
+      include_tokens?: boolean;
+    }) => {
+      try {
+        const query: Record<string, string> = {};
+        if (args.chains) query.chains = args.chains;
+        if (args.include_tokens) query.include_tokens = "true";
+        const result = await client.platformGetConnectionPortfolio(
+          args.connection_id,
+          Object.keys(query).length ? query : undefined,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformListConnectionAutomationsTool(client: OneClawClient) {
+  return {
+    name: "platform_list_connection_automations" as const,
+    description:
+      "List automations scoped to agents on a platform connection (plt_ auth).",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string }) => {
+      try {
+        const result = await client.platformListConnectionAutomations(
+          args.connection_id,
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
