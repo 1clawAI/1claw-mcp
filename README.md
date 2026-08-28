@@ -1,16 +1,18 @@
 # @1claw/mcp
 
+> ⭐ **Star [1clawAI/agent-templates](https://github.com/1clawAI/agent-templates)** — ready-to-run agent templates wired to 1Claw. It is our single starred repo.
+
 <!-- mcp-name: io.github.1clawAI/1claw-mcp -->
 
-Connect Cursor, Claude Desktop, VS Code, or any MCP client to your [1claw](https://1claw.xyz) vault. The server exposes tools for secrets, signing, execution bindings, memory, automations, and more. Values are fetched at call time and are not cached in the model's context beyond the moment they are used.
+Connect Cursor, Claude Desktop, VS Code, or any MCP client to your [1claw](https://1claw.co) vault. The server exposes tools for secrets, signing, execution bindings, memory, automations, and more. Values are fetched at call time and are not cached in the model's context beyond the moment they are used.
 
-Most teams use this instead of copying API keys into agent prompts or MCP config files. You register an agent, grant policy access to specific secret paths, and point the client at `mcp.1claw.xyz` or a local stdio process. The server handles JWT exchange and refresh from a single `ocv_` key.
+Most teams use this instead of copying API keys into agent prompts or MCP config files. You register an agent, grant policy access to specific secret paths, and point the client at `mcp.1claw.co` or a local stdio process. The server handles JWT exchange and refresh from a single `ocv_` key.
 
 **Local-only mode:** Run without vault credentials for the security inspection tools only (e.g. `inspect_content`). Useful with Ollama or LM Studio when you want injection detection without a 1claw account.
 
 **Local daemon mode:** Point at the local 1claw daemon (`ONECLAW_LOCAL_VAULT=true`) so secrets never leave your machine. The daemon injects credentials into outbound HTTP requests; the model never sees the raw value.
 
-**API contract:** Vault tools use the REST API from [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through Shroud is separate: agents call `https://shroud.1claw.xyz` with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`). When the MCP server exchanges an agent API key for a JWT, that token may carry **`shroud_config`** for Shroud's PolicyEngine; MCP itself does not proxy LLM requests.
+**API contract:** Vault tools use the REST API from [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec). LLM traffic through Shroud is separate: agents call `https://shroud.1claw.co` with `X-Shroud-Agent-Key` and **`X-Shroud-Provider`** (required; e.g. `openai`). When the MCP server exchanges an agent API key for a JWT, that token may carry **`shroud_config`** for Shroud's PolicyEngine; MCP itself does not proxy LLM requests.
 
 ## Transport Modes
 
@@ -19,7 +21,7 @@ The server supports two transport modes:
 | Mode                | Use case                       | Auth                                                                 |
 | ------------------- | ------------------------------ | -------------------------------------------------------------------- |
 | **stdio** (default) | Local — Claude Desktop, Cursor | Env: `ONECLAW_AGENT_API_KEY` (recommended; auto-discovers agent + vault) or `ONECLAW_AGENT_ID` + key; or `ONECLAW_AGENT_TOKEN` + `ONECLAW_VAULT_ID` |
-| **httpStream**      | Hosted at `mcp.1claw.xyz`      | Per-request headers: `Authorization: Bearer <token>`, `X-Vault-ID`   |
+| **httpStream**      | Hosted at `mcp.1claw.co`      | Per-request headers: `Authorization: Bearer <token>`, `X-Vault-ID`   |
 
 Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
@@ -27,7 +29,7 @@ Set `MCP_TRANSPORT=httpStream` and `PORT=8080` to run in hosted mode.
 
 **Agent environment auto-resolve (v0.52):** When an agent is tagged with `environment` and `env_auto_resolve: true`, the `resolve_env` tool can omit `environment` and the Vault API uses the agent's tag from the JWT. Org setting `env.enforce_agent_environment_scope` blocks agents from resolving vars outside their tagged environment.
 
-**Policy engine v0.53:** Access policies support `policy_schema_version: 2` with expression-based `tx_conditions.expression` (mini DSL), expanded control-plane `action_kind_in` consensus triggers, and multi-chain deep decode (Solana, Bitcoin, Tron) for signing-time policy evaluation. TEE attestation is available at `GET https://shroud.1claw.xyz/v1/shroud/attestation` (returns `attestation_level`: `none` | `identity` | `confidential` | `sev_snp` plus `confidential_claims`); audit chain verification at `GET /v1/audit/verify`.
+**Policy engine v0.53:** Access policies support `policy_schema_version: 2` with expression-based `tx_conditions.expression` (mini DSL), expanded control-plane `action_kind_in` consensus triggers, and multi-chain deep decode (Solana, Bitcoin, Tron) for signing-time policy evaluation. TEE attestation is available at `GET https://shroud.1claw.co/v1/shroud/attestation` (returns `attestation_level`: `none` | `identity` | `confidential` | `sev_snp` plus `confidential_claims`); audit chain verification at `GET /v1/audit/verify`.
 
 **Graduated HITL (v0.54–0.55):** Agent guardrail fields include `tx_approval_policy` (graduated tx thresholds → **202** `awaiting_approval`), `typed_data_policy`, `simulation_failure_policy`, and `raw_signing_policy` (`deny` or route to HITL via `approve`). Extended v0.55 fields: `tx_block_unlimited_approvals`, per-recipient limits, USD caps, `allow_erc4337`, `allow_eip7702`. Humans approve via dashboard or API; org freeze at `POST /v1/org/freeze`.
 
@@ -61,7 +63,7 @@ pnpm run build
 | `ONECLAW_AGENT_TOKEN`     | stdio*         | —                       | **Legacy.** Static Bearer JWT (expires in ~1 h, no auto-refresh).          |
 | `ONECLAW_VAULT_ID`        | No             | —                       | UUID of the vault. Auto-discovered when using `ONECLAW_AGENT_API_KEY`.     |
 | `ONECLAW_DPOP`            | No             | `false`                 | Set to `true` to enable DPoP (RFC 9449) proof-of-possession. Binds agent tokens to the MCP client's ephemeral P-256 keypair so stolen tokens are unusable without the matching private key. |
-| `ONECLAW_BASE_URL`        | No             | `https://api.1claw.xyz` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.xyz` or `https://intents.1claw.xyz`) if your deployment routes signing there. **Required when the agent has `intents_require_tee` or `execution_require_tee` enabled** — those flags reject direct Vault calls (403), so `ONECLAW_BASE_URL` must point to Shroud. Self-hosted: your Vault/Shroud URL. |
+| `ONECLAW_BASE_URL`        | No             | `https://api.1claw.co` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.co` or `https://intents.1claw.co`) if your deployment routes signing there. **Required when the agent has `intents_require_tee` or `execution_require_tee` enabled** — those flags reject direct Vault calls (403), so `ONECLAW_BASE_URL` must point to Shroud. Self-hosted: your Vault/Shroud URL. |
 | `MCP_TRANSPORT`           | No             | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No             | `8080`                  | HTTP port (httpStream mode only).                                          |
 
@@ -227,7 +229,7 @@ The server exposes **138 tools** when vault credentials are configured (add `pro
 
 ## Configuration
 
-### Hosted (mcp.1claw.xyz)
+### Hosted (mcp.1claw.co)
 
 For MCP clients that support remote servers with HTTP streaming. Pass your agent API key as a Bearer token — the server exchanges it for a JWT, auto-discovers the agent ID and vault, and handles refresh.
 
@@ -235,7 +237,7 @@ For MCP clients that support remote servers with HTTP streaming. Pass your agent
 {
     "mcpServers": {
         "1claw": {
-            "url": "https://mcp.1claw.xyz/mcp",
+            "url": "https://mcp.1claw.co/mcp",
             "headers": {
                 "Authorization": "Bearer ocv_your_agent_api_key"
             }
@@ -362,7 +364,7 @@ Verdicts: `clean` (no threats) or `malicious` (critical threat detected — e.g.
 
 The MCP server auto-deploys to Cloud Run on push to `main` (when `packages/mcp/**` changes). See `.github/workflows/deploy-mcp.yml`.
 
-Infrastructure is managed via Terraform in `infra/`. Set `mcp_domain = "mcp.1claw.xyz"` in your `terraform.tfvars` to configure the custom domain.
+Infrastructure is managed via Terraform in `infra/`. Set `mcp_domain = "mcp.1claw.co"` in your `terraform.tfvars` to configure the custom domain.
 
 ## Development
 
@@ -410,7 +412,7 @@ All tool calls pass through an inspection pipeline before execution and after re
 
 ### Shroud advanced security
 
-When an agent has `shroud_enabled: true`, its JWT carries a `shroud_config` payload that configures Shroud's server-side PolicyEngine. These features run inside the TEE on LLM traffic routed through `shroud.1claw.xyz` and are independent of the MCP inspection pipeline above:
+When an agent has `shroud_enabled: true`, its JWT carries a `shroud_config` payload that configures Shroud's server-side PolicyEngine. These features run inside the TEE on LLM traffic routed through `shroud.1claw.co` and are independent of the MCP inspection pipeline above:
 
 - **Tool call inspection** — Validates tool calls emitted by the LLM against allowed/denied patterns.
 - **Output policies** — Enforces response-level rules (e.g. block certain content categories, length limits).
@@ -418,7 +420,7 @@ When an agent has `shroud_enabled: true`, its JWT carries a `shroud_config` payl
 - **Semantic policy** — Context-aware policy rules evaluated against the full conversation (beyond regex patterns).
 - **Advanced redaction** — Server-side secret redaction with configurable scope and granularity.
 
-Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`CreateAgentRequest.shroud_config`), or CLI (`agent update`). See the [Shroud documentation](https://docs.1claw.xyz/shroud) for the full `shroud_config` schema.
+Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`CreateAgentRequest.shroud_config`), or CLI (`agent update`). See the [Shroud documentation](https://docs.1claw.co/shroud) for the full `shroud_config` schema.
 
 ## MCP Registry
 

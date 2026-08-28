@@ -53,7 +53,7 @@
     "type": "git",
     "url": "https://github.com/1clawAI/1claw-mcp.git"
   },
-  "homepage": "https://1claw.xyz",
+  "homepage": "https://1claw.co",
   "license": "MIT",
   "dependencies": {
     "@hono/node-server": "^1.19.13",
