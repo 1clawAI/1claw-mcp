@@ -11,6 +11,9 @@ export function importSigningKeyTool(client: OneClawClient) {
             agent_id: z.string().optional().describe("Agent ID. Uses the current authenticated agent if omitted."),
             chain: z
                 .enum(["ethereum", "bitcoin", "solana", "xrp", "cardano", "tron"])
+                // Deliberately excludes midnight: derivation lives in the sidecar,
+                // so there is no raw private key to import and the vault refuses
+                // it before the consensus gate.
                 .describe("Chain name"),
             private_key: z.string().describe("Private key to import"),
             format: z

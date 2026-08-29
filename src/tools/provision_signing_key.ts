@@ -10,7 +10,7 @@ export function provisionSigningKeyTool(client: OneClawClient) {
     parameters: z.object({
       agent_id: z.string().optional().describe("Agent ID. Uses the current authenticated agent if omitted."),
       chain: z
-        .enum(["ethereum", "bitcoin", "solana", "xrp", "cardano", "tron"])
+        .enum(["ethereum", "bitcoin", "solana", "xrp", "cardano", "tron", "midnight"])
         .describe("Blockchain to generate the signing key for"),
     }),
     execute: async (
