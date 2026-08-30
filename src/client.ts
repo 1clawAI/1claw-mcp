@@ -312,7 +312,7 @@ export class OneClawClient {
             if (res.status === 402) {
                 throw new OneClawApiError(
                     402,
-                    "Quota exhausted. Ask your human to upgrade the plan, add prepaid credits, or enable x402 micropayments at https://1claw.xyz/settings/billing",
+                    "Quota exhausted. Ask your human to upgrade the plan, add prepaid credits, or enable x402 micropayments at https://1claw.co/settings/billing",
                 );
             }
 
@@ -322,7 +322,7 @@ export class OneClawClient {
             ) {
                 throw new OneClawApiError(
                     403,
-                    `Resource limit reached: ${detail}. Ask your human to upgrade the plan at https://1claw.xyz/settings/billing`,
+                    `Resource limit reached: ${detail}. Ask your human to upgrade the plan at https://1claw.co/settings/billing`,
                 );
             }
 

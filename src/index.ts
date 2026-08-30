@@ -151,7 +151,7 @@ type SessionAuth =
     | { token: string; vaultId: string; runtimeId?: string }
     | { agentApiKey: string; agentId?: string; vaultId?: string; runtimeId?: string };
 
-const baseUrl = process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz";
+const baseUrl = process.env.ONECLAW_BASE_URL ?? "https://api.1claw.co";
 const transport = process.env.MCP_TRANSPORT ?? "stdio";
 const port = parseInt(process.env.PORT ?? "8080", 10);
 
@@ -910,11 +910,11 @@ if (transport === "httpStream") {
     app.get("/.well-known/oauth-protected-resource", (c) => {
         const resource =
             process.env.ONECLAW_MCP_RESOURCE_URL ??
-            `${process.env.ONECLAW_PUBLIC_MCP_URL ?? "https://mcp.1claw.xyz"}/mcp`;
+            `${process.env.ONECLAW_PUBLIC_MCP_URL ?? "https://mcp.1claw.co"}/mcp`;
         return c.json({
             resource,
             authorization_servers: [
-                process.env.ONECLAW_BASE_URL ?? "https://api.1claw.xyz",
+                process.env.ONECLAW_BASE_URL ?? "https://api.1claw.co",
             ],
             bearer_methods_supported: ["header"],
             scopes_supported: ["openid", "profile", "email"],

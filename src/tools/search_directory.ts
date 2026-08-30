@@ -29,7 +29,7 @@ export function searchDirectoryTool(client: OneClawClient) {
       args: { query?: string; tags?: string },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
-      const baseUrl = (client as unknown as { baseUrl: string }).baseUrl || process.env.ONECLAW_API_URL || "https://api.1claw.xyz";
+      const baseUrl = (client as unknown as { baseUrl: string }).baseUrl || process.env.ONECLAW_API_URL || "https://api.1claw.co";
       const searchParams = new URLSearchParams();
       if (args.query) searchParams.set("q", args.query);
       if (args.tags) searchParams.set("tags", args.tags);
