@@ -3,7 +3,7 @@
   "name": "io.github.1clawAI/1claw-mcp",
   "title": "1Claw Vault",
   "description": "HSM-backed vault secrets for AI agents (JIT fetch) plus prompt-injection and threat scanning.",
-  "websiteUrl": "https://1claw.xyz",
+  "websiteUrl": "https://1claw.co",
   "repository": {
     "url": "https://github.com/1clawAI/1claw-mcp",
     "source": "github"
@@ -39,7 +39,7 @@
         },
         {
           "name": "ONECLAW_BASE_URL",
-          "description": "Vault API base URL (default https://api.1claw.xyz).",
+          "description": "Vault API base URL (default https://api.1claw.co).",
           "isRequired": false,
           "isSecret": false
         },
