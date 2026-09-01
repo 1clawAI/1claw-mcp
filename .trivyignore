@@ -112,3 +112,12 @@ CVE-2026-16221
 CVE-2026-18446
 # ip-address parsing inconsistency — deep transitive.
 CVE-2026-69192
+
+# util-linux TOCTOU in the mount program (bsdutils, libuuid1, mount, util-linux)
+# — no fixed version in bookworm, which node:22-slim is built on; Trivy reports
+# "affected" with an empty Fixed Version, so no base image bump clears it.
+# Reaching the bug requires the mount program to run. The MCP server has no
+# child_process usage at all, so it never spawns a subprocess; util-linux is
+# present only because the base image ships it. Same acceptance as the vault
+# image, which carries this CVE for the same reason.
+CVE-2026-53613
