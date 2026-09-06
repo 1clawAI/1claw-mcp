@@ -81,6 +81,7 @@ import { listChannelsTool } from "./tools/list_channels.js";
 import { sendChannelMessageTool } from "./tools/send_channel_message.js";
 import { listConnectorPresetsTool } from "./tools/list_connector_presets.js";
 import { listNotificationTargetsTool } from "./tools/list_notification_targets.js";
+import { getPeerContextTool } from "./tools/get_peer_context.js";
 import { listInstalledConnectorsTool } from "./tools/list_installed_connectors.js";
 import { listOAuthProvidersTool } from "./tools/list_oauth_providers.js";
 import { listOAuthConnectionsTool } from "./tools/list_oauth_connections.js";
@@ -665,6 +666,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(listOAuthProvidersTool as AnyToolFactory);
     registerTool(listConnectorPresetsTool as AnyToolFactory);
     registerTool(listNotificationTargetsTool as AnyToolFactory);
+    registerTool(getPeerContextTool as AnyToolFactory);
     registerTool(listInstalledConnectorsTool as AnyToolFactory);
     registerTool(listOAuthConnectionsTool as AnyToolFactory);
     registerTool(oauthRevokeTokenTool as AnyToolFactory);

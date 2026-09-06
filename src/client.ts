@@ -1499,6 +1499,16 @@ export class OneClawClient {
 
     // ── OAuth Connect ───────────────────────────────────────────────────
 
+    async getAgentPeerContext(
+        agentId: string,
+        budget?: number,
+    ): Promise<Record<string, unknown>> {
+        const qs = budget ? `?budget=${budget}` : "";
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/peer-context${qs}`,
+        );
+    }
+
     async listNotificationTargets(): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/notification-targets`,
