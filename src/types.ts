@@ -218,17 +218,36 @@ export interface BootstrapResponse {
 
 export interface ApprovalResponse {
   id: string;
+  org_id?: string;
+  user_id?: string;
   status: string;
   action: string;
-  resource_type?: string;
-  resource_id?: string;
-  agent_id?: string;
-  reason?: string;
-  metadata?: Record<string, unknown>;
-  decided_by?: string;
-  decided_at?: string;
+  /**
+   * The API returns `target_type` / `target_id`. This interface previously
+   * declared `resource_type` / `resource_id` / `metadata`, which the API has
+   * never sent — reading them yielded undefined, silently.
+   */
+  target_type?: string;
+  target_id?: string;
+  agent_id?: string | null;
+  /** The tier actually enforced. Authoritative. */
+  risk_tier?: number;
+  /** What the caller asked for, when it asked for anything. */
+  declared_risk_tier?: number | null;
+  /** The caller asked for a lower tier than policy required. */
+  declared_below_floor?: boolean;
+  /** What the human is shown. */
+  summary?: Record<string, unknown>;
+  /** The plain-language line the operator actually receives. */
+  human_summary?: string | null;
+  /** What the action will do. */
+  payload?: Record<string, unknown>;
+  reason?: string | null;
+  decision_reason?: string | null;
+  decided_by?: string | null;
+  decided_at?: string | null;
   created_at: string;
-  expires_at?: string;
+  expires_at?: string | null;
 }
 
 /** Masked payment card — never contains PAN/CVV. */

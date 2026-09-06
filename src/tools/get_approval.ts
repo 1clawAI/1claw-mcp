@@ -23,11 +23,24 @@ export function getApprovalTool(client: OneClawClient) {
           `Status: ${approval.status}`,
           `Action: ${approval.action}`,
         ];
-        if (approval.resource_type) lines.push(`Resource: ${approval.resource_type}`);
-        if (approval.resource_id) lines.push(`Resource ID: ${approval.resource_id}`);
+        // These are `target_*`, not `resource_*` — the old names never appeared in
+        // an API response, so this tool showed the action and nothing about what
+        // it was for.
+        if (approval.target_type) lines.push(`Target: ${approval.target_type}`);
+        if (approval.target_id) lines.push(`Target ID: ${approval.target_id}`);
+        if (approval.human_summary) lines.push(`Summary: ${approval.human_summary}`);
+        if (approval.risk_tier) lines.push(`Risk tier: ${approval.risk_tier}`);
         if (approval.agent_id) lines.push(`Agent: ${approval.agent_id}`);
         if (approval.reason) lines.push(`Reason: ${approval.reason}`);
-        if (approval.metadata) lines.push(`Metadata: ${JSON.stringify(approval.metadata)}`);
+        if (approval.summary && Object.keys(approval.summary).length > 0) {
+          lines.push(`Details: ${JSON.stringify(approval.summary)}`);
+        }
+        if (approval.payload && Object.keys(approval.payload).length > 0) {
+          lines.push(`Payload: ${JSON.stringify(approval.payload)}`);
+        }
+        if (approval.decision_reason) {
+          lines.push(`Decision reason: ${approval.decision_reason}`);
+        }
         if (approval.decided_by) lines.push(`Decided by: ${approval.decided_by}`);
         if (approval.decided_at) lines.push(`Decided: ${approval.decided_at}`);
         lines.push(`Created: ${approval.created_at}`);

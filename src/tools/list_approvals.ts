@@ -38,8 +38,10 @@ export function listApprovalsTool(client: OneClawClient) {
               `Status: ${a.status}`,
               `Action: ${a.action}`,
             ];
-            if (a.resource_type) parts.push(`Resource: ${a.resource_type}`);
-            if (a.resource_id) parts.push(`Resource ID: ${a.resource_id}`);
+            if (a.human_summary) parts.push(`Summary: ${a.human_summary}`);
+            if (a.target_type) parts.push(`Target: ${a.target_type}`);
+            if (a.target_id) parts.push(`Target ID: ${a.target_id}`);
+            if (a.risk_tier) parts.push(`Risk tier: ${a.risk_tier}`);
             if (a.agent_id) parts.push(`Agent: ${a.agent_id}`);
             if (a.reason) parts.push(`Reason: ${a.reason}`);
             parts.push(`Created: ${a.created_at}`);

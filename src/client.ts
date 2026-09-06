@@ -708,7 +708,12 @@ export class OneClawClient {
         target_type: string;
         target_id: string;
         summary: Record<string, unknown>;
+        /** What the action will do; the enforced risk tier is derived from it. */
+        payload?: Record<string, unknown>;
         reason?: string;
+        /** Advisory — the server takes the higher of this and its own floor. */
+        declared_risk_tier?: number;
+        /** @deprecated Renamed to `declared_risk_tier`. Still accepted. */
         risk_tier?: number;
     }): Promise<ApprovalResponse> {
         return this.request<ApprovalResponse>(
