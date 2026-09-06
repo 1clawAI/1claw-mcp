@@ -1499,6 +1499,12 @@ export class OneClawClient {
 
     // ── OAuth Connect ───────────────────────────────────────────────────
 
+    async listNotificationTargets(): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/notification-targets`,
+        );
+    }
+
     async listConnectorPresets(): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/connectors/presets`,
