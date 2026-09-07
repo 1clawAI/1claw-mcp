@@ -108,6 +108,17 @@ The server exposes **138 tools** when vault credentials are configured (add `pro
 | `platform_reissue_claim` | Reissue a claim URL for an already-bootstrapped connection without re-provisioning resources.       |
 | `platform_rotate_key`  | Rotate the API key for a platform app. Returns the new `plt_` key (one-time).                        |
 | `platform_list_templates` | List bootstrap templates for a platform app.                                    |
+| `platform_get_fleet` | Fleet summary for a template: cohort size, version skew, drift. Read-only. |
+| `platform_list_fleet_agents` | The agents in a fleet, with the version each was provisioned from. Read-only. |
+| `platform_plan_fleet_rollout` | Plan a rollout. **Always** a dry run — it sets that itself. |
+
+> **Fleets are read-only through MCP on purpose.** `bulk-patch` and `pause`
+> exist in the API and the SDK but have no tool here: a fleet write changes
+> every agent one template provisioned — a thousand agents from one call, with
+> no per-agent review — and that is a decision for a human at a terminal or a
+> deliberate SDK call. `platform_plan_fleet_rollout` sets `dry_run` itself and
+> does not offer it as an argument, because a tool whose safety depends on a
+> value the model chooses is not a safe tool.
 | `platform_create_template` | Create a bootstrap template (vault, agents, policies, signing keys).         |
 | `platform_list_users`  | List connected users for a platform app (status, resources, claim state).   |
 | `platform_grant_access` | Grant a platform app access to vaults/agents for a connected user.           |
@@ -426,4 +437,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.59.2 — MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.59.2**
+npm: `@1claw/mcp` v0.60.0 — MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.60.0**
