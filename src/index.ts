@@ -43,6 +43,11 @@ import { platformReissueClaimTool } from "./tools/platform_reissue_claim.js";
 import { platformRotateKeyTool } from "./tools/platform_rotate_key.js";
 import { platformListTemplatesTool } from "./tools/platform_list_templates.js";
 import {
+    listDirectoryJobsTool,
+    getDirectoryJobTool,
+    submitDirectoryJobBidTool,
+} from "./tools/directory_jobs.js";
+import {
     platformGetFleetTool,
     platformListFleetAgentsTool,
     platformPlanFleetRolloutTool,
@@ -601,6 +606,9 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformGetFleetTool as AnyToolFactory);
     registerTool(platformListFleetAgentsTool as AnyToolFactory);
     registerTool(platformPlanFleetRolloutTool as AnyToolFactory);
+    registerTool(listDirectoryJobsTool as AnyToolFactory);
+    registerTool(getDirectoryJobTool as AnyToolFactory);
+    registerTool(submitDirectoryJobBidTool as AnyToolFactory);
     registerTool(platformCreateTemplateTool as AnyToolFactory);
     registerTool(platformListUsersTool as AnyToolFactory);
     registerTool(platformGrantAccessTool as AnyToolFactory);

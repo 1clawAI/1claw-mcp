@@ -935,6 +935,37 @@ export class OneClawClient {
         );
     }
 
+    // ── Directory job board (Feature 10) ──────────────────────────────
+
+    async listDirectoryJobs(
+        params: { tags?: string; q?: string; limit?: number } = {},
+    ): Promise<Record<string, unknown>> {
+        const qs = new URLSearchParams();
+        if (params.tags) qs.set("tags", params.tags);
+        if (params.q) qs.set("q", params.q);
+        if (params.limit !== undefined) qs.set("limit", String(params.limit));
+        const s = qs.toString();
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/directory/jobs${s ? `?${s}` : ""}`,
+        );
+    }
+
+    async getDirectoryJob(jobId: string): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/directory/jobs/${jobId}`,
+        );
+    }
+
+    async submitDirectoryJobBid(
+        jobId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/directory/jobs/${jobId}/bids`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
     // ── Fleets ────────────────────────────────────────────────────────
 
     async platformGetFleet(
