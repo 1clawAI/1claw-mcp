@@ -42,6 +42,11 @@ import { platformBootstrapUserTool } from "./tools/platform_bootstrap_user.js";
 import { platformReissueClaimTool } from "./tools/platform_reissue_claim.js";
 import { platformRotateKeyTool } from "./tools/platform_rotate_key.js";
 import { platformListTemplatesTool } from "./tools/platform_list_templates.js";
+import {
+    platformGetFleetTool,
+    platformListFleetAgentsTool,
+    platformPlanFleetRolloutTool,
+} from "./tools/platform_fleet.js";
 import { platformCreateTemplateTool } from "./tools/platform_create_template.js";
 import { platformListUsersTool } from "./tools/platform_list_users.js";
 import { platformGrantAccessTool } from "./tools/platform_grant_access.js";
@@ -593,6 +598,9 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformReissueClaimTool as AnyToolFactory);
     registerTool(platformRotateKeyTool as AnyToolFactory);
     registerTool(platformListTemplatesTool as AnyToolFactory);
+    registerTool(platformGetFleetTool as AnyToolFactory);
+    registerTool(platformListFleetAgentsTool as AnyToolFactory);
+    registerTool(platformPlanFleetRolloutTool as AnyToolFactory);
     registerTool(platformCreateTemplateTool as AnyToolFactory);
     registerTool(platformListUsersTool as AnyToolFactory);
     registerTool(platformGrantAccessTool as AnyToolFactory);

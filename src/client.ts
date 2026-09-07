@@ -935,6 +935,43 @@ export class OneClawClient {
         );
     }
 
+    // ── Fleets ────────────────────────────────────────────────────────
+
+    async platformGetFleet(
+        appId: string,
+        templateId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/fleets/${templateId}`,
+        );
+    }
+
+    async platformListFleetAgents(
+        appId: string,
+        templateId: string,
+        limit?: number,
+        offset?: number,
+    ): Promise<Record<string, unknown>> {
+        const q = new URLSearchParams();
+        if (limit !== undefined) q.set("limit", String(limit));
+        if (offset !== undefined) q.set("offset", String(offset));
+        const qs = q.toString();
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/fleets/${templateId}/agents${qs ? `?${qs}` : ""}`,
+        );
+    }
+
+    async platformRolloutFleet(
+        appId: string,
+        templateId: string,
+        data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/apps/${appId}/fleets/${templateId}/rollout`,
+            { method: "POST", body: JSON.stringify(data) },
+        );
+    }
+
     async platformCreateConnectionRuntime(
         connectionId: string,
         data: Record<string, unknown>,
