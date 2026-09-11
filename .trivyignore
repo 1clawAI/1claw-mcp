@@ -121,3 +121,37 @@ CVE-2026-69192
 # present only because the base image ships it. Same acceptance as the vault
 # image, which carries this CVE for the same reason.
 CVE-2026-53613
+
+# ── Added 2026-09-10 ──────────────────────────────────────────────────────
+# The same five unfixed bookworm CVEs the vault image picked up this week:
+# four util-linux mount/namespace issues and one systemd-homed. node:22-slim is
+# bookworm-based, so both images inherit them.
+#
+# The vault's acceptance rests on that binary having zero subprocess call sites.
+# That argument does not transfer to a Node service by assertion, so it was
+# checked here separately, at the commit this was written:
+#   * `grep -rnE 'child_process|execa|spawn\(|execSync|exec\(' packages/mcp/src`
+#     -> 0 call sites. The server never spawns a process, so mount(8), nsenter(1)
+#     and the external mount helpers cannot run.
+#   * no systemd, sd_bus, /bin/mount or nsenter references anywhere in the source.
+#   * the image runs `CMD ["node", "dist/index.js"]` -- one process, and it is
+#     not systemd.
+#
+# Worth stating plainly rather than leaving implied: unlike vault/Dockerfile,
+# this image has no USER directive, so it runs as root. That does not change the
+# analysis for these five (the vulnerable programs are never executed at all),
+# but it is a hardening gap in its own right and is the reason a future CVE in
+# this image may not be dismissable on the same grounds.
+#
+# CVE-2026-76642: util-linux, failed external mount helper returns success.
+CVE-2026-76642
+# CVE-2026-78408: util-linux, nsenter --join-cgroup leaks root cgroup authority.
+CVE-2026-78408
+# CVE-2026-78409: util-linux, X-mount.subdir escape via intermediate symlink.
+CVE-2026-78409
+# CVE-2026-78410: util-linux, restricted bind mounts do not pin the source.
+CVE-2026-78410
+# CVE-2026-16742: systemd-homed local privilege escalation (fix_deferred).
+# Requires systemd-homed running and reachable over sd-bus; this image starts
+# a single node process.
+CVE-2026-16742
