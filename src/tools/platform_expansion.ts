@@ -787,3 +787,71 @@ export function platformListConnectionAutomationsTool(client: OneClawClient) {
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Control-plane telemetry, scoped to one connection's agents
+// ---------------------------------------------------------------------------
+
+export function platformGetConnectionOtelSummaryTool(client: OneClawClient) {
+  return {
+    name: "platform_get_connection_otel_summary" as const,
+    description:
+      "Posture score, open threat counts and pending approvals over the agents of a platform connection (plt_ auth). The score is over the connection's agents and what they reach, not the end-user's whole org.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string }) => {
+      try {
+        const result = await client.platformGetConnectionOtelSummary(args.connection_id);
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformGetConnectionOtelThreatsTool(client: OneClawClient) {
+  return {
+    name: "platform_get_connection_otel_threats" as const,
+    description:
+      "Threats on the agents of a platform connection, highest blast radius first (plt_ auth). `shadow: true` marks a recommend-only finding nothing has acted on.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      state: z.enum(["open", "all"]).optional(),
+    }),
+    execute: async (args: { connection_id: string; state?: "open" | "all" }) => {
+      try {
+        const result = await client.platformGetConnectionOtelThreats(
+          args.connection_id,
+          args.state ?? "open",
+        );
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
+export function platformGetConnectionOtelTopologyTool(client: OneClawClient) {
+  return {
+    name: "platform_get_connection_otel_topology" as const,
+    description:
+      "Agents, the policies they hold, the vaults those grant, the chains they sign on and the systems they call — for one platform connection (plt_ auth). Restricted to what the connection's agents reach; capped at 500 nodes with `truncated` set when the cap applied.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string }) => {
+      try {
+        const result = await client.platformGetConnectionOtelTopology(args.connection_id);
+        return JSON.stringify(result, null, 2);
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}

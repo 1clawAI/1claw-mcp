@@ -132,6 +132,9 @@ import {
     platformCreateConnectionPendingApprovalTool,
     platformGetConnectionPortfolioTool,
     platformListConnectionAutomationsTool,
+    platformGetConnectionOtelSummaryTool,
+    platformGetConnectionOtelThreatsTool,
+    platformGetConnectionOtelTopologyTool,
 } from "./tools/platform_expansion.js";
 import { importSigningKeyTool } from "./tools/import_signing_key.js";
 import { listCedarPoliciesTool } from "./tools/list_cedar_policies.js";
@@ -641,6 +644,9 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformCreateConnectionPendingApprovalTool as AnyToolFactory);
     registerTool(platformGetConnectionPortfolioTool as AnyToolFactory);
     registerTool(platformListConnectionAutomationsTool as AnyToolFactory);
+    registerTool(platformGetConnectionOtelSummaryTool as AnyToolFactory);
+    registerTool(platformGetConnectionOtelThreatsTool as AnyToolFactory);
+    registerTool(platformGetConnectionOtelTopologyTool as AnyToolFactory);
     registerTool(listApprovalsTool as AnyToolFactory);
     registerTool(getApprovalTool as AnyToolFactory);
     registerTool(getApprovalStatusTool as AnyToolFactory);

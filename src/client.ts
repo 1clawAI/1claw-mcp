@@ -1102,6 +1102,34 @@ export class OneClawClient {
         );
     }
 
+    // Control-plane telemetry for one connection's agents (plt_ auth). No
+    // stream here: an MCP tool call is a request/response, and a stream that
+    // never ends is a tool call that never returns.
+    async platformGetConnectionOtelSummary(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/otel/summary`,
+        );
+    }
+
+    async platformGetConnectionOtelThreats(
+        connectionId: string,
+        state: "open" | "all" = "open",
+    ): Promise<Record<string, unknown>[]> {
+        return this.request<Record<string, unknown>[]>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/otel/threats?state=${state}`,
+        );
+    }
+
+    async platformGetConnectionOtelTopology(
+        connectionId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/otel/topology`,
+        );
+    }
+
     async inspectContent(
         data: { content: string; context?: string },
     ): Promise<Record<string, unknown>> {
