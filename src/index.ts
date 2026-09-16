@@ -120,6 +120,7 @@ import {
     platformSetConnectionSpendPolicyTool,
     platformCreateConnectionRuntimeTool,
     platformGetConnectionRuntimeTool,
+    platformDeleteConnectionRuntimeTool,
     platformConnectionPasskeyEnrollBeginTool,
     platformConnectionPasskeyEnrollCompleteTool,
     platformConnectionAgentChatTool,
@@ -632,6 +633,7 @@ if (!localOnly && !isLocalDaemonMode()) {
     registerTool(platformSetConnectionSpendPolicyTool as AnyToolFactory);
     registerTool(platformCreateConnectionRuntimeTool as AnyToolFactory);
     registerTool(platformGetConnectionRuntimeTool as AnyToolFactory);
+    registerTool(platformDeleteConnectionRuntimeTool as AnyToolFactory);
     registerTool(platformConnectionPasskeyEnrollBeginTool as AnyToolFactory);
     registerTool(platformConnectionPasskeyEnrollCompleteTool as AnyToolFactory);
     registerTool(platformConnectionAgentChatTool as AnyToolFactory);

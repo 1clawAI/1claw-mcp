@@ -641,6 +641,27 @@ export function platformGetConnectionRuntimeTool(client: OneClawClient) {
   };
 }
 
+export function platformDeleteConnectionRuntimeTool(client: OneClawClient) {
+  return {
+    name: "platform_delete_connection_runtime" as const,
+    description:
+      "Delete a Cloud Runtime the app provisioned on a platform connection (plt_ auth). A running runtime is stopped first; any runtime add-on is cancelled. Use this to clean up a mis-provisioned runtime.",
+    parameters: z.object({
+      connection_id: z.string().uuid(),
+      runtime_id: z.string().uuid(),
+    }),
+    execute: async (args: { connection_id: string; runtime_id: string }) => {
+      try {
+        await client.platformDeleteConnectionRuntime(args.connection_id, args.runtime_id);
+        return `Runtime ${args.runtime_id} deleted from connection ${args.connection_id}.`;
+      } catch (err) {
+        if (err instanceof OneClawApiError) throw new UserError(err.detail);
+        throw err;
+      }
+    },
+  };
+}
+
 export function platformConnectionPasskeyEnrollBeginTool(
   client: OneClawClient,
 ) {

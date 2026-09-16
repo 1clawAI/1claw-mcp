@@ -1022,6 +1022,17 @@ export class OneClawClient {
         );
     }
 
+    /** Delete a runtime the app provisioned on this connection (plt_ scoped). */
+    async platformDeleteConnectionRuntime(
+        connectionId: string,
+        runtimeId: string,
+    ): Promise<void> {
+        await this.request<void>(
+            `${this.baseUrl}/v1/platform/connections/${connectionId}/runtimes/${runtimeId}`,
+            { method: "DELETE" },
+        );
+    }
+
     async platformConnectionPasskeyEnrollBegin(
         connectionId: string,
     ): Promise<Record<string, unknown>> {
