@@ -4,7 +4,7 @@
  * Tracks fetched secret values for redaction and exfiltration protection.
  */
 
-import { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS } from "../toolsets.js";
+import { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS } from "../toolsets/secret-tools.js";
 
 export interface ThreatDetection {
     type: string;

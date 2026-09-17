@@ -7,7 +7,7 @@ import {
     refreshEntitlementsIfStale,
     ENTITLEMENT_TTL_MS,
     type SessionCredential,
-} from "../session.js";
+} from "../core/session.js";
 import { registerSecret, clearSecrets, trackedSecretCount } from "../security/index.js";
 
 const fakeClient = (

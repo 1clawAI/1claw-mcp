@@ -1,34 +1,21 @@
 /**
- * Toolset catalog — the single place that says which toolset every MCP tool
- * belongs to and what a session must be entitled to before that toolset is
- * offered.
+ * Toolset gates — what a session must be entitled to before a toolset is
+ * offered. The tool → toolset mapping itself is owned by the modules under
+ * `src/toolsets/` and aggregated here into `TOOL_CATALOG`.
  *
- * Pure module: no FastMCP, no network. `index.ts` consults it at
+ * No FastMCP, no network. `index.ts` consults it at
  * registration time (stdio) and per session via `canAccess` (hosted), and
  * `security/index.ts` derives its secret-carrying tool list from it so the
  * "hide under execution_require_tee" list and the "don't redact" list can
  * never drift apart.
  */
 
-export type ToolsetId =
-    | "inspect"
-    | "local"
-    | "vault"
-    | "approvals"
-    | "intents"
-    | "execute"
-    | "cards"
-    | "treasury"
-    | "memory"
-    | "delegation"
-    | "channels"
-    | "chat"
-    | "automations"
-    | "runtimes"
-    | "directory"
-    | "notification"
-    | "admin"
-    | "platform";
+import { OneClawClient } from "./client.js";
+import { TOOLSET_MODULES, type ToolsetId } from "./toolsets/index.js";
+import { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS } from "./toolsets/secret-tools.js";
+
+export type { ToolsetId, ToolsetModule, ToolFactory } from "./toolsets/index.js";
+export { TOOLSET_MODULES, SECRET_READ_TOOLS, SECRET_WRITE_TOOLS };
 
 /** How much the server actually knows about the session's entitlements. */
 export type EntitlementLookup =
@@ -76,205 +63,35 @@ export function unknownEntitlements(lookup: EntitlementLookup = "failed"): Entit
     };
 }
 
-/** Tools that return secret values. Hidden under `execution_require_tee`; never redacted. */
-export const SECRET_READ_TOOLS: readonly string[] = ["get_secret", "get_env_bundle", "resolve_env"];
-/** Tools that accept secret values as input. Kept under `execution_require_tee`; never redacted. */
-export const SECRET_WRITE_TOOLS: readonly string[] = ["put_secret", "rotate_and_store"];
+/** Tools whose factories take no client — registered by hand in index.ts. */
+const CLIENTLESS_TOOLS: ReadonlyArray<[string, ToolsetId]> = [
+    ["inspect_content", "inspect"],
+    ["proxy_request", "local"],
+];
 
-const T = (toolset: ToolsetId, names: string[]): Array<[string, ToolsetId]> =>
-    names.map((n) => [n, toolset]);
+/** A client that can never be used — only good for reading a factory's name. */
+const PROBE_CLIENT = new OneClawClient({ baseUrl: "http://unused.invalid", token: "", vaultId: "" });
 
 /**
- * Every tool the server can register, by toolset. A tool missing from this
- * table fails registration (see `toolsetOf`), so adding a tool means
- * deciding where it belongs.
+ * Every tool the server can register, by toolset — DERIVED from the toolset
+ * modules under `src/toolsets/`, which own their tool lists. A tool missing
+ * from every module fails registration (see `toolsetOf`), so adding a tool
+ * means deciding where it belongs.
  */
-export const TOOL_CATALOG: ReadonlyMap<string, ToolsetId> = new Map<string, ToolsetId>([
-    ...T("inspect", ["inspect_content"]),
-    ...T("local", ["proxy_request"]),
-
-    ...T("vault", [
-        "list_secrets",
-        "get_secret",
-        "put_secret",
-        "delete_secret",
-        "describe_secret",
-        "list_versions",
-        "rotate_and_store",
-        "rotate_generate",
-        "get_env_bundle",
-        "resolve_env",
-        "share_secret",
-        "grant_access",
-        "create_vault",
-        "list_vaults",
-        "list_oauth_connections",
-        "list_oauth_providers",
-        "oauth_revoke_consent",
-        "oauth_revoke_token",
-    ]),
-
-    ...T("approvals", [
-        "request_approval",
-        "get_approval_status",
-        "get_approval",
-        "list_approvals",
-        "list_pending_approvals",
-    ]),
-
-    ...T("intents", [
-        "simulate_transaction",
-        "simulate_bundle",
-        "submit_transaction",
-        "sign_transaction",
-        "sign_message",
-        "sign_typed_data",
-        "sign_digest",
-        "list_transactions",
-        "get_transaction",
-        "provision_signing_key",
-        "import_signing_key",
-        "list_signing_keys",
-        "get_signing_key_balance",
-        "get_portfolio",
-        "import_smart_account",
-        "list_agent_accounts",
-        "get_safe_module_registry",
-        "lease_bankr_key",
-    ]),
-
-    ...T("execute", [
-        "list_bindings",
-        "test_binding",
-        "execute_http",
-        "execute_intent",
-        "list_executions",
-        "list_installed_connectors",
-        "list_connector_presets",
-    ]),
-
-    ...T("cards", ["list_cards", "get_card_status", "search_gift_cards", "order_card", "order_gift_card"]),
-
-    ...T("treasury", ["treasury_propose", "treasury_list_proposals", "treasury_sign_proposal"]),
-
-    ...T("memory", [
-        "put_memory",
-        "get_memory",
-        "list_memory",
-        "search_memory",
-        "delete_memory",
-        "get_peer_context",
-    ]),
-
-    ...T("delegation", [
-        "list_delegations",
-        "create_delegation",
-        "get_effective_delegations",
-        "delegate_task",
-        "org_directory",
-    ]),
-
-    ...T("channels", ["list_channels", "create_channel", "send_channel_message"]),
-
-    ...T("chat", ["list_chat_conversations", "send_chat_message"]),
-
-    ...T("automations", [
-        "list_automations",
-        "list_automation_presets",
-        "create_agent_automation",
-        "trigger_automation",
-        "cancel_automation_run",
-    ]),
-
-    ...T("runtimes", ["list_runtimes", "manage_runtime", "runtime_status", "runtime_logs"]),
-
-    ...T("directory", [
-        "search_agent_directory",
-        "list_directory_jobs",
-        "get_directory_job",
-        "submit_directory_job_bid",
-    ]),
-
-    ...T("notification", ["list_notification_targets"]),
-
-    // Human-only at the vault (`principal_type != "user"` → 403). Never
-    // offered on an agent session.
-    ...T("admin", [
-        "create_binding",
-        "create_sub_org",
-        "list_sub_orgs",
-        "approve_pending_approval",
-        "execute_pending_approval",
-        "migrate_agent_to_safe",
-        "deprecate_agent_eoa",
-        "sync_org_safe_allowances",
-        "list_cedar_policies",
-        "test_cedar_policy",
-        "list_opa_policies",
-        "test_opa_policy",
-        "get_policy_backend_settings",
-        "update_policy_backend_settings",
-        "get_shadow_report",
-        "get_guardrail_shadow_report",
-        "list_guardrail_revisions",
-        "replay_agent_guardrails",
-        "upload_contract_abi",
-        "list_contract_abis",
-    ]),
-
-    // `plt_` auth only; the MCP server rejects plt_ credentials outright, so
-    // these are never offered on any session today.
-    ...T("platform", [
-        "platform_list_apps",
-        "platform_create_app",
-        "platform_delete_app",
-        "platform_rotate_key",
-        "platform_rotate_webhook_secret",
-        "platform_app_stats",
-        "platform_list_users",
-        "platform_bootstrap_user",
-        "platform_siwe_challenge",
-        "platform_reissue_claim",
-        "platform_transfer_ownership",
-        "platform_grant_access",
-        "platform_list_grants",
-        "platform_marketplace",
-        "platform_list_templates",
-        "platform_create_template",
-        "platform_get_template",
-        "platform_preview_template",
-        "platform_list_entitlements",
-        "platform_get_spend_policy",
-        "platform_get_connection",
-        "platform_connection_usage",
-        "platform_get_connection_spend_policy",
-        "platform_set_connection_spend_policy",
-        "platform_list_connection_approvals",
-        "platform_get_connection_approval",
-        "platform_decide_connection_approval",
-        "platform_list_connection_pending_approvals",
-        "platform_create_connection_pending_approval",
-        "platform_decide_connection_pending_approval",
-        "platform_create_connection_runtime",
-        "platform_get_connection_runtime",
-        "platform_delete_connection_runtime",
-        "platform_connection_agent_chat",
-        "platform_list_connection_signing_keys",
-        "platform_get_connection_signing_key",
-        "platform_deactivate_connection_signing_key",
-        "platform_patch_connection_agent",
-        "platform_connection_passkey_enroll_begin",
-        "platform_connection_passkey_enroll_complete",
-        "platform_get_connection_portfolio",
-        "platform_list_connection_automations",
-        "platform_get_connection_otel_summary",
-        "platform_get_connection_otel_threats",
-        "platform_get_connection_otel_topology",
-        "platform_get_fleet",
-        "platform_list_fleet_agents",
-        "platform_plan_fleet_rollout",
-    ]),
-]);
+export const TOOL_CATALOG: ReadonlyMap<string, ToolsetId> = (() => {
+    const map = new Map<string, ToolsetId>(CLIENTLESS_TOOLS);
+    for (const module of TOOLSET_MODULES) {
+        for (const factory of module.tools) {
+            const name = factory(PROBE_CLIENT).name;
+            const prior = map.get(name);
+            if (prior && prior !== module.id) {
+                throw new Error(`Tool '${name}' is claimed by both '${prior}' and '${module.id}'`);
+            }
+            map.set(name, module.id);
+        }
+    }
+    return map;
+})();
 
 export const TOOLSET_IDS: readonly ToolsetId[] = [
     "inspect", "local", "vault", "approvals", "intents", "execute", "cards", "treasury",

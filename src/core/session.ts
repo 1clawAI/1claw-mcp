@@ -14,7 +14,7 @@ import {
     OneClawApiError,
     type AgentProfileResponse,
     type AgentEntitlementsResponse,
-} from "./client.js";
+} from "../client.js";
 import {
     type Entitlements,
     type ToolsetId,
@@ -23,7 +23,7 @@ import {
     unknownEntitlements,
     describeToolsets,
     visibleToolNames,
-} from "./toolsets.js";
+} from "../toolsets.js";
 
 export type SessionCredential =
     | { token: string; vaultId: string; runtimeId?: string }
