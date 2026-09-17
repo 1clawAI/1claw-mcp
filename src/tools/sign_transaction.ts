@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { UserError } from "fastmcp";
-import { OneClawClient, OneClawApiError } from "../client.js";
+import type { OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 const nonEvmParams = {
   destination_tag: z.number().int().optional().describe("XRP: destination tag for exchange deposits"),

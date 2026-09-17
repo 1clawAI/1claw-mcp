@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { UserError } from "fastmcp";
-import { OneClawClient, OneClawApiError } from "../client.js";
+import type { OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 /** List recent execution events (audit/observability) for the current agent. */
 export function listExecutionsTool(client: OneClawClient) {

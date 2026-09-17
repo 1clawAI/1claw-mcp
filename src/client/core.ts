@@ -23,15 +23,8 @@ import type {
 } from "../types.js";
 import { DPoPManager } from "../auth/dpop.js";
 
-export class OneClawApiError extends Error {
-    constructor(
-        public status: number,
-        public detail: string,
-    ) {
-        super(detail);
-        this.name = "OneClawApiError";
-    }
-}
+import { OneClawApiError } from "./error.js";
+export { OneClawApiError };
 
 export interface ClientConfig {
     baseUrl: string;

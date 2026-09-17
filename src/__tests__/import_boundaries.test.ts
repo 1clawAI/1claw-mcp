@@ -45,20 +45,27 @@ describe("import boundaries", () => {
         }
     });
 
-    it("core never imports tools or toolset modules", () => {
+    it("core never imports a domain tool, a toolset module, or the client facade at runtime", () => {
         for (const f of tsFiles(join(src, "core"))) {
+            const text = readFileSync(f, "utf8");
             for (const dep of imports(f)) {
-                expect(dep, `${f} imports ${dep}`).not.toMatch(/\/tools\/|\/toolsets\//);
+                // The two clientless tools are the only tools core may know about.
+                const clientless = dep === "../tools/inspect_content.js" || dep === "../tools/proxy_request.js";
+                expect(clientless || !/\/tools\//.test(dep), `${f} imports ${dep}`).toBe(true);
+                expect(dep, `${f} imports ${dep}`).not.toMatch(/\/toolsets\/[a-z]+\.js$|toolsets\/index/);
             }
+            // The facade may be named as a type only — a value import would drag every domain in.
+            expect(text).not.toMatch(/^import \{[^}]*\bOneClawClient\b[^}]*\} from "\.\.\/client(\/index)?\.js"/m);
         }
     });
 
     it("client domains extend core and never import each other", () => {
         for (const f of tsFiles(join(src, "client"))) {
-            if (f.endsWith("/index.ts")) continue;
+            // index.ts and vault-facade.ts are the two assembly points; they may name domains.
+            if (f.endsWith("/index.ts") || f.endsWith("/vault-facade.ts")) continue;
             for (const dep of imports(f)) {
                 const ok =
-                    dep === "./core.js" || dep === "../types.js" || dep === "../auth/dpop.js";
+                    dep === "./core.js" || dep === "./error.js" || dep === "../types.js" || dep === "../auth/dpop.js";
                 expect(ok, `${f} imports ${dep}`).toBe(true);
             }
         }

@@ -1,0 +1,50 @@
+{
+  "name": "@1claw/mcp-vault",
+  "version": "0.63.0",
+  "description": "1claw MCP server, vault only: secrets, versions, rotation, env bundles, vaults, sharing, connected accounts and human approvals. No signing or execute code in the package.",
+  "bin": {
+    "1claw-mcp-vault": "dist/packages/vault/src/index.js"
+  },
+  "main": "dist/packages/vault/src/index.js",
+  "config": {
+    "entry": "packages/vault/src/index.js"
+  },
+  "keywords": [
+    "1claw",
+    "mcp",
+    "model-context-protocol",
+    "secrets",
+    "vault",
+    "ai-agents"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://1claw.co",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1clawAI/1claw-mcp.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.13",
+    "fastmcp": "^3.33.0",
+    "glob": "^11.1.0",
+    "hono": "^4.12.25",
+    "koa": "^3.1.2",
+    "undici": "^7.29.0",
+    "zod": "^3.24.0"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p . && node ../../scripts/prune-dist.mjs dist $npm_package_config_entry",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

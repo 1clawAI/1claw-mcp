@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { UserError } from "fastmcp";
-import { OneClawClient, OneClawApiError } from "../client.js";
+import type { OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 const txSchema = z.object({
     to: z.string().describe("Destination address (0x-prefixed)"),

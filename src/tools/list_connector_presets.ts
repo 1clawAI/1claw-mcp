@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { OneClawClient, OneClawApiError } from "../client.js";
+import type { OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 interface Preset {
   slug: string;

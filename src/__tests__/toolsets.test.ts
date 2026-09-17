@@ -14,6 +14,10 @@ import {
     type Entitlements,
 } from "../toolsets.js";
 import { SECRET_TOOLS } from "../security/index.js";
+import { installToolsets } from "../toolsets.js";
+import { TOOLSET_MODULES } from "../toolsets/index.js";
+
+installToolsets(TOOLSET_MODULES);
 
 const here = dirname(fileURLToPath(import.meta.url));
 

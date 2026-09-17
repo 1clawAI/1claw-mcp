@@ -74,6 +74,17 @@ pnpm run build
 
 The server ships **155 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 155. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
 
+### Split packages
+
+Two narrower builds of this same tree are published in lockstep, for stdio deployments where the claim has to be true of the code on disk:
+
+| Package | Contains | Claim |
+| --- | --- | --- |
+| `@1claw/mcp-vault` | `vault` + `approvals` toolsets, `inspect_content`, `vault://secrets` (24 tools) | no signing, execute, cards, memory, platform or admin code in the package |
+| `@1claw/mcp-guard` | `inspect_content` only | no account, no credentials, no vault client in the package |
+
+Same env vars and behaviour; see `packages/vault/README.md` and `packages/guard/README.md`. The hosted server at `mcp.1claw.co` is always the umbrella.
+
 ### Toolsets
 
 Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session gets is decided from the agent's own flags, once at admission, and re-checked every 15 minutes and after any `403` from the vault (hosted sessions then receive `notifications/tools/list_changed`).

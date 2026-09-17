@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { UserError } from "fastmcp";
 import type { OneClawClient } from "../client.js";
-import { OneClawApiError } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 export function listAgentAccountsTool(client: OneClawClient) {
     return {

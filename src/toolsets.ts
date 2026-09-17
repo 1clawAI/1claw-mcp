@@ -10,12 +10,12 @@
  * never drift apart.
  */
 
-import { OneClawClient } from "./client.js";
-import { TOOLSET_MODULES, type ToolsetId } from "./toolsets/index.js";
+import type { OneClawClient } from "./client/index.js";
+import type { ToolsetId, ToolsetModule } from "./toolsets/types.js";
 import { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS } from "./toolsets/secret-tools.js";
 
-export type { ToolsetId, ToolsetModule, ToolFactory } from "./toolsets/index.js";
-export { TOOLSET_MODULES, SECRET_READ_TOOLS, SECRET_WRITE_TOOLS };
+export type { ToolsetId, ToolsetModule, ToolFactory } from "./toolsets/types.js";
+export { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS };
 
 /** How much the server actually knows about the session's entitlements. */
 export type EntitlementLookup =
@@ -63,35 +63,53 @@ export function unknownEntitlements(lookup: EntitlementLookup = "failed"): Entit
     };
 }
 
-/** Tools whose factories take no client — registered by hand in index.ts. */
+/** Tools whose factories take no client — registered by hand by the entrypoint. */
 const CLIENTLESS_TOOLS: ReadonlyArray<[string, ToolsetId]> = [
     ["inspect_content", "inspect"],
     ["proxy_request", "local"],
 ];
 
-/** A client that can never be used — only good for reading a factory's name. */
-const PROBE_CLIENT = new OneClawClient({ baseUrl: "http://unused.invalid", token: "", vaultId: "" });
+/**
+ * Stand-in "client" for reading a factory's name. Factories only close over
+ * the client — none touches it at construction — and using a bare object
+ * here keeps the client out of this module's import closure (the guard
+ * package must not carry it).
+ */
+const PROBE_CLIENT = Object.freeze({}) as unknown as OneClawClient;
+
+const catalog = new Map<string, ToolsetId>(CLIENTLESS_TOOLS);
+let installed: readonly ToolsetModule[] = [];
 
 /**
  * Every tool the server can register, by toolset — DERIVED from the toolset
- * modules under `src/toolsets/`, which own their tool lists. A tool missing
- * from every module fails registration (see `toolsetOf`), so adding a tool
- * means deciding where it belongs.
+ * modules the entrypoint installs (`installToolsets`). This module does not
+ * import the modules itself, so an entrypoint that installs only `vault`
+ * and `approvals` (the `@1claw/mcp-vault` package) never has the signing or
+ * execute code in its tree. A tool missing from every installed module
+ * fails registration (see `toolsetOf`), so adding a tool means deciding
+ * where it belongs.
  */
-export const TOOL_CATALOG: ReadonlyMap<string, ToolsetId> = (() => {
-    const map = new Map<string, ToolsetId>(CLIENTLESS_TOOLS);
-    for (const module of TOOLSET_MODULES) {
+export const TOOL_CATALOG: ReadonlyMap<string, ToolsetId> = catalog;
+
+/** The modules the entrypoint installed, in registration order. */
+export function installedToolsets(): readonly ToolsetModule[] {
+    return installed;
+}
+
+/** Install the toolset modules this server offers. Idempotent for the same set. */
+export function installToolsets(modules: readonly ToolsetModule[]): void {
+    for (const module of modules) {
         for (const factory of module.tools) {
             const name = factory(PROBE_CLIENT).name;
-            const prior = map.get(name);
+            const prior = catalog.get(name);
             if (prior && prior !== module.id) {
                 throw new Error(`Tool '${name}' is claimed by both '${prior}' and '${module.id}'`);
             }
-            map.set(name, module.id);
+            catalog.set(name, module.id);
         }
     }
-    return map;
-})();
+    installed = modules;
+}
 
 export const TOOLSET_IDS: readonly ToolsetId[] = [
     "inspect", "local", "vault", "approvals", "intents", "execute", "cards", "treasury",

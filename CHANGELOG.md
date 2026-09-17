@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.63.0 (2026-09-17)
+
+### Added
+
+- **`@1claw/mcp-vault` and `@1claw/mcp-guard`** (plan Phase 3). Two split packages built from this tree: `mcp-vault` installs only the `vault` and `approvals` toolset modules and ships a `VaultClient` (core + secrets + approvals) — no signing, execute, cards, memory, platform or admin code is in the package; `mcp-guard` is `inspect_content` alone with no vault client at all. `scripts/prune-dist.mjs` keeps only the runtime import closure after `tsc`, and `split_packages.test.ts` fails if a forbidden file becomes reachable from either entry. Lockstep versions.
+
+### Changed
+
+- **Bootstrap moved to `core/server.ts`.** `startServer({ name, version, modules, createClient, localOnly?, instructions? })` builds and starts the server; the entrypoint decides which toolset modules and which client class it gets. `toolsets.ts` no longer imports every module — the entrypoint calls `installToolsets()`, and `core/session.ts` takes its client from `installClientFactory()`. `index.ts` is 20 lines.
+- Tool modules import the client as a type only (and `OneClawApiError` from `client/error.ts`), so a tool's runtime footprint is itself plus the security module.
+
 ## 0.62.1 (2026-09-17)
 
 ### Changed

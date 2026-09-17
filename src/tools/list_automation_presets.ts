@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { UserError } from "fastmcp";
-import { OneClawApiError, type OneClawClient } from "../client.js";
+import type { OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client/core.js";
 
 export function listAutomationPresetsTool(client: OneClawClient) {
   return {

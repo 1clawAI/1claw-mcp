@@ -1,0 +1,50 @@
+{
+  "name": "@1claw/mcp-guard",
+  "version": "0.63.0",
+  "description": "1claw MCP server, guard only: inspect_content scores text for prompt injection, command injection, encoded payloads, PII and leaked secrets. No account, no credentials, no vault client in the package.",
+  "bin": {
+    "1claw-mcp-guard": "dist/packages/guard/src/index.js"
+  },
+  "main": "dist/packages/guard/src/index.js",
+  "config": {
+    "entry": "packages/guard/src/index.js"
+  },
+  "keywords": [
+    "1claw",
+    "mcp",
+    "model-context-protocol",
+    "prompt-injection",
+    "guardrails",
+    "ai-agents"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://1claw.co",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1clawAI/1claw-mcp.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.13",
+    "fastmcp": "^3.33.0",
+    "glob": "^11.1.0",
+    "hono": "^4.12.25",
+    "koa": "^3.1.2",
+    "undici": "^7.29.0",
+    "zod": "^3.24.0"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p . && node ../../scripts/prune-dist.mjs dist $npm_package_config_entry",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

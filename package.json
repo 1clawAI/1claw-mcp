@@ -1,6 +1,6 @@
 {
   "name": "@1claw/mcp",
-  "version": "0.62.1",
+  "version": "0.63.0",
   "mcpName": "io.github.1clawAI/1claw-mcp",
   "description": "MCP server for the 1claw secrets vault \u2014 lets AI agents fetch, store, and manage secrets at runtime",
   "type": "module",
@@ -31,7 +31,8 @@
     "inspect": "npx fastmcp inspect src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:packages": "npm run build --prefix packages/vault && npm run build --prefix packages/guard"
   },
   "keywords": [
     "1claw",

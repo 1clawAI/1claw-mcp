@@ -1,14 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { OneClawApiError, type OneClawClient } from "../client.js";
+import { OneClawApiError } from "../client.js";
 import {
     clientForSession,
     resolveEntitlements,
     attachEntitlements,
     refreshEntitlementsIfStale,
     ENTITLEMENT_TTL_MS,
+    installClientFactory,
     type SessionCredential,
 } from "../core/session.js";
 import { registerSecret, clearSecrets, trackedSecretCount } from "../security/index.js";
+import { installToolsets } from "../toolsets.js";
+import { TOOLSET_MODULES } from "../toolsets/index.js";
+import { OneClawClient } from "../client/index.js";
+
+installToolsets(TOOLSET_MODULES);
+installClientFactory((c) => new OneClawClient(c));
 
 const fakeClient = (
     claims: Record<string, unknown> | undefined,

@@ -9,12 +9,14 @@
  * from the vault (see `refreshEntitlementsIfStale`).
  */
 
-import {
-    OneClawClient,
-    OneClawApiError,
-    type AgentProfileResponse,
-    type AgentEntitlementsResponse,
-} from "../client.js";
+import { OneClawApiError } from "../client/error.js";
+import type {
+    ClientConfig,
+    AgentCredentials,
+    AgentProfileResponse,
+    AgentEntitlementsResponse,
+} from "../client/core.js";
+import type { OneClawClient } from "../client/index.js";
 import {
     type Entitlements,
     type ToolsetId,
@@ -42,20 +44,37 @@ export const ENTITLEMENT_TTL_MS = 15 * 60 * 1000;
 
 const clients = new WeakMap<object, OneClawClient>();
 
+/** Constructs the vault client for a credential. Installed by the entrypoint. */
+export type ClientFactory = (config: ClientConfig | AgentCredentials) => OneClawClient;
+
+let createClient: ClientFactory | undefined;
+
+/**
+ * The entrypoint says which client class sessions get: the full facade for
+ * the umbrella server, a narrower one for a split package. This module
+ * deliberately does not import a facade so it pulls no domain code in.
+ */
+export function installClientFactory(factory: ClientFactory): void {
+    createClient = factory;
+}
+
 /** Build (once) and return the client for a session. */
 export function clientForSession(session: SessionCredential, baseUrl: string): OneClawClient {
     const cached = clients.get(session);
     if (cached) return cached;
+    if (!createClient) {
+        throw new Error("installClientFactory() must run before any session is admitted");
+    }
     const client =
         "agentApiKey" in session
-            ? new OneClawClient({
+            ? createClient({
                   baseUrl,
                   agentId: session.agentId,
                   apiKey: session.agentApiKey,
                   vaultId: session.vaultId,
                   runtimeId: session.runtimeId,
               })
-            : new OneClawClient({
+            : createClient({
                   baseUrl,
                   token: session.token,
                   vaultId: session.vaultId,

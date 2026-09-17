@@ -138,8 +138,8 @@ beforeAll(async () => {
     }) as typeof fetch;
 
     const mod = await import("../index.js");
-    await mod.started;
-    stop = () => mod.server.stop();
+    const { server } = await mod.running;
+    stop = () => server.stop();
 }, 30_000);
 
 afterAll(async () => {
