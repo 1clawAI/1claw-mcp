@@ -64,6 +64,7 @@ pnpm run build
 | `ONECLAW_VAULT_ID`        | No             | —                       | UUID of the vault. Auto-discovered when using `ONECLAW_AGENT_API_KEY`.     |
 | `ONECLAW_DPOP`            | No             | `false`                 | Set to `true` to enable DPoP (RFC 9449) proof-of-possession. Binds agent tokens to the MCP client's ephemeral P-256 keypair so stolen tokens are unusable without the matching private key. |
 | `ONECLAW_BASE_URL`        | No             | `https://api.1claw.co` | Vault API base URL. Intents tools (`simulate_transaction`, `submit_transaction`, etc.) call this host; for TEE signing, point it at **Shroud** or **Intents** (e.g. `https://shroud.1claw.co` or `https://intents.1claw.co`) if your deployment routes signing there. **Required when the agent has `intents_require_tee` or `execution_require_tee` enabled** — those flags reject direct Vault calls (403), so `ONECLAW_BASE_URL` must point to Shroud. Self-hosted: your Vault/Shroud URL. |
+| `ONECLAW_MCP_TOOLSETS`    | No             | entitlement defaults    | Comma list of toolsets to expose (or `all`). Narrows or opts in; never widens past the agent's entitlements. See **Toolsets**. Hosted: send `X-1Claw-Toolsets` instead. |
 | `MCP_TRANSPORT`           | No             | `stdio`                 | Transport mode: `stdio` or `httpStream`.                                   |
 | `PORT`                    | No             | `8080`                  | HTTP port (httpStream mode only).                                          |
 
@@ -71,7 +72,34 @@ pnpm run build
 
 ## Tools
 
-The server exposes **138 tools** when vault credentials are configured (add `proxy_request` in local daemon mode). **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
+The server ships **155 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 155. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
+
+### Toolsets
+
+Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session gets is decided from the agent's own flags, once at admission, and re-checked every 15 minutes and after any `403` from the vault (hosted sessions then receive `notifications/tools/list_changed`).
+
+| Toolset | On when | Tools |
+| --- | --- | --- |
+| `inspect` | always | `inspect_content` |
+| `vault` | any agent | secrets, versions, rotation, env bundles, vaults, sharing, connected accounts (~18) |
+| `approvals` | any agent | `request_approval`, `get_approval_status`, `get_approval`, `list_approvals`, `list_pending_approvals` |
+| `intents` | `intents_api_enabled` | signing, simulation, submission, signing keys, portfolio, Safe accounts, Bankr lease (~18) |
+| `execute` | `execution_intents_enabled` | bindings, `execute_http`, `execute_intent`, executions, connectors (7) |
+| `cards` | `cards_enabled` | cards and gift cards (5) |
+| `memory` | `memory_enabled` | memory + `get_peer_context` (6) |
+| `channels` | `shroud_enabled` | Telegram / WhatsApp / Discord channels (3) |
+| `directory` | `discoverable` | agent directory + job board (4) |
+| `treasury`, `delegation`, `chat`, `automations`, `runtimes`, `notification` | opt-in only | the vault has no per-agent flag for these; ask for them explicitly |
+| `admin` | never on an agent | human-only endpoints (policies, sub-orgs, approval votes, Safe migration…) — only a user JWT over stdio sees them |
+| `platform` | never | `plt_` endpoints; the server rejects platform keys |
+
+**Choosing toolsets explicitly.** Set `ONECLAW_MCP_TOOLSETS` (stdio) or send `X-1Claw-Toolsets` (hosted) with a comma list, e.g. `vault,intents,automations`, or `all`. A selection can narrow the defaults or opt into the opt-in sets; it can never add a toolset the agent is not entitled to, and `all` still excludes `admin` and `platform`. `inspect` is always included.
+
+**When `execution_require_tee` is set** the vault refuses to hand this agent secret *values* outside a TEE, so `get_secret`, `get_env_bundle` and `resolve_env` are hidden; `put_secret`, `rotate_*`, `describe_secret`, `list_secrets` and `list_versions` stay.
+
+**Degraded lookups.** The server logs one line per session: `toolsets=… lookup=full|jwt_only|failed`. `jwt_only` means the agent profile could not be read and only the flags carried in the signed JWT (`intents`, `execute`, `shroud`) were honoured — `cards`, `memory` and `directory` are withheld until the next refresh. `failed` means not even a token was obtained; the session falls back to the agent defaults. Neither state ever widens a toolset.
+
+**stdio.** The toolset is fixed when the process starts; restart the MCP server after changing an agent's flags.
 
 | Tool                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |

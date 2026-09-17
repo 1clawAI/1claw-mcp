@@ -4,6 +4,8 @@
  * Tracks fetched secret values for redaction and exfiltration protection.
  */
 
+import { SECRET_READ_TOOLS, SECRET_WRITE_TOOLS } from "../toolsets.js";
+
 export interface ThreatDetection {
     type: string;
     pattern: string;
@@ -118,13 +120,12 @@ function extractRawValue(key: string): string {
     return idx === -1 ? key : key.slice(idx + 1);
 }
 
-/** Tools that legitimately return or accept secret values. */
-const SECRET_TOOLS = new Set([
-    "get_secret",
-    "get_env_bundle",
-    "put_secret",
-    "rotate_and_store",
-]);
+/**
+ * Tools that legitimately return or accept secret values. Derived from the
+ * toolset catalog so this list and the `execution_require_tee` hide list can
+ * never disagree about which tools carry secrets.
+ */
+export const SECRET_TOOLS: ReadonlySet<string> = new Set([...SECRET_READ_TOOLS, ...SECRET_WRITE_TOOLS]);
 
 // ── Encoding variant generation ──────────────────────
 // Forward-generate common reversible encodings of each tracked secret so exfil
@@ -205,13 +206,21 @@ export function registerSecret(path: string, value: string, scope?: string): voi
     const key = scope ? `${scope}${SCOPE_SEPARATOR}${normalized}` : normalized;
 
     // Evict oldest entries when at capacity
-    if (!secretValues.has(key) && secretValues.size >= MAX_SECRET_ENTRIES) {
+    // The cap is per scope: one agent filling its bucket evicts only its own
+    // oldest entries, never another tenant's (SEC-004).
+    if (!secretValues.has(key)) {
+        const scopePrefix = scope ? `${scope}${SCOPE_SEPARATOR}` : undefined;
+        const inScope = (k: string) =>
+            scopePrefix ? k.startsWith(scopePrefix) : k.indexOf(SCOPE_SEPARATOR) === -1;
+        let count = 0;
         let oldestKey: string | undefined;
         let oldestTs = Infinity;
         for (const [k, ts] of secretTimestamps) {
+            if (!inScope(k)) continue;
+            count++;
             if (ts < oldestTs) { oldestTs = ts; oldestKey = k; }
         }
-        if (oldestKey) {
+        if (count >= MAX_SECRET_ENTRIES && oldestKey) {
             secretValues.delete(oldestKey);
             secretTimestamps.delete(oldestKey);
         }
@@ -245,8 +254,12 @@ export function clearSecrets(scope?: string): void {
 /**
  * Return the number of tracked secret values.
  */
-export function trackedSecretCount(): number {
-    return secretValues.size;
+export function trackedSecretCount(scope?: string): number {
+    if (scope === undefined) return secretValues.size;
+    const prefix = `${scope}${SCOPE_SEPARATOR}`;
+    let n = 0;
+    for (const k of secretValues.keys()) if (k.startsWith(prefix)) n++;
+    return n;
 }
 
 // ── Feature flags ────────────────────────────────────

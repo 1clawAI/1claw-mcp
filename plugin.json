@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "1claw",
-  "version": "0.44.0",
-  "description": "Secure secrets management, multi-chain signing, agent memory, automations, and 60+ tools for AI agents via 1Claw vault.",
+  "version": "0.62.0",
+  "description": "Secure secrets management, multi-chain signing, agent memory, automations, and 155 tools (offered per agent entitlement, in toolsets) for AI agents via 1Claw vault.",
   "author": {
     "name": "1Claw",
     "url": "https://1claw.co",

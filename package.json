@@ -1,6 +1,6 @@
 {
   "name": "@1claw/mcp",
-  "version": "0.61.2",
+  "version": "0.62.0",
   "mcpName": "io.github.1clawAI/1claw-mcp",
   "description": "MCP server for the 1claw secrets vault \u2014 lets AI agents fetch, store, and manage secrets at runtime",
   "type": "module",
@@ -65,6 +65,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "@types/node": "^20.19.33",
     "typescript": "^5.5.0",
     "vitest": "^4.1.0"

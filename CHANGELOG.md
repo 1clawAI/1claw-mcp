@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.62.0 (2026-09-17)
+
+### Changed
+
+- **Entitlement-based toolsets.** Every tool now belongs to a toolset (`src/toolsets.ts`) and a session is only offered the toolsets its agent is entitled to: `inspect`, `vault` and `approvals` always; `intents`, `execute`, `cards`, `memory`, `channels`, `directory` from the agent's flags; `treasury`, `delegation`, `chat`, `automations`, `runtimes`, `notification` by explicit opt-in (`ONECLAW_MCP_TOOLSETS` / `X-1Claw-Toolsets`); `admin` and `platform` never on an agent session. A vault-only agent sees ~24 tools instead of 155. `all` means everything the agent could use — it still excludes `admin`/`platform` and cannot add a flag-gated set.
+- **`execution_require_tee` hides secret reads** (`get_secret`, `get_env_bundle`, `resolve_env`) and keeps writes/metadata, matching what the vault will actually allow.
+- **One client per session.** Hosted mode used to build a fresh `OneClawClient` — and re-run the API-key exchange, vault probe and now the profile read — on every tool call, because the HTTP layer calls `authenticate` per request. Admissions are memoised by credential (10 min) and the same session object is reused, so the exchange happens once.
+- **Entitlements are re-resolved** every 15 minutes and immediately after a `403` from the vault; hosted sessions get `notifications/tools/list_changed` when the visible set changes. Over stdio the set is fixed at startup — restart to pick up flag changes.
+- **Degraded lookups are visible.** Each admission logs `toolsets=… lookup=full|jwt_only|failed`; a degraded lookup only ever narrows.
+- **`resolve_env` joins the secret-carrying tool list** (its values are registered for redaction and it is exempt from output redaction like `get_secret`), and the hide list / redaction list now derive from one place.
+- **Secret redaction cache evicts per agent.** The 1000-entry cap is applied per scope so one agent filling its bucket cannot evict another's entries; the scope is the agent id, with vault id only as a logged fallback.
+- `vault://secrets` is gated like `list_secrets`.
+- Added the in-process two-session harness (`hosted_sessions.test.ts`) that boots the real server against a fake vault and diffs `tools/list` between two agents.
+
 ## 0.43.1 (2026-08-03)
 
 ### Fixed

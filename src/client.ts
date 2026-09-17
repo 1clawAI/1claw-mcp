@@ -56,6 +56,21 @@ interface AgentTokenResponse {
     vault_ids?: string[];
 }
 
+/** Subset of `AgentResponse` the MCP server reads for toolset gating. */
+export interface AgentProfileResponse {
+    id: string;
+    is_active?: boolean;
+    intents_api_enabled?: boolean;
+    execution_intents_enabled?: boolean;
+    execution_require_tee?: boolean;
+    intents_require_tee?: boolean;
+    cards_enabled?: boolean;
+    memory_enabled?: boolean;
+    shroud_enabled?: boolean;
+    discoverable?: boolean;
+    platform_app_id?: string | null;
+}
+
 function encodePath(path: string): string {
     return path
         .split("/")
@@ -453,6 +468,23 @@ export class OneClawClient {
 
     get agentId(): string | undefined {
         return this._resolvedAgentId ?? this.agentCredentials?.agentId;
+    }
+
+    /**
+     * Decoded (not verified — the vault verifies) claims of the JWT this
+     * client is presenting. Performs the API-key exchange first if needed,
+     * so a fresh client can answer. Used to derive session entitlements.
+     */
+    async tokenClaims(): Promise<Record<string, unknown> | undefined> {
+        await this.ensureToken();
+        return decodeJwtPayload(this.token);
+    }
+
+    /** `GET /v1/agents/{id}` — the agent's own profile, including its feature flags. */
+    async getAgent(agentId: string): Promise<AgentProfileResponse> {
+        return this.request<AgentProfileResponse>(
+            `${this.baseUrl}/v1/agents/${agentId}`,
+        );
     }
 
     get vaultId(): string {
