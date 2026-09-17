@@ -9,7 +9,12 @@
  * from the vault (see `refreshEntitlementsIfStale`).
  */
 
-import { OneClawClient, OneClawApiError, type AgentProfileResponse } from "./client.js";
+import {
+    OneClawClient,
+    OneClawApiError,
+    type AgentProfileResponse,
+    type AgentEntitlementsResponse,
+} from "./client.js";
 import {
     type Entitlements,
     type ToolsetId,
@@ -98,6 +103,27 @@ export function entitlementsFromProfile(
     };
 }
 
+/** Fold the token exchange's `entitlements` (vault ≥ 0.61.17) into a snapshot. */
+export function entitlementsFromExchange(
+    r: AgentEntitlementsResponse,
+    base: Partial<Entitlements> = {},
+): Entitlements {
+    return {
+        lookup: "full",
+        principal: "agent",
+        agentId: base.agentId,
+        intentsApi: flag(r.intents_api),
+        executionIntents: flag(r.execution_intents),
+        executionRequireTee: flag(r.execution_require_tee),
+        cards: flag(r.cards),
+        memory: flag(r.memory),
+        shroud: flag(r.shroud),
+        discoverable: flag(r.discoverable),
+        treasurySigner: flag(r.treasury_signer),
+        hasDelegations: flag(r.has_delegations),
+    };
+}
+
 /** Fold signed JWT claims into a snapshot. Flags the JWT does not carry stay off. */
 export function entitlementsFromClaims(claims: Record<string, unknown>): Entitlements {
     return {
@@ -149,6 +175,14 @@ export async function resolveEntitlements(
     if (fromJwt.principal !== "agent" || !fromJwt.agentId) {
         // Users and platforms have no agent profile; the JWT is all there is.
         return fromJwt;
+    }
+
+    // Newer vaults answer everything on the exchange itself — no extra call.
+    try {
+        const fromExchange = await client.tokenEntitlements();
+        if (fromExchange) return entitlementsFromExchange(fromExchange, fromJwt);
+    } catch {
+        /* fall through to the profile GET */
     }
 
     const fetchProfile = opts.fetchProfile ?? ((c, id) => c.getAgent(id));

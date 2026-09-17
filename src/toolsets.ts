@@ -55,6 +55,10 @@ export interface Entitlements {
     memory: boolean;
     shroud: boolean;
     discoverable: boolean;
+    /** Agent signs for ≥1 treasury. Undefined = the vault did not say. */
+    treasurySigner?: boolean;
+    /** Agent has an active delegation in either direction. Undefined = unknown. */
+    hasDelegations?: boolean;
 }
 
 /** The most conservative snapshot: an agent about which nothing is known. */
@@ -333,10 +337,18 @@ export function availableToolsets(e: Entitlements): Set<ToolsetId> {
     return out;
 }
 
-/** What a session sees with no override: available minus the opt-in-only sets. */
+/**
+ * What a session sees with no override: available minus the opt-in-only
+ * sets — except that treasury and delegation come on by default when the
+ * vault has positively said the agent uses them.
+ */
 export function defaultToolsets(e: Entitlements): Set<ToolsetId> {
     const out = availableToolsets(e);
     for (const ts of AGENT_OPT_IN) out.delete(ts);
+    if (e.principal !== "platform" && e.lookup !== "none") {
+        if (e.treasurySigner === true) out.add("treasury");
+        if (e.hasDelegations === true) out.add("delegation");
+    }
     // Chat is opt-in even for Shroud agents — `channels` is the working
     // surface; `chat` is a self-conversation and rarely what a tool caller wants.
     out.delete("chat");

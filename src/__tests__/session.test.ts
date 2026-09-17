@@ -10,12 +10,17 @@ import {
 } from "../session.js";
 import { registerSecret, clearSecrets, trackedSecretCount } from "../security/index.js";
 
-const fakeClient = (claims: Record<string, unknown> | undefined, profile?: Record<string, unknown> | Error) =>
+const fakeClient = (
+    claims: Record<string, unknown> | undefined,
+    profile?: Record<string, unknown> | Error,
+    exchange?: Record<string, unknown>,
+) =>
     ({
         tokenClaims: async () => {
             if (claims instanceof Error) throw claims;
             return claims;
         },
+        tokenEntitlements: async () => exchange,
         getAgent: async () => {
             if (profile instanceof Error) throw profile;
             return { id: "agent-1", ...(profile ?? {}) };
@@ -58,6 +63,24 @@ describe("resolveEntitlements", () => {
         expect(e.executionRequireTee).toBe(true);
         expect(e.cards).toBe(false);
         expect(warnings.join("\n")).toMatch(/jwt_only.*HTTP 403/s);
+    });
+
+    it("prefers the exchange's entitlements and skips the profile GET", async () => {
+        const e = await resolveEntitlements(
+            fakeClient({ sub: "agent:agent-1" }, new Error("must not be called"), {
+                intents_api: true, execution_intents: false, execution_require_tee: false, intents_require_tee: false,
+                cards: false, memory: true, shroud: false, discoverable: false, treasury_signer: true, has_delegations: false,
+            }),
+        );
+        expect(e.lookup).toBe("full");
+        expect(e.intentsApi).toBe(true);
+        expect(e.memory).toBe(true);
+        expect(e.treasurySigner).toBe(true);
+        expect(e.hasDelegations).toBe(false);
+        const { resolveToolsets } = await import("../toolsets.js");
+        const ts = resolveToolsets(e);
+        expect(ts.has("treasury")).toBe(true);
+        expect(ts.has("delegation")).toBe(false);
     });
 
     it("is 'failed' when no token can be obtained", async () => {

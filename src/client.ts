@@ -49,11 +49,26 @@ export interface AgentCredentials {
     runtimeId?: string;
 }
 
+/** `entitlements` on the agent token exchange (vault ≥ 0.61.17). */
+export interface AgentEntitlementsResponse {
+    intents_api: boolean;
+    execution_intents: boolean;
+    execution_require_tee: boolean;
+    intents_require_tee: boolean;
+    cards: boolean;
+    memory: boolean;
+    shroud: boolean;
+    discoverable: boolean;
+    treasury_signer: boolean;
+    has_delegations: boolean;
+}
+
 interface AgentTokenResponse {
     access_token: string;
     expires_in: number;
     agent_id?: string;
     vault_ids?: string[];
+    entitlements?: AgentEntitlementsResponse;
 }
 
 /** Subset of `AgentResponse` the MCP server reads for toolset gating. */
@@ -134,6 +149,7 @@ export class OneClawClient {
 
     private agentCredentials?: { agentId?: string; apiKey: string };
     private tokenExpiresAt = 0;
+    private _entitlements?: AgentEntitlementsResponse;
     private dpopManager?: DPoPManager;
     private dpopReady: Promise<void> | null = null;
 
@@ -237,6 +253,7 @@ export class OneClawClient {
         const data = (await res.json()) as AgentTokenResponse;
         this.token = data.access_token;
         this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+        this._entitlements = data.entitlements;
 
         if (data.agent_id) {
             this._resolvedAgentId = data.agent_id;
@@ -478,6 +495,16 @@ export class OneClawClient {
     async tokenClaims(): Promise<Record<string, unknown> | undefined> {
         await this.ensureToken();
         return decodeJwtPayload(this.token);
+    }
+
+    /**
+     * Entitlements the vault returned with the last key exchange, if it is
+     * new enough to send them. Undefined on the static-token path and
+     * against older vaults — callers then fall back to the profile GET.
+     */
+    async tokenEntitlements(): Promise<AgentEntitlementsResponse | undefined> {
+        await this.ensureToken();
+        return this._entitlements;
     }
 
     /** `GET /v1/agents/{id}` — the agent's own profile, including its feature flags. */

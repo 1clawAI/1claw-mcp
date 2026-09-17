@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.62.1 (2026-09-17)
+
+### Changed
+
+- **Entitlements from the token exchange.** Vault ≥ 0.61.17 returns `entitlements` on `POST /v1/auth/agent-token`; the server uses it and skips the `GET /v1/agents/{id}` round trip. It also carries `treasury_signer` and `has_delegations`, so the `treasury` and `delegation` toolsets now come on by default when the vault says the agent uses them (still opt-in-able otherwise). Older vaults fall back to the profile GET as before.
+
 ## 0.62.0 (2026-09-17)
 
 ### Changed
