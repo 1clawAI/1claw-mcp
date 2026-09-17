@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **Client split (plan Phase 2).** `client.ts` (2,155 lines, one class) is now `client/core.ts` (auth, exchange, request primitive) plus 14 per-domain mixin classes (`secrets`, `intents`, `execute`, `platform`, `admin`, …) assembled into the same `OneClawClient` facade, so no tool changed. `import_boundaries.test.ts` pins that domains only extend core and never import each other, and that every domain method resolves on the facade. `src/client.ts` is a re-export shim.
 - **Module split (plan Phase 2).** Each toolset is now a module under `src/toolsets/` that owns its tool list and gate description; `toolsets.ts` derives the catalog from them; the five tools that lived inline in `index.ts` moved to `src/tools/{secret_versions,env}.ts`; session state moved to `src/core/`. `import_boundaries.test.ts` enforces that toolset modules import only tools + client (never each other), tools never reach up, and `@1claw/mcp/security` stays dependency-light. `index.ts` is 760 lines, down from ~1170. No tool renamed, no behaviour change (prod stdio probe: 52 tools before and after).
 
 - **Entitlements from the token exchange.** Vault ≥ 0.61.17 returns `entitlements` on `POST /v1/auth/agent-token`; the server uses it and skips the `GET /v1/agents/{id}` round trip. It also carries `treasury_signer` and `has_delegations`, so the `treasury` and `delegation` toolsets now come on by default when the vault says the agent uses them (still opt-in-able otherwise). Older vaults fall back to the profile GET as before.

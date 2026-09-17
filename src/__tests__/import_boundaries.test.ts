@@ -53,6 +53,34 @@ describe("import boundaries", () => {
         }
     });
 
+    it("client domains extend core and never import each other", () => {
+        for (const f of tsFiles(join(src, "client"))) {
+            if (f.endsWith("/index.ts")) continue;
+            for (const dep of imports(f)) {
+                const ok =
+                    dep === "./core.js" || dep === "../types.js" || dep === "../auth/dpop.js";
+                expect(ok, `${f} imports ${dep}`).toBe(true);
+            }
+        }
+        // core is a leaf among the domains: it must not name a domain method.
+        const core = readFileSync(join(src, "client", "core.ts"), "utf8");
+        expect(core).not.toMatch(/this\.(listSecrets|listVaults|simulateTransaction|platformListApps)\(/);
+    });
+
+    it("the facade mixes in every domain class and each method resolves", async () => {
+        const { OneClawClient, CLIENT_DOMAINS } = await import("../client/index.js");
+        const c = new OneClawClient({ baseUrl: "http://unused.invalid", token: "", vaultId: "" });
+        for (const [domain, cls] of Object.entries(CLIENT_DOMAINS)) {
+            for (const name of Object.getOwnPropertyNames(cls.prototype)) {
+                if (name === "constructor") continue;
+                expect(typeof (c as unknown as Record<string, unknown>)[name], `${domain}.${name}`).toBe("function");
+            }
+        }
+        expect(typeof c.listSecrets).toBe("function");
+        expect(typeof c.simulateTransaction).toBe("function");
+        expect(typeof c.platformListApps).toBe("function");
+    });
+
     it("the security subpath stays lightweight", () => {
         for (const f of tsFiles(join(src, "security"))) {
             for (const dep of imports(f)) {
