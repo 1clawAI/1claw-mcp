@@ -5,6 +5,7 @@ import { describeSecretTool } from "../tools/describe_secret.js";
 import { getEnvBundleTool, resolveEnvTool } from "../tools/env.js";
 import { getSecretTool } from "../tools/get_secret.js";
 import { grantAccessTool } from "../tools/grant_access.js";
+import { listChildAgentsTool } from "../tools/list_child_agents.js";
 import { listOAuthConnectionsTool } from "../tools/list_oauth_connections.js";
 import { listOAuthProvidersTool } from "../tools/list_oauth_providers.js";
 import { listSecretsTool } from "../tools/list_secrets.js";
@@ -29,6 +30,7 @@ export const vaultToolset: ToolsetModule = {
         rotateAndStoreTool,
         rotateGenerateTool,
         getEnvBundleTool,
+        listChildAgentsTool,
         resolveEnvTool,
         shareSecretTool,
         grantAccessTool,

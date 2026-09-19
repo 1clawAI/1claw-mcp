@@ -404,6 +404,13 @@ export class ClientCore {
         );
     }
 
+    /** Child agents under a parent (vault ≥ 0.61.30). An agent may list its own. */
+    async listChildAgents(agentId: string): Promise<{ agents?: AgentProfileResponse[] }> {
+        return this.request<{ agents?: AgentProfileResponse[] }>(
+            `${this.baseUrl}/v1/agents/${agentId}/children`,
+        );
+    }
+
     get vaultId(): string {
         return this._vaultId;
     }

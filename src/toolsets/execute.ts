@@ -3,6 +3,7 @@ import { executeHttpTool } from "../tools/execute_http.js";
 import { executeIntentTool } from "../tools/execute_intent.js";
 import { listBindingsTool } from "../tools/list_bindings.js";
 import { listConnectorPresetsTool } from "../tools/list_connector_presets.js";
+import { listEventSubscriptionsTool } from "../tools/list_event_subscriptions.js";
 import { listExecutionsTool } from "../tools/list_executions.js";
 import { listInstalledConnectorsTool } from "../tools/list_installed_connectors.js";
 import { testBindingTool } from "../tools/test_binding.js";
@@ -19,5 +20,6 @@ export const executeToolset: ToolsetModule = {
         listExecutionsTool,
         listInstalledConnectorsTool,
         listConnectorPresetsTool,
+        listEventSubscriptionsTool,
     ],
 };

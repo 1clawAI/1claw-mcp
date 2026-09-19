@@ -72,7 +72,7 @@ pnpm run build
 
 ## Tools
 
-The server ships **157 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 157. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
+The server ships **159 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 159. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
 
 ### Split packages
 
@@ -92,10 +92,10 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | Toolset | On when | Tools |
 | --- | --- | --- |
 | `inspect` | always | `inspect_content` |
-| `vault` | any agent | secrets, versions, rotation, env bundles, vaults, sharing, connected accounts (~18) |
-| `approvals` | any agent | `request_approval`, `get_approval_status`, `get_approval`, `list_approvals`, `list_pending_approvals` |
+| `vault` | any agent | secrets, versions, rotation, env bundles, vaults, sharing, connected accounts, child agents (~19) |
+| `approvals` | any agent | `request_approval`, `get_approval_status`, `get_approval`, `list_approvals`, `cancel_approval`, `list_pending_approvals` |
 | `intents` | `intents_api_enabled` | signing, simulation, submission, signing keys, portfolio, Safe accounts, Bankr lease (~18) |
-| `execute` | `execution_intents_enabled` | bindings, `execute_http`, `execute_intent`, executions, connectors (7) |
+| `execute` | `execution_intents_enabled` | bindings, `execute_http`, `execute_intent`, executions, connectors, event subscriptions (8) |
 | `cards` | `cards_enabled` | cards and gift cards (5) |
 | `memory` | `memory_enabled` | memory + `get_peer_context` (6) |
 | `channels` | `shroud_enabled` | Telegram / WhatsApp / Discord channels (3) |
@@ -123,6 +123,7 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | `rotate_generate`      | Server-side secret rotation with generated value (length, charset configurable) |
 | `list_versions`        | List all versions of a secret (version numbers, dates, disabled status)      |
 | `get_env_bundle`       | Fetch an env_bundle secret and parse it as KEY=VALUE JSON                    |
+| `list_child_agents`    | Child agents under a parent (own key/memory/policy, subset of the parent's access; vault ≥ 0.61.30) |
 | `resolve_env`          | Resolve environment variables for a vault and environment (returns the final KEY=VALUE set with precedence applied). When the agent has `env_auto_resolve: true`, omit `environment` and the server uses the agent's tagged environment from the JWT. |
 | `create_vault`         | Create a new vault (auto-shared with the agent's human creator)              |
 | `list_vaults`          | List all vaults the agent can access (own + shared)                          |
@@ -197,6 +198,7 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | `treasury_list_proposals` | List proposals for a treasury, optionally filtered by status (pending, approved, executed, rejected, expired).        |
 | `request_approval`     | Request human approval for a policy change or sensitive action. Creates a pending approval for the agent's human operator. |
 | `list_approvals`       | List approval requests, optionally filtered by status (pending, approved, denied).                   |
+| `cancel_approval`      | Withdraw a pending approval this agent created; first answer wins (vault ≥ 0.61.29). |
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `get_approval_status`  | Lightweight approval poll for agents (status + `expires_at` only).          |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
@@ -207,6 +209,9 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | `list_bindings`        | List all bindings configured for the agent. Returns binding names, types, and configuration (no credentials). |
 | `test_binding`         | Test connectivity of a binding. |
 | `list_executions`      | List recent execution events for an agent. |
+| `list_installed_connectors` | Connectors installed on the agent and whether each is signed in. |
+| `list_connector_presets` | The connector catalogue (gmail, slack, stripe, hubspot, …) with each preset's `event_sources`. |
+| `list_event_subscriptions` | Polled connector event sources the agent is subscribed to; new items arrive as automation events (vault ≥ 0.61.32). |
 | `order_card`           | Order a prepaid card via x402. Requires `cards_enabled` on the agent and a funded USDC signing key on Base. Returns a masked card reference (never PAN). |
 | `order_gift_card`      | Order a gift card via x402. Accepts optional `laso_server_id` for brand selection. |
 | `search_gift_cards`    | Search available gift-card brands/servers (by query or country). |

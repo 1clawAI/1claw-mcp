@@ -107,6 +107,15 @@ export class ExecuteApi extends ClientCore {
         );
     }
 
+    /** Polled connector event sources the agent is subscribed to (vault ≥ 0.61.32). */
+    async listEventSubscriptions(
+        agentId: string,
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/event-subscriptions`,
+        );
+    }
+
     async listOAuthProviders(): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/oauth/providers`,
