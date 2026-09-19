@@ -65,6 +65,25 @@ const PII_PATTERNS = [
     { name: "phone_us", pattern: /\b(?:\+1[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b/, severity: "low" as const },
     { name: "aws_key", pattern: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/, severity: "critical" as const },
     { name: "private_key_header", pattern: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/, severity: "critical" as const },
+    // Vendor API keys by shape (mirrors vault/src/domain/content_inspection.rs, 2026-09-19).
+    { name: "stripe_key", pattern: /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b/, severity: "critical" as const },
+    { name: "openai_key", pattern: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/, severity: "critical" as const },
+    { name: "anthropic_key", pattern: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/, severity: "critical" as const },
+    { name: "github_token", pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,}\b|\bgithub_pat_[A-Za-z0-9_]{22,}\b/, severity: "critical" as const },
+    { name: "slack_token", pattern: /\bxox[abpors]-[A-Za-z0-9-]{10,}\b/, severity: "critical" as const },
+    { name: "google_api_key", pattern: /\bAIza[0-9A-Za-z_-]{35}\b/, severity: "critical" as const },
+    { name: "oneclaw_key", pattern: /\b(?:ocv|1ck|plt)_[A-Za-z0-9_-]{16,}\b/, severity: "critical" as const },
+];
+
+// Prompt-injection shapes, ported from Shroud's injection_detect.rs and the
+// vault's content_inspection.rs so local inspection agrees with the proxy.
+const PROMPT_INJECTION_PATTERNS = [
+    { name: "instruction_override", pattern: /\b(?:ignore\s+(?:all\s+)?(?:previous|above|all|prior)|disregard\s+(?:all\s+)?(?:above|previous|all|prior)|forget\s+everything|new\s+rules|override\s+(?:instructions|previous))\b/i, severity: "high" as const },
+    { name: "role_manipulation", pattern: /\b(?:you\s+are\s+now|act\s+as|pretend\s+(?:to\s+be|you're)|your\s+new\s+instructions|from\s+now\s+on\s+you)\b/i, severity: "medium" as const },
+    { name: "delimiter_attack", pattern: /(?:```system|<\/s>|\[INST\]|\[\/INST\]|<\|im_start\|>|<\|system\|>|<\|endoftext\|>|<\|assistant\|>)/i, severity: "high" as const },
+    { name: "encoding_evasion", pattern: /(?:eval|exec|decode)\s*\(\s*(?:atob|base64|fromCharCode)/, severity: "medium" as const },
+    { name: "indirect_injection", pattern: /\b(?:when\s+(?:you|the\s+user)\s+(?:see|ask|mention)|if\s+asked\s+about|whenever\s+someone)\b/i, severity: "medium" as const },
+    { name: "system_extraction", pattern: /\b(?:repeat\s+(?:your|the)\s+(?:system|initial)\s+(?:prompt|instructions|message)|what\s+(?:are|were)\s+your\s+(?:instructions|rules)|reveal\s+(?:any|your|the)\s+(?:system\s+)?prompts?)\b/i, severity: "high" as const },
 ];
 
 // Zero-width and invisible characters
@@ -337,6 +356,13 @@ function detectThreats(text: string): ThreatDetection[] {
         }
     }
     
+    for (const { name, pattern, severity } of PROMPT_INJECTION_PATTERNS) {
+        const match = text.match(pattern);
+        if (match) {
+            threats.push({ type: "prompt_injection", pattern: name, location: match[0].slice(0, 60), severity });
+        }
+    }
+
     for (const { name, pattern, severity } of NETWORK_PATTERNS) {
         const match = text.match(pattern);
         if (match) {
