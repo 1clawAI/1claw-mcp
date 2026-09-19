@@ -200,6 +200,7 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | `get_approval`         | Get the current status of a specific approval request. Useful for agents polling while waiting on approval. |
 | `get_approval_status`  | Lightweight approval poll for agents (status + `expires_at` only).          |
 | `lease_bankr_key`      | **Privileged** — policy-gated on `agents/{id}/bankr/*`. Provisions scoped `bk_usr_` key (stored for Shroud; **not returned** in tool output). Recommend TTL 300–900 s. Requires `BANKR_PARTNER_KEY` on Vault. |
+| `spend_from_passkey_safe` | Spend from a human's passkey-owned Safe (`custody: passkey_owner`) under an on-chain Allowance Module grant the owner signed for this agent — `safe_id`, `to`, `amount` (base units), optional `token`. The module enforces the cap; guardrails and the sanctions screen run first. Counts as one signature. |
 | `execute_http`         | Execute an HTTP request through a pre-configured binding. Credentials are injected server-side and never exposed to the agent. Requires `execution_intents_enabled` on the agent. |
 | `execute_intent`       | Execute a generic intent (HTTP, GraphQL, etc.) through a named binding. |
 | `create_binding`       | Create a binding (credential handle) for an agent. Supports inline credentials or `vault_ref` (live pointer to an existing vault secret, resolved at execution time). Human-only. |

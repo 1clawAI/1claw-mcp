@@ -186,6 +186,19 @@ export class IntentsApi extends ClientCore {
     }
 
 
+    // ── Passkey-owned Safe: spend under an Allowance Module grant ──────
+
+    async spendFromPasskeySafe(
+        agentId: string,
+        safeId: string,
+        spend: { to: string; amount: string; token?: string },
+    ): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/agents/${agentId}/passkey-safes/${encodeURIComponent(safeId)}/spend`,
+            { method: "POST", body: JSON.stringify(spend) },
+        );
+    }
+
     // ── Signing Key Balance ──────────────────────────────────────────
 
     async getSigningKeyBalance(

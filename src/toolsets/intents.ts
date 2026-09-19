@@ -15,6 +15,7 @@ import { signTransactionTool } from "../tools/sign_transaction.js";
 import { signTypedDataTool } from "../tools/sign_typed_data.js";
 import { simulateBundleTool } from "../tools/simulate_bundle.js";
 import { simulateTransactionTool } from "../tools/simulate_transaction.js";
+import { spendFromPasskeySafeTool } from "../tools/spend_from_passkey_safe.js";
 import { submitTransactionTool } from "../tools/submit_transaction.js";
 
 /** intents: agent flag intents_api_enabled. */
@@ -40,5 +41,6 @@ export const intentsToolset: ToolsetModule = {
         listAgentAccountsTool,
         getSafeModuleRegistryTool,
         leaseBankrKeyTool,
+        spendFromPasskeySafeTool,
     ],
 };
