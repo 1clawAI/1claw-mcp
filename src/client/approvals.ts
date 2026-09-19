@@ -25,6 +25,13 @@ export class ApprovalsApi extends ClientCore {
         );
     }
 
+    async cancelApproval(approvalId: string, reason?: string): Promise<ApprovalResponse> {
+        return this.request<ApprovalResponse>(`${this.baseUrl}/v1/approvals/${approvalId}/cancel`, {
+            method: "POST",
+            body: JSON.stringify(reason ? { reason } : {}),
+        });
+    }
+
     async getApprovalStatus(
         approvalId: string,
     ): Promise<{ status: string; expires_at?: string | null }> {

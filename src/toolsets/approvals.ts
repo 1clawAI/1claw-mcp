@@ -2,6 +2,7 @@ import type { ToolsetModule } from "./types.js";
 import { getApprovalTool } from "../tools/get_approval.js";
 import { getApprovalStatusTool } from "../tools/get_approval_status.js";
 import { listApprovalsTool } from "../tools/list_approvals.js";
+import { cancelApprovalTool } from "../tools/cancel_approval.js";
 import { listPendingApprovalsTool } from "../tools/pending_approvals.js";
 import { requestApprovalTool } from "../tools/request_approval.js";
 
@@ -14,6 +15,7 @@ export const approvalsToolset: ToolsetModule = {
         getApprovalStatusTool,
         getApprovalTool,
         listApprovalsTool,
+        cancelApprovalTool,
         listPendingApprovalsTool,
     ],
 };

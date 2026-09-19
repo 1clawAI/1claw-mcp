@@ -7,10 +7,10 @@ export function listApprovalsTool(client: OneClawClient) {
   return {
     name: "list_approvals" as const,
     description:
-      "List pending approval requests. Returns approvals that are awaiting human decision.",
+      "List approval requests. A human session sees its own queue; an agent session sees only the approvals it created (useful to recover one whose id was lost).",
     parameters: z.object({
       status: z
-        .enum(["pending", "approved", "rejected", "expired"])
+        .enum(["pending", "approved", "rejected", "expired", "cancelled"])
         .optional()
         .describe("Filter by approval status (default: all)"),
       limit: z
