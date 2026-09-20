@@ -19,10 +19,16 @@ export class AutomationsApi extends ClientCore {
     async triggerAutomation(
         automationId: string,
         input?: Record<string, unknown>,
+        idempotencyKey?: string,
     ): Promise<Record<string, unknown>> {
+        // vault ≥ 0.61.45 reads `{input, idempotency_key}`; a bare object
+        // used to be ignored entirely.
+        const body: Record<string, unknown> = {};
+        if (input) body.input = input;
+        if (idempotencyKey) body.idempotency_key = idempotencyKey;
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/automations/${automationId}/trigger`,
-            { method: "POST", body: JSON.stringify(input ?? {}) },
+            { method: "POST", body: JSON.stringify(body) },
         );
     }
 
