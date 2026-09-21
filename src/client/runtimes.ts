@@ -12,11 +12,18 @@ export class RuntimesApi extends ClientCore {
 
     async manageRuntime(
         runtimeId: string,
-        action: "start" | "stop",
+        action: "start" | "stop" | "restart" | "rollback",
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
             `${this.baseUrl}/v1/runtimes/${runtimeId}/${action}`,
             { method: "POST" },
+        );
+    }
+
+    /** Every env var the container is started with, by source (secrets masked). vault ≥ 0.61.48 */
+    async runtimeResolvedEnv(runtimeId: string): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>(
+            `${this.baseUrl}/v1/runtimes/${runtimeId}/env/resolved`,
         );
     }
 

@@ -72,7 +72,7 @@ pnpm run build
 
 ## Tools
 
-The server ships **159 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 159. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
+The server ships **160 tools** (add `proxy_request` in local daemon mode) but a session only ever sees the **toolsets it is entitled to** — a vault-only agent is offered ~24 tools, not 160. **`inspect_content`** also runs in **`ONECLAW_LOCAL_ONLY=true`** mode without vault credentials. Also includes the `vault://secrets` resource.
 
 ### Split packages
 

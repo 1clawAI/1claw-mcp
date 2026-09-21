@@ -3,6 +3,7 @@ import { listRuntimesTool } from "../tools/list_runtimes.js";
 import { manageRuntimeTool } from "../tools/manage_runtime.js";
 import { runtimeLogsTool } from "../tools/runtime_logs.js";
 import { runtimeStatusTool } from "../tools/runtime_status.js";
+import { runtimeEnvTool } from "../tools/runtime_env.js";
 
 /** runtimes: opt-in. */
 export const runtimesToolset: ToolsetModule = {
@@ -13,5 +14,6 @@ export const runtimesToolset: ToolsetModule = {
         manageRuntimeTool,
         runtimeStatusTool,
         runtimeLogsTool,
+        runtimeEnvTool,
     ],
 };
