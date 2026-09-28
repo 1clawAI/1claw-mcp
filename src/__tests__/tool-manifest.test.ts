@@ -22,7 +22,7 @@ installToolsets(TOOLSET_MODULES);
 
 const manifest = JSON.parse(
   readFileSync(resolve(__dirname, "../../tool-manifest.json"), "utf8"),
-) as { total: number; byToolset: Record<string, number> };
+) as { total: number; hosted: number; byToolset: Record<string, number> };
 
 function liveCounts() {
   const byToolset: Record<string, number> = {};
@@ -47,6 +47,21 @@ describe("the committed tool manifest", () => {
     // changing what a vault-only agent is offered, which is the number that
     // actually reaches most sessions.
     expect(manifest.byToolset).toEqual(liveCounts().byToolset);
+  });
+
+  it("separates what the hosted server can offer from the whole catalog", () => {
+    // `proxy_request` belongs to the `local` toolset, which has no module and
+    // which core/server.ts leaves out of the toolsets it advertises — only
+    // the local daemon registers it. A session against mcp.1claw.co can
+    // never be offered it.
+    //
+    // Both numbers are asked for, and the distinction is easy to lose: the
+    // repo briefly advertised 161 everywhere, including in documents that
+    // describe the hosted server, after a check that had been claiming 160
+    // by miscounting was found to be wrong.
+    const live = liveCounts();
+    expect(manifest.hosted).toBe(live.total - (live.byToolset.local ?? 0));
+    expect(manifest.hosted).toBeLessThan(manifest.total);
   });
 
   it("counts every toolset the entrypoint installs", () => {
