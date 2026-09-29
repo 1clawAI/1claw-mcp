@@ -13,6 +13,7 @@ import { listVaultsTool } from "../tools/list_vaults.js";
 import { oauthRevokeConsentTool } from "../tools/oauth_revoke_consent.js";
 import { oauthRevokeTokenTool } from "../tools/oauth_revoke_token.js";
 import { putSecretTool } from "../tools/put_secret.js";
+import { checkSecretRequestTool, requestSecretTool } from "../tools/secret_request.js";
 import { listVersionsTool, rotateAndStoreTool, rotateGenerateTool } from "../tools/secret_versions.js";
 import { shareSecretTool } from "../tools/share_secret.js";
 
@@ -24,6 +25,8 @@ export const vaultToolset: ToolsetModule = {
         listSecretsTool,
         getSecretTool,
         putSecretTool,
+        requestSecretTool,
+        checkSecretRequestTool,
         deleteSecretTool,
         describeSecretTool,
         listVersionsTool,

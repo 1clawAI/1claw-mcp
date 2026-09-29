@@ -140,4 +140,33 @@ export class SecretsApi extends ClientCore {
         return this.request(url);
     }
 
+
+    // ── Secret requests ───────────────────────────────────────────────────
+    //
+    // Asking a human for a credential. Neither call carries a value: the
+    // human's browser writes the secret to the vault over their own session
+    // and the agent is told a vault id and a path. See
+    // `vault/src/domain/secret_request.rs`.
+
+    async createSecretRequest(data: {
+        label: string;
+        purpose: string;
+        suggested_path?: string;
+    }): Promise<{ id: string; status: string; expires_at: string; next: string }> {
+        return this.request(`${this.baseUrl}/v1/secret-requests`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+    }
+
+    async getSecretRequest(id: string): Promise<{
+        id: string;
+        status: "pending" | "fulfilled" | "declined" | "expired";
+        vault_id?: string | null;
+        path?: string | null;
+        next: string;
+    }> {
+        return this.request(`${this.baseUrl}/v1/secret-requests/${encodeURIComponent(id)}`);
+    }
+
 }
