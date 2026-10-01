@@ -2,7 +2,7 @@
   "name": "@1claw/mcp",
   "version": "0.63.9",
   "mcpName": "io.github.1clawAI/1claw-mcp",
-  "description": "MCP server for the 1claw secrets vault — lets AI agents fetch, store, and manage secrets at runtime",
+  "description": "MCP server for the 1claw secrets vault \u2014 lets AI agents fetch, store, and manage secrets at runtime",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,10 +58,11 @@
   "homepage": "https://1claw.co",
   "license": "MIT",
   "dependencies": {
-    "@hono/node-server": "^1.19.13",
+    "@hono/node-server": "^1.19.17",
+    "axios": "^1.20.0",
     "fastmcp": "^3.33.0",
     "glob": "^11.1.0",
-    "hono": "^4.12.25",
+    "hono": "^4.13.12",
     "koa": "^3.1.2",
     "undici": "^7.29.0",
     "zod": "^3.24.0"
@@ -70,14 +71,18 @@
     "@modelcontextprotocol/sdk": "^1.24.3",
     "@types/node": "^20.19.33",
     "typescript": "^5.5.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.11"
   },
   "overrides": {
-    "axios": "^1.16.0",
-    "fast-uri": "^3.1.5",
-    "form-data": "^4.0.6",
-    "hono": "^4.12.25",
-    "undici": "^7.29.0"
+    "@vitest/mocker": ">=4.1.11",
+    "body-parser": ">=2.3.0",
+    "brace-expansion": ">=5.0.12",
+    "express-rate-limit": ">=8.7.0",
+    "file-type": ">=21.3.4",
+    "ip-address": ">=10.7.2",
+    "nanoid": ">=3.3.19",
+    "postcss": ">=8.5.28",
+    "qs": ">=6.16.0"
   },
   "engines": {
     "node": ">=20.0.0"
