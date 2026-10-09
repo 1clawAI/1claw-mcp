@@ -21,7 +21,9 @@ export function createChannelTool(client: OneClawClient) {
         ),
       slash_commands_enabled: z.boolean().optional().describe("Enable slash commands"),
       voice_transcription_enabled: z.boolean().optional().describe("Enable voice message transcription"),
-      sender_allowlist: z.array(z.string()).optional().describe("Allowed sender IDs for auto-respond"),
+      sender_allowlist: z.array(z.string()).optional().describe(
+        "Sender IDs allowed to message the agent. A non-empty list means everyone else gets no reply, and those senders may also run admin slash commands. Leave unset unless the user named who should have access — it also pre-empts the first-contact admin claim, which is how a non-developer gets admin without touching an ID",
+      ),
       auto_respond_enabled: z.boolean().optional().describe("Enable auto-respond"),
     }),
     execute: async (
