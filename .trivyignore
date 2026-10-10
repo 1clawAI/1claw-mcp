@@ -155,3 +155,25 @@ CVE-2026-78410
 # Requires systemd-homed running and reachable over sd-bus; this image starts
 # a single node process.
 CVE-2026-16742
+
+# libgnutls30 HIGH CVEs, both published 2026-10-09 and both unfixed in bookworm
+# at 3.7.9-2+deb12u7:
+#   CVE-2026-88647 — information disclosure via hostname
+#   CVE-2026-88648 — cross-domain certificate restriction bypass
+#
+# Both are certificate and hostname verification flaws, so they bite a caller
+# whose TLS *is* gnutls. Nothing in this image links gnutls: Node's TLS is its
+# bundled OpenSSL, and gnutls arrives with the base image as a dependency of
+# other system packages, not of anything this container runs.
+#
+# Verified rather than assumed, at the commit this was written:
+#   * `node -p "process.versions.openssl"` is the TLS stack for every outbound
+#     request the server makes (undici/axios both go through it).
+#   * no native addon in the dependency tree links gnutls; the image installs
+#     production deps only and runs `node` as its entrypoint.
+#
+# The vault image accepted the same two with the same reasoning. This file was
+# missing them, which is why the MCP scan stayed red after the vault scan went
+# green — the accepted-CVE lists are per image and had drifted apart.
+CVE-2026-88647
+CVE-2026-88648
