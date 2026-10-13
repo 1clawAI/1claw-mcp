@@ -12,7 +12,12 @@ export class ExecuteApi extends ClientCore {
             execution_mode?: string;
             params: Record<string, unknown>;
             dry_run?: boolean;
-            resume_after_approval_id?: string;
+            // No resume field. The vault refuses `resume_after_approval_id` at
+            // the deserializer (APPRBIND-H1): verifying the id bound the
+            // approval but not the request body the approval was granted for,
+            // so one earned approval could be replayed against a different
+            // body. An approved execution resumes server-side from the stored
+            // approval payload.
         },
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
