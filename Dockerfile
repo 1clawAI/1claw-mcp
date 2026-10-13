@@ -1,6 +1,17 @@
 # Debian security updates are applied explicitly in the runtime stage below —
 # a rebuild alone waits on upstream node:22-slim. Digest-pin with Renovate.
-FROM node:22-slim AS builder
+# Base image pinned by digest, and the runtime stage runs as a non-root user.
+#
+# `node:22-slim` is a moving tag: two builds a week apart can ship different
+# userland, so the build is not reproducible and an upstream change arrives with
+# no diff here to review. The digest is the content; the tag stays alongside for
+# readability. renovate.json in the parent repo keeps it current.
+#
+# `USER node` because this container serves public HTTP (mcp.1claw.xyz). The
+# node images ship a `node` user for exactly this, and running the server as
+# root means any RCE starts with the ability to rewrite the application it just
+# compromised.
+FROM node:22-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS builder
 
 WORKDIR /app
 
@@ -15,7 +26,7 @@ RUN npx tsc
 RUN npm prune --production
 
 # ── Runtime ───────────────────────────────────────────
-FROM node:22-slim
+FROM node:22-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
 
 # Apply Debian security updates, same as vault/Dockerfile's runtime stage.
 #
@@ -45,5 +56,10 @@ COPY --from=builder /app/package.json ./
 ENV MCP_TRANSPORT=httpStream
 ENV PORT=8080
 EXPOSE 8080
+
+# Drop privileges before serving. Last, so the COPY steps above still run as
+# root and the files stay root-owned and read-only to this user -- the server
+# has no reason to be able to rewrite its own code.
+USER node
 
 CMD ["node", "dist/index.js"]
