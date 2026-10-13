@@ -65,3 +65,48 @@ describe("split packages carry only what they claim", () => {
         expect(files).toContain("src/client/intents.ts");
     });
 });
+
+/**
+ * The split packages must carry the umbrella's version.
+ *
+ * `@1claw/mcp-vault` and `@1claw/mcp-guard` compile the umbrella's own source:
+ * their tsconfig sets `rootDir: "../.."` and their entrypoints import from
+ * `../../../src/`. So a change to `src/security/index.ts` or `src/core/server.ts`
+ * changes what they would publish, without changing anything inside their own
+ * directories — and nothing made that visible.
+ *
+ * Measured 2026-10-13: both sat at 0.63.0 while the umbrella had reached
+ * 0.63.11, twelve patch releases apart. Five files in their compile closure had
+ * changed in between (`client/core.ts`, `core/server.ts`, `security/index.ts`,
+ * `toolsets/vault.ts`, `toolsets/approvals.ts`), so the published packages were
+ * missing, among other things, the `stripe_key` and `openai_key` credential
+ * shapes added to the security layer. `@1claw/mcp-guard` exists only to run
+ * `inspect_content`, which makes a stale pattern set there the sharpest version
+ * of the problem.
+ *
+ * The README and `.cursor/rules/1claw.mdc` both already described these as
+ * "lockstep versions". Nothing enforced it, so it was an intention rather than
+ * a fact. This makes it a fact: bumping the umbrella now fails this test until
+ * the split packages follow, and the publish workflow skips any version already
+ * on npm, so a matching bump is what triggers their release.
+ */
+describe("split package versions", () => {
+    it("match the umbrella version exactly", async () => {
+        const { readFileSync } = await import("node:fs");
+        const { join } = await import("node:path");
+        const root = join(__dirname, "..", "..");
+        const version = (rel: string) =>
+            JSON.parse(readFileSync(join(root, rel), "utf8")).version as string;
+
+        const umbrella = version("package.json");
+        for (const rel of ["packages/vault/package.json", "packages/guard/package.json"]) {
+            expect(
+                version(rel),
+                `${rel} is ${version(rel)} but the umbrella is ${umbrella}. These packages ` +
+                    `compile the umbrella's src/, so a release of it changes what they would ` +
+                    `publish. Bump them together, or they ship stale code at a version that ` +
+                    `looks current.`,
+            ).toBe(umbrella);
+        }
+    });
+});

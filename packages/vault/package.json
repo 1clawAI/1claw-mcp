@@ -1,6 +1,6 @@
 {
   "name": "@1claw/mcp-vault",
-  "version": "0.63.0",
+  "version": "0.63.12",
   "description": "1claw MCP server, vault only: secrets, versions, rotation, env bundles, vaults, sharing, connected accounts and human approvals. No signing or execute code in the package.",
   "bin": {
     "1claw-mcp-vault": "dist/packages/vault/src/index.js"
