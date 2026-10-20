@@ -1,6 +1,6 @@
 {
   "name": "@1claw/mcp-guard",
-  "version": "0.63.12",
+  "version": "0.64.0",
   "description": "1claw MCP server, guard only: inspect_content scores text for prompt injection, command injection, encoded payloads, PII and leaked secrets. No account, no credentials, no vault client in the package.",
   "bin": {
     "1claw-mcp-guard": "dist/packages/guard/src/index.js"

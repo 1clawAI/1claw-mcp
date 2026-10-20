@@ -15,10 +15,10 @@ export function testBindingTool(client: OneClawClient) {
       timeout_ms: z
         .number()
         .int()
-        .min(100)
-        .max(60000)
+        .min(1000)
+        .max(30000)
         .optional()
-        .describe("Connectivity timeout in milliseconds (default 5000)"),
+        .describe("Connectivity timeout in milliseconds; the vault clamps it to 1000-30000 (default 5000)"),
     }),
     execute: async (args: { binding_id: string; timeout_ms?: number }) => {
       try {

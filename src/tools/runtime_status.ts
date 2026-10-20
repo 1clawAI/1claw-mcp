@@ -27,7 +27,11 @@ export function runtimeStatusTool(client: OneClawClient) {
         const result = await client.getRuntimesForAgent(agentId);
         log.info(`runtime_status: agent ${agentId}`);
 
-        const runtimes = (result as { runtimes?: Array<Record<string, unknown>> }).runtimes ?? [];
+        // GET /v1/runtimes takes no agent filter; with a human token it lists
+        // every runtime in the org, so pick this agent's here.
+        const runtimes = ((result as { runtimes?: Array<Record<string, unknown>> }).runtimes ?? []).filter(
+          (r) => r.agent_id === undefined || r.agent_id === agentId,
+        );
         if (runtimes.length === 0) {
           return `No runtime found for agent ${agentId}.`;
         }

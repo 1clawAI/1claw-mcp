@@ -44,11 +44,11 @@ export function createBindingTool(client: OneClawClient) {
       guardrails: z
         .record(z.unknown())
         .optional()
-        .describe("Optional guardrails (allowed_hosts, max_duration_ms, max_requests_per_minute)"),
+        .describe("Optional guardrails (allowed_hosts, max_duration_ms, max_requests_per_minute, allowed_request_headers: extra agent headers custom/gRPC bindings may forward; default content-type, accept, user-agent, idempotency-key)"),
       credential: z
         .record(z.unknown())
         .optional()
-        .describe("Legacy: inline credential material (e.g. { token } or { value }). Prefer credential_source for new bindings."),
+        .describe("Legacy: inline credential material (e.g. { token } or { value }). Prefer credential_source for new bindings. Postgres/MySQL credentials default to verified TLS; only sslmode verify-full or disable (MySQL ssl-mode VERIFY_IDENTITY or DISABLED) are accepted, anything else is refused."),
       credential_source: credentialSourceSchema.optional(),
     }),
     execute: async (args: {

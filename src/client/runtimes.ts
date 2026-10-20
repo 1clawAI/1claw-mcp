@@ -31,6 +31,7 @@ export class RuntimesApi extends ClientCore {
         agentId: string,
     ): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>(
+            // The vault ignores `agent_id`; callers filter on `runtimes[].agent_id`.
             `${this.baseUrl}/v1/runtimes?agent_id=${encodeURIComponent(agentId)}`,
         );
     }

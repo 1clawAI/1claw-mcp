@@ -2,6 +2,7 @@ import { z } from "zod";
 import { UserError } from "fastmcp";
 import type { OneClawClient } from "../client.js";
 import { OneClawApiError } from "../client/core.js";
+import { pendingApprovalOf, describePendingApproval } from "../client/error.js";
 
 export function listDelegationsTool(client: OneClawClient) {
   return {
@@ -99,6 +100,11 @@ export function createDelegationTool(client: OneClawClient) {
         .string()
         .optional()
         .describe("ISO 8601 expiration timestamp"),
+      approval_id: z
+        .string()
+        .uuid()
+        .optional()
+        .describe("Approved control-plane approval (the pending_approval_id from an earlier 202) to complete this same request"),
     }),
     execute: async (
       args: {
@@ -110,11 +116,13 @@ export function createDelegationTool(client: OneClawClient) {
         max_depth?: number;
         delegation_mode?: "caller" | "target" | "both";
         expires_at?: string;
+        approval_id?: string;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
       try {
         const result = await client.createDelegation(args.agent_id, {
+          approval_id: args.approval_id,
           delegate_id: args.delegate_id,
           allowed_tools: args.allowed_tools,
           blocked_tools: args.blocked_tools,
@@ -124,6 +132,8 @@ export function createDelegationTool(client: OneClawClient) {
           expires_at: args.expires_at,
         });
 
+        const pending = pendingApprovalOf(result);
+        if (pending) return describePendingApproval(pending, "create_delegation");
         const d = result as Record<string, unknown>;
         log.info(`created delegation ${d.id}`);
 

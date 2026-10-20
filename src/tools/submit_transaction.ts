@@ -2,6 +2,7 @@ import { z } from "zod";
 import { UserError } from "fastmcp";
 import type { OneClawClient } from "../client.js";
 import { OneClawApiError } from "../client/core.js";
+import { pendingApprovalOf, describePendingApproval, forbiddenDetailForAgent } from "../client/error.js";
 
 const nonEvmParams = {
   destination_tag: z.number().int().optional().describe("XRP: destination tag for exchange deposits"),
@@ -34,6 +35,8 @@ export function submitTransactionTool(client: OneClawClient) {
       max_priority_fee_per_gas: z.string().optional().describe("EIP-1559 max priority fee per gas in wei (EVM)"),
       simulate_first: z.boolean().default(true).describe("Run Tenderly simulation before signing (EVM-only). Defaults to true."),
       ...nonEvmParams,
+      approval_id: z.string().uuid().optional().describe("Approved multi-party approval (the pending_approval_id from an earlier 202) to resubmit this same transaction once it has been approved"),
+      resume_tx_id: z.string().uuid().optional().describe("Transaction ID from an earlier awaiting_approval answer: signs and broadcasts it once a human has approved it"),
     }),
     execute: async (
       args: {
@@ -58,6 +61,8 @@ export function submitTransactionTool(client: OneClawClient) {
         xrpl_tx_json?: Record<string, unknown>;
         raw_transaction?: string;
         tron_transaction?: Record<string, unknown>;
+        approval_id?: string;
+        resume_tx_id?: string;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -70,6 +75,11 @@ export function submitTransactionTool(client: OneClawClient) {
 
       try {
         const result = await client.submitTransaction(agentId, args);
+        const pending = pendingApprovalOf(result);
+        if (pending) {
+          log.info(`transaction awaiting approval (${pending.approvalId})`);
+          return describePendingApproval(pending, "submit_transaction");
+        }
         log.info(`transaction: ${result.status} (${result.id})`);
 
         const lines: string[] = [
@@ -88,7 +98,7 @@ export function submitTransactionTool(client: OneClawClient) {
       } catch (err) {
         if (err instanceof OneClawApiError) {
           if (err.status === 400) throw new UserError(err.detail);
-          if (err.status === 403) throw new UserError(`Access denied: ${err.detail}`);
+          if (err.status === 403) throw new UserError(`Access denied: ${forbiddenDetailForAgent(err.detail)}`);
           if (err.status === 422) throw new UserError(`Transaction rejected: ${err.detail}`);
         }
         throw err;

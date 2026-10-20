@@ -2,6 +2,7 @@ import { z } from "zod";
 import { UserError } from "fastmcp";
 import type { OneClawClient } from "../client.js";
 import { OneClawApiError } from "../client/core.js";
+import { pendingApprovalOf, describePendingApproval, forbiddenDetailForAgent } from "../client/error.js";
 
 const nonEvmParams = {
   destination_tag: z.number().int().optional().describe("XRP: destination tag for exchange deposits"),
@@ -12,8 +13,6 @@ const nonEvmParams = {
   token_decimals: z.number().int().optional().describe("Solana / Tron: token decimals (default 6)"),
   ttl: z.number().int().optional().describe("Cardano: transaction time-to-live (absolute slot)"),
   xrpl_tx_json: z.record(z.unknown()).optional().describe("Raw XRPL transaction JSON for full transaction type coverage (TrustSet, OfferCreate, NFTokenMint, AMMCreate, EscrowCreate, etc.). Account/Sequence/Fee/SigningPubKey are auto-filled."),
-  raw_transaction: z.string().optional().describe("Pre-built raw transaction as base64 byte string for deep-inspect before signing (non-EVM)"),
-  tron_transaction: z.record(z.unknown()).optional().describe("Pre-built Tron transaction JSON object for full Tron transaction type coverage"),
 };
 
 export function signTransactionTool(client: OneClawClient) {
@@ -56,8 +55,6 @@ export function signTransactionTool(client: OneClawClient) {
         token_decimals?: number;
         ttl?: number;
         xrpl_tx_json?: Record<string, unknown>;
-        raw_transaction?: string;
-        tron_transaction?: Record<string, unknown>;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -70,6 +67,11 @@ export function signTransactionTool(client: OneClawClient) {
 
       try {
         const result = await client.signTransaction(agentId, args);
+        const pending = pendingApprovalOf(result);
+        if (pending) {
+          log.info(`sign awaiting approval (${pending.approvalId})`);
+          return describePendingApproval(pending, "sign_transaction");
+        }
         log.info(`transaction signed: ${result.tx_hash}`);
 
         const lines: string[] = [
@@ -89,7 +91,7 @@ export function signTransactionTool(client: OneClawClient) {
       } catch (err) {
         if (err instanceof OneClawApiError) {
           if (err.status === 400) throw new UserError(err.detail);
-          if (err.status === 403) throw new UserError(`Access denied: ${err.detail}`);
+          if (err.status === 403) throw new UserError(`Access denied: ${forbiddenDetailForAgent(err.detail)}`);
         }
         throw err;
       }

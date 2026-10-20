@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.64.0 (2026-10-19)
+
+Checked every tool against the vault's routes and request/response shapes as of 2026-10-19.
+
+### Added
+
+- **Approvals are reported, not mistaken for results.** A 202 from the vault (`awaiting_approval` / `approval_required` with `approval_id`, or a consensus `pending_approval` with `pending_approval_id`) used to be rendered as a normal answer, so `submit_transaction` printed "ID: undefined" and the sign tools printed "From: undefined" with the approval id dropped. `submit_transaction`, `sign_transaction`, `sign_message`, `sign_typed_data`, `sign_digest` and `create_delegation` now return the approval id and the next step (`client/error.ts` `pendingApprovalOf` / `describePendingApproval`).
+- `approval_id` on `submit_transaction`, `sign_message`, `sign_typed_data`, `sign_digest` and `create_delegation`, and `resume_tx_id` on `submit_transaction`, so an agent can finish what an approval unblocked. The vault already accepted both.
+- `list_signing_keys` shows a key's `custody` (`server` or `client_tss`) and flags a self-custody key that is not backed up. `get_transaction` shows `from_address`, `block_number` and `confirmed_at` from the receipt reconciler.
+
+### Changed
+
+- When the vault refuses server signing for a self-custody key, the message no longer tells the agent to use a passkey; it says an agent co-signs such a key only from a runtime the owner provisioned with a share.
+- Error bodies that are not problem details are read: guardrail denials (`reason_code`, `limit`, `current`, `attempted`, `retry_after_seconds`, `approval_available`) instead of "HTTP 403", the x402 `payment_required` message and `required_usd` on a 402, and `upgrade_required` plan gates.
+- `test_binding` takes `timeout_ms` 1000-30000, the range the vault clamps to (was 100-60000).
+- `create_binding` documents that Postgres/MySQL credentials accept only `sslmode` verify-full or disable (MySQL `ssl-mode` VERIFY_IDENTITY or DISABLED), and `allowed_request_headers` for custom/gRPC bindings. `sign_digest` documents `raw_signing_policy` and that platform-added agents start with raw signing off.
+
+### Fixed
+
+- `sign_transaction` no longer offers `raw_transaction` / `tron_transaction`, which `SignTransactionRequest` does not have (the vault dropped them silently).
+- `runtime_status` picks the agent's own runtime. `GET /v1/runtimes` ignores `agent_id`, so with a human token it reported the first runtime in the org.
+- README: 15 tools that were missing from the tool table, a note on self-custody keys and approvals, and the registry version. `server.json` and `plugin.json` were at 0.63.6 and 0.63.0; all versions are now 0.64.0 (with `@1claw/mcp-vault` and `@1claw/mcp-guard` in lockstep).
+
 ## 0.63.0 (2026-09-17)
 
 ### Added

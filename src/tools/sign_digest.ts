@@ -2,6 +2,7 @@ import { z } from "zod";
 import { UserError } from "fastmcp";
 import type { OneClawClient } from "../client.js";
 import { OneClawApiError } from "../client/core.js";
+import { pendingApprovalOf, describePendingApproval, forbiddenDetailForAgent } from "../client/error.js";
 
 export function signDigestTool(client: OneClawClient) {
   return {
@@ -9,7 +10,7 @@ export function signDigestTool(client: OneClawClient) {
     description:
       "Sign a client-computed 32-byte digest directly (raw/blind signing). Returns a 65-byte r‖s‖v ECDSA signature (v=27/28) that recovers to the signer EOA. " +
       "Use this for ERC-1271 / ERC-7739 nested EIP-712 flows (e.g. Polymarket CLOB orders) where the canonical hash is computed client-side and must match the verifier exactly. " +
-      "WARNING: this is blind signing — no domain/transaction inspection is performed and guardrails are bypassed. The agent must have `raw_signing_enabled` set by a human, or the request returns 403. Every use is audit-logged.",
+      "WARNING: this is blind signing — no domain/transaction inspection is performed and guardrails are bypassed. The agent must have `raw_signing_enabled` set by a human, or the request returns 403; `raw_signing_policy` then decides: `deny` answers 403, `approve` holds each request for a human (this tool returns the approval id). Agents added through a platform connection start with raw signing off; the end user turns it on. Every use is audit-logged.",
     parameters: z.object({
       agent_id: z.string().optional().describe("Agent ID. Uses the current authenticated agent if omitted."),
       hash: z
@@ -18,6 +19,7 @@ export function signDigestTool(client: OneClawClient) {
         .describe("The 0x-prefixed 32-byte digest to sign directly"),
       chain: z.string().default("ethereum").describe("Chain name (default: ethereum)"),
       signing_key_path: z.string().optional().describe("Vault path to the signing key. Uses the agent's default key for the chain if omitted."),
+      approval_id: z.string().uuid().optional().describe("Approved multi-party approval (the pending_approval_id from an earlier 202) to resubmit this same request once it has been approved"),
     }),
     execute: async (
       args: {
@@ -25,6 +27,7 @@ export function signDigestTool(client: OneClawClient) {
         hash: string;
         chain?: string;
         signing_key_path?: string;
+        approval_id?: string;
       },
       { log }: { log: { info: (msg: string) => void } },
     ) => {
@@ -42,8 +45,14 @@ export function signDigestTool(client: OneClawClient) {
           hash: args.hash,
         };
         if (args.signing_key_path) body.signing_key_path = args.signing_key_path;
+        if (args.approval_id) body.approval_id = args.approval_id;
 
         const result = await client.signIntent(agentId, body);
+        const pending = pendingApprovalOf(result);
+        if (pending) {
+          log.info(`sign awaiting approval (${pending.approvalId})`);
+          return describePendingApproval(pending, "sign_digest");
+        }
         log.info(`digest signed by ${result.from}`);
 
         const lines: string[] = [
@@ -59,7 +68,7 @@ export function signDigestTool(client: OneClawClient) {
       } catch (err) {
         if (err instanceof OneClawApiError) {
           if (err.status === 400) throw new UserError(err.detail);
-          if (err.status === 403) throw new UserError(`Access denied: ${err.detail}`);
+          if (err.status === 403) throw new UserError(`Access denied: ${forbiddenDetailForAgent(err.detail)}`);
         }
         throw err;
       }

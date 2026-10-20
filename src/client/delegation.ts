@@ -16,6 +16,7 @@ export class DelegationApi extends ClientCore {
         agentId: string,
         data: {
             delegate_id: string;
+            approval_id?: string;
             allowed_tools?: string[];
             blocked_tools?: string[];
             max_daily_delegations?: number;

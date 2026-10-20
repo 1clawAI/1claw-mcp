@@ -38,6 +38,13 @@ export function listSigningKeysTool(client: OneClawClient) {
               `Public key: ${k.public_key}`,
             ];
             if (k.address) parts.push(`Address: ${k.address}`);
+            if (k.custody) {
+              parts.push(
+                k.custody === "client_tss"
+                  ? `Custody: client_tss (2-of-3 self-custody; signs only from a runtime the owner gave a share${k.backup && !k.backup.backed_up ? "; NOT backed up, so agents are refused" : ""})`
+                  : `Custody: ${k.custody}`,
+              );
+            }
             parts.push(`Version: ${k.key_version}`);
             parts.push(`Active: ${k.is_active}`);
             parts.push(`Created: ${k.created_at}`);

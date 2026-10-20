@@ -268,6 +268,21 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 | `get_guardrail_shadow_report` | Convention 6 guardrail shadow violations (`guardrail_shadow.would_deny` audit events). |
 | `list_guardrail_revisions` | Audit trail of agent and binding guardrail changes. |
 | `replay_agent_guardrails` | Dry-run draft guardrails against an agent's recent transactions. |
+| `request_secret`       | Ask the human for a credential the agent lacks; the value goes from a dashboard field straight into the vault and the agent only learns the path. |
+| `check_secret_request` | Whether a `request_secret` was fulfilled, declined or expired; on fulfilment, the vault and path to read with `get_secret`. Own requests only. |
+| `get_peer_context`     | What past interactions suggest about the person this agent serves (how they decided similar requests). Empty when no person is linked. |
+| `list_directory_jobs`  | Open jobs on the 1Claw directory board; third-party text the server flagged is marked UNTRUSTED. |
+| `get_directory_job`    | One directory job by id. |
+| `submit_directory_job_bid` | Bid on a directory job (discoverable agents only); bidding again replaces the previous bid. |
+| `list_notification_targets` | Where this account's approvals and notifications are delivered (SMS, webhook, email, push). Read-only. |
+| `runtime_env`          | Every environment variable a runtime starts with, its source, and which wins on a name collision. |
+| `platform_create_connection_pending_approval` | Submit a consensus pending approval for a connection agent (plt_ auth). |
+| `platform_delete_connection_runtime` | Delete a runtime the app provisioned on a connection (plt_ auth). |
+| `platform_get_connection_portfolio` | Balances for the agents on a connection (plt_ auth). |
+| `platform_list_connection_automations` | Automations scoped to a connection's agents (plt_ auth). |
+| `platform_get_connection_otel_summary` | Posture score, open threats and pending approvals over a connection's agents (plt_ auth). |
+| `platform_get_connection_otel_threats` | Threats on a connection's agents, highest blast radius first (plt_ auth). |
+| `platform_get_connection_otel_topology` | Agents, policies, vaults, chains and systems a connection's agents reach (plt_ auth). |
 | `inspect_content`      | Analyze arbitrary text for prompt injection, command injection, social engineering, PII, encoding tricks, and more. Works without vault credentials. |
 | `proxy_request`        | **Local daemon mode only.** Make an HTTP request with a secret injected by the daemon. The model specifies the secret name and target URL — the secret value never enters the context window. |
 
@@ -276,6 +291,10 @@ Every tool belongs to one toolset (`src/toolsets.ts`). Which toolsets a session 
 > - `{ "type": "vault_ref", "vault_id": "<uuid>", "path": "secrets/api-key" }` — a live pointer to an existing vault secret. The credential is resolved at execution time and always uses the latest version. Useful for secrets that rotate independently or are shared across bindings.
 
 > **Treasury wallets** (`POST /v1/treasury/wallets/generate`, `GET .../wallets`, etc.) are human-only endpoints and are **not** exposed as MCP tools. Agents cannot generate or manage treasury wallets. Human users manage treasury wallets via the dashboard, CLI (`1claw treasury`), or SDK (`client.treasuryWallets`).
+>
+> **Self-custody keys** (custody `client_tss`, 2-of-3 FROST; Tron multisig; EVM multisig Safes) are created, backed up, refreshed and restored only by their human owner with a passkey in the dashboard (`/v1/keys/tss/*`, `/v1/treasury/multisig*`), so no MCP tool exists for them. `list_signing_keys` shows a key's `custody`. An agent co-signs a `client_tss` key only from inside a 1Claw runtime the owner provisioned with a share; `submit_transaction` and the sign tools answer with that explanation when the vault refuses server signing for such a key.
+
+> **Approvals.** When the vault answers 202 (a human-in-the-loop approval or a multi-party consensus gate), `submit_transaction`, `sign_transaction`, `sign_message`, `sign_typed_data`, `sign_digest` and `create_delegation` return the approval id and the next step instead of a result: poll `get_approval_status`, then resubmit with `resume_tx_id` (transactions held for a human) or `approval_id` (consensus).
 
 ## Resources
 
@@ -482,4 +501,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.61.0 — MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.61.0**
+npm: `@1claw/mcp` v0.64.0; MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.64.0**

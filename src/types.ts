@@ -112,6 +112,11 @@ export interface TransactionResponse {
   signed_at?: string;
   simulation_id?: string;
   simulation_status?: string;
+  from_address?: string;
+  /** Set by the receipt reconciler once the chain has the transaction. */
+  block_number?: number;
+  confirmed_at?: string;
+  reconciled_at?: string;
 }
 
 export interface SignTransactionResponse {
@@ -141,6 +146,10 @@ export interface SigningKeyResponse {
   is_active: boolean;
   created_at: string;
   rotated_at?: string;
+  /** `server` (1Claw holds the key) or `client_tss` (2-of-3 self-custody; a human owns shares 2 and 3). */
+  custody?: string;
+  owner_user_id?: string;
+  backup?: { backed_up: boolean; missing?: string[] };
 }
 
 export interface SigningKeyListResponse {

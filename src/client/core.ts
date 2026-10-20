@@ -332,18 +332,35 @@ export class ClientCore {
         if (!res.ok) {
             let detail = `HTTP ${res.status}`;
             let errorType = "";
+            let raw: Record<string, unknown> = {};
             try {
-                const body = (await res.json()) as ApiErrorBody;
+                raw = (await res.json()) as Record<string, unknown>;
+                const body = raw as Partial<ApiErrorBody>;
                 if (body.detail) detail = body.detail;
+                else detail = describeNonProblemBody(raw) ?? detail;
                 if (body.type) errorType = body.type;
             } catch {
                 // use default detail
             }
 
             if (res.status === 402) {
+                // x402: `{code: "payment_required", required_usd, message}` (vault error.rs).
+                const x402 =
+                    raw.code === "payment_required"
+                        ? `${typeof raw.message === "string" ? raw.message : "Payment required"}` +
+                          (raw.required_usd ? ` (required: $${String(raw.required_usd)})` : "") +
+                          ". "
+                        : "Quota exhausted. ";
                 throw new OneClawApiError(
                     402,
-                    "Quota exhausted. Ask your human to upgrade the plan, add prepaid credits, or enable x402 micropayments at https://1claw.co/settings/billing",
+                    `${x402}Ask your human to upgrade the plan, add prepaid credits, or enable x402 micropayments at https://1claw.co/settings/billing`,
+                );
+            }
+
+            if (res.status === 403 && errorType === "upgrade_required") {
+                throw new OneClawApiError(
+                    403,
+                    `Plan upgrade required: ${detail}. Ask your human to upgrade at https://1claw.co/settings/billing`,
                 );
             }
 
@@ -415,4 +432,26 @@ export class ClientCore {
         return this._vaultId;
     }
 
+}
+
+/**
+ * Error bodies that are not RFC 7807 problem details. Guardrail denials
+ * (`domain/guardrail_denial.rs`) send `{error, reason_code, limit, current,
+ * attempted, approval_available, retry_after_seconds, detail?}` and often no
+ * `detail`, which used to leave the agent with "HTTP 403".
+ */
+export function describeNonProblemBody(raw: Record<string, unknown>): string | undefined {
+    const str = (v: unknown) =>
+        typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : undefined;
+    if (raw.reason_code !== undefined || (raw.error !== undefined && raw.limit !== undefined)) {
+        const parts = [str(raw.error) ?? "Guardrail denied the request"];
+        if (raw.reason_code !== undefined) parts.push(`reason: ${str(raw.reason_code)}`);
+        if (raw.limit !== undefined) parts.push(`limit: ${str(raw.limit)}`);
+        if (raw.current !== undefined) parts.push(`current: ${str(raw.current)}`);
+        if (raw.attempted !== undefined) parts.push(`attempted: ${str(raw.attempted)}`);
+        if (raw.retry_after_seconds !== undefined) parts.push(`retry after ${str(raw.retry_after_seconds)}s`);
+        if (raw.approval_available === true) parts.push("a human can approve an exception");
+        return parts.join("; ");
+    }
+    return str(raw.message) ?? str(raw.error);
 }

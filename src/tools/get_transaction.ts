@@ -40,7 +40,10 @@ export function getTransactionTool(client: OneClawClient) {
           `Value: ${tx.value_wei} wei`,
           `Status: ${tx.status}`,
         ];
+        if (tx.from_address) lines.push(`From: ${tx.from_address}`);
         if (tx.tx_hash) lines.push(`Tx hash: ${tx.tx_hash}`);
+        if (tx.block_number !== undefined && tx.block_number !== null) lines.push(`Block: ${tx.block_number}`);
+        if (tx.confirmed_at) lines.push(`Confirmed: ${tx.confirmed_at}`);
         if (tx.signed_tx) lines.push(`Signed tx: ${tx.signed_tx}`);
         if (tx.error_message) lines.push(`Error: ${tx.error_message}`);
         if (tx.simulation_id) lines.push(`Simulation: ${tx.simulation_id} (${tx.simulation_status})`);
