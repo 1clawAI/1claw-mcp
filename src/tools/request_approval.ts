@@ -26,13 +26,13 @@ export function requestApprovalTool(client: OneClawClient) {
         .describe("What kind of thing this is about (e.g. 'order', 'vault', 'channel')"),
       target_id: z.string().describe("ID of that thing"),
       summary: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .describe(
           "What the human is shown: { title, body, fields: [{ label, value }] }. " +
             "Write it for someone who has no context on the task.",
         ),
       payload: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe(
           "What the action will actually do — { amount_usd, customer_email, recipient, ... }. " +

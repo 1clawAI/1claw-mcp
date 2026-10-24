@@ -98,7 +98,7 @@ export function platformPreviewTemplateTool(client: OneClawClient) {
     parameters: z.object({
       app_id: z.string().uuid(),
       template_id: z.string().uuid(),
-      parameters: z.record(z.unknown()).optional(),
+      parameters: z.record(z.string(), z.unknown()).optional(),
       subject: z
         .object({
           user_id: z.string().optional(),
@@ -337,7 +337,7 @@ export function platformSetConnectionSpendPolicyTool(client: OneClawClient) {
       "Set or replace the spend policy for a platform connection (plt_ auth).",
     parameters: z.object({
       connection_id: z.string().uuid(),
-      policy: z.record(z.unknown()).describe("Spend policy fields"),
+      policy: z.record(z.string(), z.unknown()).describe("Spend policy fields"),
       idempotency_key: z.string().optional(),
     }),
     execute: async (args: {
@@ -734,7 +734,7 @@ export function platformCreateConnectionPendingApprovalTool(
       "Submit a consensus pending approval for a connection agent (plt_ auth). policy_id optional — server resolves from agent policies.",
     parameters: z.object({
       connection_id: z.string().uuid(),
-      action_payload: z.record(z.unknown()).describe("chain, to, value, etc."),
+      action_payload: z.record(z.string(), z.unknown()).describe("chain, to, value, etc."),
       agent_id: z.string().uuid().optional(),
       policy_id: z.string().uuid().optional(),
       action: z.string().optional().default("transaction"),

@@ -1,6 +1,6 @@
 {
   "name": "@1claw/mcp",
-  "version": "0.64.0",
+  "version": "0.64.1",
   "mcpName": "io.github.1clawAI/1claw-mcp",
   "description": "MCP server for the 1claw secrets vault — lets AI agents fetch, store, and manage secrets at runtime",
   "type": "module",
@@ -65,8 +65,8 @@
     "glob": "^11.1.0",
     "hono": "^4.13.12",
     "koa": "^3.1.2",
-    "undici": "^7.29.0",
-    "zod": "^3.24.0"
+    "undici": "^7.30.1",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^20.19.33",
@@ -75,11 +75,13 @@
   },
   "overrides": {
     "@vitest/mocker": ">=4.1.11",
-    "body-parser": ">=2.3.0",
+    "body-parser": ">=2.4.0",
     "brace-expansion": ">=5.0.12",
     "express-rate-limit": ">=8.7.0",
+    "fast-uri": ">=3.1.9",
     "file-type": ">=21.3.4",
-    "ip-address": ">=10.7.2",
+    "follow-redirects": "1.16.1",
+    "ip-address": ">=10.7.4",
     "nanoid": ">=3.3.19",
     "postcss": ">=8.5.28",
     "qs": ">=6.16.0"

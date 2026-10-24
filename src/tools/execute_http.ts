@@ -18,11 +18,11 @@ export function executeHttpTool(client: OneClawClient) {
         .describe("HTTP method"),
       path: z.string().default("").describe("URL path appended to the binding's base_url"),
       headers: z
-        .record(z.string())
+        .record(z.string(), z.string())
         .optional()
         .describe("Additional HTTP headers to include"),
       body: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("JSON request body (for POST/PUT/PATCH)"),
       execution_mode: z

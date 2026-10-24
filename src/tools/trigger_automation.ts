@@ -14,7 +14,7 @@ export function triggerAutomationTool(client: OneClawClient) {
         .min(1)
         .describe("The UUID of the automation to trigger"),
       input: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Optional JSON input, exposed to steps as {{trigger.*}}"),
       idempotency_key: z

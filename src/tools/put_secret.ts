@@ -21,7 +21,7 @@ export function putSecretTool(client: OneClawClient) {
         .default("api_key")
         .describe("Secret type: api_key, password, private_key, certificate, file, note, ssh_key, or env_bundle"),
       metadata: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Optional JSON metadata to attach to the secret"),
       expires_at: z

@@ -44,8 +44,8 @@ export function replayAgentGuardrailsTool(client: OneClawClient) {
         parameters: z.object({
             agent_id: z.string().uuid(),
             days: z.number().int().min(1).max(90).optional(),
-            draft_guardrails: z.record(z.unknown()).optional(),
-            draft_approval_policy: z.record(z.unknown()).optional(),
+            draft_guardrails: z.record(z.string(), z.unknown()).optional(),
+            draft_approval_policy: z.record(z.string(), z.unknown()).optional(),
         }),
         execute: async (
             args: {

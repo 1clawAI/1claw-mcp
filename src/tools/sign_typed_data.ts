@@ -12,7 +12,7 @@ export function signTypedDataTool(client: OneClawClient) {
     parameters: z.object({
       agent_id: z.string().optional().describe("Agent ID. Uses the current authenticated agent if omitted."),
       typed_data: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .describe("EIP-712 typed data object with types, primaryType, domain, and message fields"),
       chain: z.string().default("ethereum").describe("Chain name (default: ethereum)"),
       signing_key_path: z.string().optional().describe("Vault path to the signing key. Uses the agent's default key for the chain if omitted."),

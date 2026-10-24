@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.64.1 (2026-10-24)
+
+Dependency security release. No tool names, parameters or behaviour change.
+
+### Security
+
+- **zod 3 to 4 (`^4.6.6`).** GHSA-mrhx-c7xc-m3w5: zod before 4.6.6 collects one issue per failing array element with no cap, so a large array sent to a tool can exhaust the server's memory. There is no 3.x fix. Tool schemas are unchanged; `z.record(value)` is now written `z.record(z.string(), value)`, which zod 4 requires and which produces the same JSON Schema object with `propertyNames: {type: "string"}`. All 161 tool schemas were converted to JSON Schema to check.
+- **undici `^7.30.1`** (GHSA-xjj6-f33q-929c, content-encoding DoS; GHSA-4qv8-2p9j-2685, EventSource memory).
+- **npm overrides:** `body-parser >=2.4.0` (GHSA-27r3-jxmh-p828, via `@modelcontextprotocol/sdk > express`), `follow-redirects 1.16.1`, `ip-address >=10.7.4`, `fast-uri >=3.1.9`. `npm audit --omit=dev` reports 0 vulnerabilities.
+- `@1claw/mcp-vault` and `@1claw/mcp-guard` move to 0.64.1 in lockstep with the same undici and zod ranges.
+
 ## 0.64.0 (2026-10-19)
 
 Checked every tool against the vault's routes and request/response shapes as of 2026-10-19.

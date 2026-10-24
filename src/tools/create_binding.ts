@@ -7,7 +7,7 @@ const credentialSourceSchema = z
   .object({
     type: z.enum(["inline", "vault_ref"]).describe("Source type: 'inline' (store value) or 'vault_ref' (live pointer to an existing vault secret)"),
     value: z
-      .record(z.unknown())
+      .record(z.string(), z.unknown())
       .optional()
       .describe("For inline: the credential value object (e.g. { token: '...' })"),
     vault_id: z
@@ -38,15 +38,15 @@ export function createBindingTool(client: OneClawClient) {
         .default("http")
         .describe("Binding type: http, graphql, postgres, redis, smtp, s3, custom, ..."),
       config: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .default({})
         .describe("Binding config (e.g. { base_url, auth_type, auth_header })"),
       guardrails: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Optional guardrails (allowed_hosts, max_duration_ms, max_requests_per_minute, allowed_request_headers: extra agent headers custom/gRPC bindings may forward; default content-type, accept, user-agent, idempotency-key)"),
       credential: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Legacy: inline credential material (e.g. { token } or { value }). Prefer credential_source for new bindings. Postgres/MySQL credentials default to verified TLS; only sslmode verify-full or disable (MySQL ssl-mode VERIFY_IDENTITY or DISABLED) are accepted, anything else is refused."),
       credential_source: credentialSourceSchema.optional(),

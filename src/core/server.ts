@@ -509,7 +509,7 @@ async function refreshSession(
 type AnyToolFactory = (client: OneClawClient) => {
     name: string;
     description: string;
-    parameters: z.ZodTypeAny;
+    parameters: z.ZodType<Record<string, unknown>>;
     execute: (args: never, ctx: never) => Promise<string>;
 };
 

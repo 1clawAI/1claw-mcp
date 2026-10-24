@@ -12,7 +12,7 @@ const nonEvmParams = {
   token_mint: z.string().optional().describe("Solana SPL / Tron TRC-20: token mint or contract; omit for native transfer"),
   token_decimals: z.number().int().optional().describe("Solana / Tron: token decimals (default 6)"),
   ttl: z.number().int().optional().describe("Cardano: transaction time-to-live (absolute slot)"),
-  xrpl_tx_json: z.record(z.unknown()).optional().describe("Raw XRPL transaction JSON for full transaction type coverage (TrustSet, OfferCreate, NFTokenMint, AMMCreate, EscrowCreate, etc.). Account/Sequence/Fee/SigningPubKey are auto-filled."),
+  xrpl_tx_json: z.record(z.string(), z.unknown()).optional().describe("Raw XRPL transaction JSON for full transaction type coverage (TrustSet, OfferCreate, NFTokenMint, AMMCreate, EscrowCreate, etc.). Account/Sequence/Fee/SigningPubKey are auto-filled."),
 };
 
 export function signTransactionTool(client: OneClawClient) {

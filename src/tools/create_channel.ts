@@ -15,7 +15,7 @@ export function createChannelTool(client: OneClawClient) {
         .describe("Channel type: telegram, whatsapp, or discord."),
       channel_name: z.string().optional().describe("Optional display name for the channel."),
       config: z
-        .record(z.string())
+        .record(z.string(), z.string())
         .describe(
           "Channel config. Telegram: { bot_token }. WhatsApp: { phone_number_id, access_token, verify_token }. Discord: { bot_token, application_id }.",
         ),

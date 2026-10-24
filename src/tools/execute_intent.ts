@@ -20,7 +20,7 @@ export function executeIntentTool(client: OneClawClient) {
         .default("http")
         .describe("Intent type matching the binding (e.g. 'http', 'graphql')"),
       params: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .default({})
         .describe("Executor params (e.g. { query, variables } for graphql, or { method, path, headers, body } for http)"),
       execution_mode: z

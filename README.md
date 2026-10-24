@@ -501,4 +501,4 @@ Configure these via the agent's `shroud_config` JSON in the dashboard, SDK (`Cre
 
 This package is registered as `io.github.1clawAI/1claw-mcp` on the [MCP Registry](https://registry.modelcontextprotocol.io). Publishing uses the "Publish to MCP Registry" workflow on `1clawAI/1claw-mcp` (GitHub OIDC).
 
-npm: `@1claw/mcp` v0.64.0; MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.64.0**
+npm: `@1claw/mcp` v0.64.1; MCP Registry: `io.github.1clawAI/1claw-mcp` @ **0.64.1**

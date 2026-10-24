@@ -5,7 +5,7 @@ import { OneClawApiError } from "../client/core.js";
 
 const workflowStepSchema = z.object({
   type: z.string(),
-  params: z.record(z.unknown()).optional(),
+  params: z.record(z.string(), z.unknown()).optional(),
   name: z.string().optional(),
 });
 

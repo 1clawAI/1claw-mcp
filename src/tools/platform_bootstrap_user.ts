@@ -24,7 +24,7 @@ export function platformBootstrapUserTool(client: OneClawClient) {
         .optional()
         .describe("URL to redirect the user to after claiming"),
       parameters: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Template parameters substituted as {{params.*}} during bootstrap"),
     }),

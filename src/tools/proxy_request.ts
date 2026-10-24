@@ -31,7 +31,7 @@ export function proxyRequestTool(client: LocalDaemonClient) {
                 .default("GET")
                 .describe("HTTP method"),
             headers: z
-                .record(z.string())
+                .record(z.string(), z.string())
                 .optional()
                 .describe("Additional headers (secret is injected separately)"),
             body: z
