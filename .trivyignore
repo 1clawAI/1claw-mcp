@@ -177,3 +177,18 @@ CVE-2026-16742
 # green — the accepted-CVE lists are per image and had drifted apart.
 CVE-2026-88647
 CVE-2026-88648
+
+# CVE-2026-76844: zlib1g 1:1.2.13.dfsg-1 from the node:22-slim (bookworm) base,
+# no fixed version in bookworm. Trivy's title says webpack-dev-middleware; that
+# is wrong, the Debian tracker and upstream describe a heap overflow in zlib's
+# gzFile write path (gz_write() after a failed write()). Read 2026-11-05.
+# Inapplicable here because nothing loads the system libz for that API:
+#   * official Node builds statically bundle Chromium's zlib fork
+#     (`process.versions.zlib` = 1.3.1-e00f703 on v22; `otool -L node` shows no
+#     libz), and node:zlib exposes stream inflate/deflate, never gzopen/gzwrite.
+#   * the only install-script packages in package-lock.json are fsevents
+#     (dev, macOS-only) and tldjs (refreshes a TLD list, no native build).
+#   * `grep -rnE 'gzopen|gzwrite' packages/mcp/src` -> 0 matches.
+# The vault image accepted it with its own reasoning (miniz_oxide, no libz-sys).
+# Drop it once bookworm ships a fixed zlib1g.
+CVE-2026-76844
