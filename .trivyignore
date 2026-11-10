@@ -221,3 +221,15 @@ CVE-2026-112321
 CVE-2026-112322
 CVE-2026-112323
 CVE-2026-119079
+
+# CVE-2026-107364, CVE-2026-118380, CVE-2026-71199, CVE-2026-71200: four more
+# MIT krb5 1.20.1-2+deb12u5 findings (no fixed version), read 2026-11-10 after
+# the Trivy DB refreshed mid-day. 107364 and 71200 are unauthenticated KDC DoS
+# (ASN.1 decoder overrun, PKINIT NULL deref); 118380 is kadmind; 71199 is
+# auth-indicator alteration in the KDC-issued CAMMAC container, which only a
+# KDC or a GSSAPI service validating tickets consumes. Same reasoning as the
+# block above: no KDC, kadmind or GSSAPI service in this image. Drop with it.
+CVE-2026-107364
+CVE-2026-118380
+CVE-2026-71199
+CVE-2026-71200
