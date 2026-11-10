@@ -201,3 +201,23 @@ CVE-2026-76844
 # images share the Debian base, so an ignore belongs in both or neither.
 # Drop it with 76844 once bookworm ships a fixed zlib1g.
 CVE-2026-85091
+
+# CVE-2026-112315..112323 and CVE-2026-119079: MIT krb5 1.20.1-2+deb12u5
+# (bookworm, no fixed version yet). Read 2026-11-10. Every one is a DoS in a
+# Kerberos *server*: kadmind (the admin daemon) or the KDC. Those binaries
+# ship in krb5-admin-server and krb5-kdc, which this image does not install.
+# Trivy flags the client libraries (libkrb5-3, libgssapi-krb5-2, libk5crypto3,
+# libkrb5support0, krb5-locales) because they come from the same source
+# package. They are here only as dependencies of libpq5/curl, and nothing in
+# the image authenticates with GSSAPI. Ignored in vault/ and packages/mcp/
+# alike (same Debian base). Drop once bookworm ships a fixed krb5.
+CVE-2026-112315
+CVE-2026-112316
+CVE-2026-112317
+CVE-2026-112318
+CVE-2026-112319
+CVE-2026-112320
+CVE-2026-112321
+CVE-2026-112322
+CVE-2026-112323
+CVE-2026-119079
