@@ -192,3 +192,12 @@ CVE-2026-88648
 # The vault image accepted it with its own reasoning (miniz_oxide, no libz-sys).
 # Drop it once bookworm ships a fixed zlib1g.
 CVE-2026-76844
+
+# CVE-2026-85091: zlib1g 1:1.2.13.dfsg-1 (bookworm, no fixed version), heap
+# overflow in gz_vacate(), an internal of zlib's gzFile layer. Read 2026-11-10.
+# Same reasoning as CVE-2026-76844 above: Node bundles its own zlib and its
+# zlib binding uses the in-memory stream API, never gzopen/gzdopen, and nothing
+# else in this image opens a gzFile. Mirrors vault/.trivyignore; the two
+# images share the Debian base, so an ignore belongs in both or neither.
+# Drop it with 76844 once bookworm ships a fixed zlib1g.
+CVE-2026-85091
