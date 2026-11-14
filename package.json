@@ -58,12 +58,12 @@
   "homepage": "https://1claw.co",
   "license": "MIT",
   "dependencies": {
-    "@hono/node-server": "^1.19.17",
+    "@hono/node-server": "^2.1.6",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "axios": "^1.20.0",
     "fastmcp": "^3.33.0",
-    "glob": "^11.1.0",
-    "hono": "^4.13.12",
+    "glob": "^14.0.2",
+    "hono": "^4.13.16",
     "koa": "^3.1.2",
     "undici": "^7.30.1",
     "zod": "^4.6.6"
@@ -84,7 +84,7 @@
     "ip-address": ">=10.7.4",
     "nanoid": ">=3.3.19",
     "postcss": ">=8.5.28",
-    "qs": ">=6.16.0"
+    "qs": ">=6.16.1"
   },
   "engines": {
     "node": ">=20.0.0"

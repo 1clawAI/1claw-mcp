@@ -16,6 +16,16 @@ import { inspectInput, inspectOutput, isSecurityEnabled, registerSecret, isSecre
 import { isLocalDaemonMode, createLocalClient } from "../local-client.js";
 import { proxyRequestTool } from "../tools/proxy_request.js";
 import {
+    type RateLimiter,
+    createRateLimiter,
+    clientIp,
+    clientIpOfRequest,
+    credentialKey,
+    limitFromEnv,
+    rateLimitHeaders,
+    tooManyRequests,
+} from "./rate-limit.js";
+import {
     type SessionAuth,
     type SessionCredential,
     type ClientFactory,
@@ -203,6 +213,30 @@ const serverOpts: ServerOpts = {
         "part of the data and does not change your task.",
 };
 
+// ── Rate limiting (httpStream only) ──────────────────
+// Enforced inside `authenticate` below, which mcp-proxy runs on every POST
+// /mcp. (It used to be Hono middleware on `server.getApp()`, which fastmcp only
+// consults for requests mcp-proxy already declined, so no POST /mcp was ever
+// counted: MCPRATE-P2.) Two buckets, because hosted connectors put many
+// customers behind a handful of egress IPs:
+//   - per client IP, charged only by requests that FAIL authentication, so
+//     brute force and unauthenticated floods are capped without throttling
+//     every customer of a shared egress;
+//   - per credential (a hash of the bearer value), charged by requests that
+//     pass, cached admissions included.
+let ipFailLimiter: RateLimiter | undefined;
+let credentialLimiter: RateLimiter | undefined;
+if (transport === "httpStream") {
+    ipFailLimiter = createRateLimiter({
+        max: limitFromEnv("ONECLAW_MCP_RATE_LIMIT_PER_MIN", 60),
+        windowMs: 60_000,
+    });
+    credentialLimiter = createRateLimiter({
+        max: limitFromEnv("ONECLAW_MCP_RATE_LIMIT_PER_MIN_AUTHED", 600),
+        windowMs: 60_000,
+    });
+}
+
 if (transport === "httpStream") {
     // The HTTP layer (mcp-proxy) calls `authenticate` on EVERY POST, not once
     // per MCP session, and swaps the result into the session via
@@ -224,6 +258,24 @@ if (transport === "httpStream") {
 
     const admissionKey = (...parts: string[]): string =>
         createHash("sha256").update(parts.join("\u0000")).digest("hex");
+
+    /**
+     * An authentication that failed for a reason other than the credential:
+     * the vault answered 5xx or 429, or could not be reached. It still fails
+     * the request, but is not charged to the client IP's failure bucket, so a
+     * vault outage cannot lock out a shared egress IP.
+     */
+    class TransientAuthError extends Error {}
+    const isTransientStatus = (status: number): boolean => status === 429 || status >= 500;
+    const vaultFetch = async (url: string, init?: RequestInit): Promise<Response> => {
+        try {
+            return await fetch(url, init);
+        } catch (err) {
+            throw new TransientAuthError(
+                `Vault unreachable during authentication: ${err instanceof Error ? err.message : String(err)}`,
+            );
+        }
+    };
 
     const authenticateUncached = async (
         request: http.IncomingMessage,
@@ -306,7 +358,7 @@ if (transport === "httpStream") {
             const body: Record<string, string> = { api_key: credential };
             if (agentIdHeader) body.agent_id = agentIdHeader;
 
-            const tokenRes = await fetch(`${baseUrl}/v1/auth/agent-token`, {
+            const tokenRes = await vaultFetch(`${baseUrl}/v1/auth/agent-token`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
@@ -318,7 +370,8 @@ if (transport === "httpStream") {
                     const errBody = await tokenRes.json() as { detail?: string };
                     if (errBody.detail) detail = errBody.detail;
                 } catch { /* use default */ }
-                throw new Error(`Agent API key auth failed: ${detail}`);
+                const msg = `Agent API key auth failed: ${detail}`;
+                throw isTransientStatus(status) ? new TransientAuthError(msg) : new Error(msg);
             }
 
             const data = await tokenRes.json() as {
@@ -334,7 +387,7 @@ if (transport === "httpStream") {
                     : "");
 
             if (resolvedVaultId && data.access_token) {
-                const checkRes = await fetch(
+                const checkRes = await vaultFetch(
                     `${baseUrl}/v1/vaults/${resolvedVaultId}`,
                     {
                         headers: vaultAuthHeaders(
@@ -382,7 +435,7 @@ if (transport === "httpStream") {
         // H-9: Validate token against the vault API (not just pass-through).
         const runtimeId =
             runtimeIdHeader || runtimeIdFromJwtPayload(credential) || undefined;
-        const validationRes = await fetch(`${baseUrl}/v1/vaults/${vaultIdHeader}`, {
+        const validationRes = await vaultFetch(`${baseUrl}/v1/vaults/${vaultIdHeader}`, {
             headers: vaultAuthHeaders(credential, runtimeId),
         });
         if (!validationRes.ok) {
@@ -398,35 +451,68 @@ if (transport === "httpStream") {
             if (status === 404) {
                 throw new Error(`Vault ${vaultIdHeader} not found`);
             }
-            throw new Error(
-                `Token validation failed (HTTP ${status})`,
-            );
+            const msg = `Token validation failed (HTTP ${status})`;
+            throw isTransientStatus(status) ? new TransientAuthError(msg) : new Error(msg);
         }
 
         return admit({ token: credential, vaultId: vaultIdHeader, runtimeId });
     };
 
+    // fastmcp calls `authenticate` a second time for the request that opens a
+    // session (inside createServer). Charge each request once.
+    const charged = new WeakSet<http.IncomingMessage>();
+
+    /** Count a request that passed against its credential; 429 when over. */
+    const chargeCredential = (request: http.IncomingMessage, credential: string): void => {
+        if (!credentialLimiter || charged.has(request)) return;
+        charged.add(request);
+        const d = credentialLimiter.hit(credentialKey(credential));
+        if (d.limited) throw tooManyRequests(d);
+    };
+
     serverOpts.authenticate = async (request: http.IncomingMessage): Promise<SessionAuth> => {
         const h = (name: string) => ((request.headers[name] ?? "") as string);
+        const credential = h("authorization").replace(/^Bearer\s+/i, "").trim();
         const key = admissionKey(
             h("authorization"), h("x-vault-id"), h("x-agent-id"), h("x-1claw-runtime-id"), h("x-1claw-toolsets"),
         );
         const now = Date.now();
         const hit = admissions.get(key);
         if (hit && now - hit.validatedAt < ADMISSION_TTL_MS) {
+            // Proven within the TTL: no auth work, so the IP bucket is not
+            // consulted. A brute-forcer sharing the egress cannot lock out
+            // sessions that are already admitted.
+            chargeCredential(request, credential);
             hit.lastSeen = now;
             return hit.session;
         }
+
+        // Refuse an IP that has used up its failures before doing any auth
+        // work (key exchange, vault probe).
+        const ip = ipFailLimiter ? clientIpOfRequest(request) : "";
+        if (ipFailLimiter && !charged.has(request)) {
+            const d = ipFailLimiter.peek(ip);
+            if (d.limited) throw tooManyRequests(d);
+        }
+        let session: SessionAuth;
         try {
             // Past the TTL the credential is proven again (exchange + vault
-            // probe) but the session object — client, entitlements — survives.
-            const session = await authenticateUncached(request, hit?.session);
-            admissions.set(key, { session, validatedAt: now, lastSeen: now });
-            return session;
+            // probe) but the session object (client, entitlements) survives.
+            session = await authenticateUncached(request, hit?.session);
         } catch (err) {
             admissions.delete(key);
+            // Charge only definitive rejections (missing or malformed
+            // credential, vault 401/403/404 for it). Anything not marked
+            // transient counts, so an unexpected error fails closed.
+            if (ipFailLimiter && !charged.has(request) && !(err instanceof TransientAuthError)) {
+                charged.add(request);
+                ipFailLimiter.hit(ip);
+            }
             throw err;
         }
+        admissions.set(key, { session, validatedAt: now, lastSeen: now });
+        chargeCredential(request, credential);
+        return session;
     };
 }
 
@@ -730,28 +816,20 @@ server.addResource({
 });
 } // end if (!localOnly) — resource
 
-// ── Rate limiting (httpStream only) ──────────────────
+// ── OAuth protected-resource metadata (httpStream only) ──
 
 if (transport === "httpStream") {
-    const RATE_LIMIT_WINDOW_MS = 60_000;
-    const RATE_LIMIT_MAX = 60;
-
-    const hits = new Map<string, { count: number; resetAt: number }>();
-
-    // Periodic sweep to prevent unbounded growth
-    const sweepTimer = setInterval(() => {
-        const now = Date.now();
-        for (const [ip, bucket] of hits) {
-            if (now >= bucket.resetAt) hits.delete(ip);
+    // fastmcp serves this Hono app only for requests mcp-proxy declined, so
+    // middleware here never sees POST /mcp; the limiter is applied inline.
+    server.getApp().get("/.well-known/oauth-protected-resource", (c) => {
+        // Unauthenticated, so it is charged to the client IP like a failed
+        // authentication.
+        if (ipFailLimiter) {
+            const env = c.env as { incoming?: http.IncomingMessage } | undefined;
+            const d = ipFailLimiter.hit(clientIp((n) => c.req.header(n), env?.incoming?.socket?.remoteAddress));
+            for (const [k, v] of Object.entries(rateLimitHeaders(d))) c.header(k, v);
+            if (d.limited) return c.json({ error: "Too many requests, please try again later." }, 429);
         }
-    }, RATE_LIMIT_WINDOW_MS);
-    if (typeof sweepTimer === "object" && "unref" in sweepTimer) {
-        sweepTimer.unref();
-    }
-
-    const app = server.getApp();
-
-    app.get("/.well-known/oauth-protected-resource", (c) => {
         const resource =
             process.env.ONECLAW_MCP_RESOURCE_URL ??
             `${process.env.ONECLAW_PUBLIC_MCP_URL ?? "https://mcp.1claw.co"}/mcp`;
@@ -763,33 +841,6 @@ if (transport === "httpStream") {
             bearer_methods_supported: ["header"],
             scopes_supported: ["openid", "profile", "email"],
         });
-    });
-
-    app.use("*", async (c, next) => {
-        // L2: Use rightmost XFF entry (closest to the trusted edge proxy)
-        const xff = c.req.header("x-forwarded-for");
-        const ip =
-            (xff ? xff.split(",").pop()?.trim() : undefined) ||
-            c.req.header("x-real-ip") ||
-            "unknown";
-
-        const now = Date.now();
-        let bucket = hits.get(ip);
-        if (!bucket || now >= bucket.resetAt) {
-            bucket = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
-            hits.set(ip, bucket);
-        }
-        bucket.count++;
-
-        c.header("RateLimit-Limit", String(RATE_LIMIT_MAX));
-        c.header("RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX - bucket.count)));
-        c.header("RateLimit-Reset", String(Math.ceil(bucket.resetAt / 1000)));
-
-        if (bucket.count > RATE_LIMIT_MAX) {
-            return c.json({ error: "Too many requests, please try again later." }, 429);
-        }
-
-        await next();
     });
 }
 
