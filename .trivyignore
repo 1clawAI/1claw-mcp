@@ -233,3 +233,10 @@ CVE-2026-107364
 CVE-2026-118380
 CVE-2026-71199
 CVE-2026-71200
+
+# CVE-2025-6020: linux-pam pam_namespace directory traversal, local privilege
+# escalation during a PAM login session (bookworm libpam 1.5.2-6+deb12u2, no
+# fixed version). Read 2026-11-14. The image has no login, su, sshd or any PAM
+# client in its entrypoint path; libpam is only present as an essential base
+# package. Drop once bookworm ships a fix.
+CVE-2025-6020
