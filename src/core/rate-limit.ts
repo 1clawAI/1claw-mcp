@@ -13,7 +13,7 @@
  * request must never be charged to the IP.
  */
 
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import type http from "node:http";
 
 export interface RateLimitDecision {
@@ -38,15 +38,38 @@ export interface RateLimiter {
 
 type HeaderGetter = (name: string) => string | string[] | undefined;
 
+/** Constant-time string equality (length is not secret). */
+function safeEqual(a: string, b: string): boolean {
+    const ab = Buffer.from(a, "utf8");
+    const bb = Buffer.from(b, "utf8");
+    return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
 /**
- * Client IP as the edge saw it. The rightmost X-Forwarded-For entry is the one
- * appended by the proxy closest to us (Cloud Run's front end), so a client
- * cannot choose it by sending its own XFF; entries to its left are
- * client-controlled. Falls back to X-Real-IP, then the socket peer.
+ * Client IP as the edge saw it.
+ *
+ * Hosted traffic (mcp.1claw.xyz / mcp.1claw.co) reaches us through the
+ * dashboard's Vercel proxy, which `fetch`es Cloud Run. For those requests the
+ * rightmost X-Forwarded-For entry is Vercel's egress IP, shared by every
+ * customer (MCPRATEIP-P2). The proxy sends the real client IP in
+ * `x-oneclaw-client-ip` together with `x-oneclaw-proxy-secret`, and strips any
+ * caller-supplied copies of both. That header is trusted only when the secret
+ * matches a non-empty `ONECLAW_PROXY_SECRET`, compared in constant time.
+ *
+ * Otherwise: the rightmost X-Forwarded-For entry is the one appended by the
+ * proxy closest to us (Cloud Run's front end), so a client cannot choose it by
+ * sending its own XFF; entries to its left are client-controlled. Falls back
+ * to X-Real-IP, then the socket peer.
  */
 export function clientIp(header: HeaderGetter, socketAddress?: string): string {
     const last = (v: string | string[] | undefined): string | undefined =>
         Array.isArray(v) ? v[v.length - 1] : v;
+    const proxySecret = process.env.ONECLAW_PROXY_SECRET ?? "";
+    if (proxySecret) {
+        const presented = last(header("x-oneclaw-proxy-secret"));
+        const trusted = last(header("x-oneclaw-client-ip"))?.trim();
+        if (presented && trusted && safeEqual(presented, proxySecret)) return trusted;
+    }
     const xff = last(header("x-forwarded-for"));
     const fromXff = xff ? xff.split(",").pop()?.trim() : undefined;
     return fromXff || last(header("x-real-ip"))?.trim() || socketAddress || "unknown";
