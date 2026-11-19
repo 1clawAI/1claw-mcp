@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.64.2 (2026-11-19)
+
+Security release. No tool names, parameters or behaviour change for a client within the limits.
+
+### Security
+
+- **Rate limiting on `POST /mcp` (MCPRATE-P2).** The HTTP transport's limiter now runs in `authenticate`, so `/mcp` itself is limited and answers with `RateLimit-*` headers and 429. Before, it sat in Hono middleware that fastmcp only reaches for unhandled routes.
+- **Client IP behind a proxy (MCPRATEIP-P2).** The proxy-supplied client IP is trusted only when the request carries the shared proxy secret, so one caller can no longer pick its own rate-limit bucket or share everyone else's.
+- **Dependencies:** `hono ^4.13.16`, `@hono/node-server ^2.1.6`, `glob ^14.0.2`; overrides `follow-redirects >=1.16.2 <2` (CVE-2026-116689) and `qs >=6.16.1`. Dev only: `vite 8.3.8` and `vitest 4.1.12` (vite GHSA-9jrq-w75r-8gcw and related, @vitest/mocker GHSA-qxg6-89mg-rqv8). `npm audit` reports 0 vulnerabilities.
+- `@1claw/mcp-vault` and `@1claw/mcp-guard` move to 0.64.2 in lockstep.
+
 ## 0.64.1 (2026-10-24)
 
 Dependency security release. No tool names, parameters or behaviour change.
