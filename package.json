@@ -71,10 +71,11 @@
   "devDependencies": {
     "@types/node": "^20.19.33",
     "typescript": "^5.5.0",
-    "vitest": "^4.1.11"
+    "vite": "^8.3.8",
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "@vitest/mocker": ">=4.1.11",
+    "@vitest/mocker": "^4.1.12",
     "body-parser": ">=2.4.0",
     "brace-expansion": ">=5.0.12",
     "express-rate-limit": ">=8.7.0",
