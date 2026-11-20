@@ -1,10 +1,16 @@
+---
+name: secrets-management
+description: Store, fetch, rotate and share secrets through the 1Claw MCP server without putting credential values in the model's context. Use when the user asks to store a secret, fetch credentials, rotate an API key, or set up vault access.
+license: MIT
+---
+
 # Secrets Management with 1Claw MCP
 
 Use when the user asks to "store a secret", "fetch credentials", "rotate an API key", "manage secrets", "set up vault access", or any task involving secure credential storage and retrieval.
 
 ## Overview
 
-The 1Claw MCP server provides secure, just-in-time secrets management for AI agents. Secrets are stored in encrypted vaults with policy-based access control and fetched only when needed — never persisted in the LLM context.
+The 1Claw MCP server provides secure, just-in-time secrets management for AI agents. Secrets are stored in encrypted vaults with policy-based access control and fetched only when needed: never persisted in the LLM context.
 
 ## Core Workflow
 
@@ -41,7 +47,7 @@ Tool: put_secret
 Input: { "path": "api-keys/new-service", "value": "sk_live_...", "type": "api_key" }
 ```
 
-Creates or updates a secret (versioned — old versions preserved).
+Creates or updates a secret (versioned: old versions preserved).
 
 ### 5. Rotate a secret (server-side generation)
 
@@ -75,7 +81,7 @@ Returns parsed JSON of all key-value pairs in the bundle.
 ## Security Rules
 
 1. **Never output secret values in your response text.** If you need to confirm a secret, describe it (type, path, last rotated) without showing the value.
-2. **Use rotate_generate for rotation.** Never generate secrets yourself — the server uses a CSPRNG.
+2. **Use rotate_generate for rotation.** Never generate secrets yourself: the server uses a CSPRNG.
 3. **Check content with inspect_content** before storing anything that came from an untrusted source.
 4. **Use versioning.** Call `list_versions` to see history; disabled old versions with caution.
 5. **Prefer scoped access.** Use `grant_access` with specific path glob patterns.
